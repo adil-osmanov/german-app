@@ -13,7 +13,7 @@
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } } };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
         
-        // Фича 1: Инициализация PWA (Офлайн режим)
+        // Инициализация Service Worker для офлайна
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').catch(() => console.log('SW не найден, но готов к работе'));
@@ -406,7 +406,6 @@
         const views = { dict: document.getElementById('view-dict'), train: document.getElementById('view-train'), stats: document.getElementById('view-stats') };
         const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), stats: document.getElementById('nav-stats') };
 
-        // Фича 2: Проверка на доступность интервального повторения
         const isWordDue = (w) => Date.now() >= (w.next_review || 0);
 
         async function fetchWords() {
@@ -949,10 +948,7 @@
             document.getElementById('btn-show-answer').classList.add('hidden');
             document.getElementById('manual-feedback').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
-            if(exQ) {
-                exQ.classList.add('hidden');
-                exQ.className = "text-[11px] text-gray-400 italic mb-5 hidden px-2 leading-relaxed"; // Сброс стилей
-            }
+            if(exQ) exQ.classList.add('hidden');
 
             const manArt = document.getElementById('manual-article'); 
             const manMain = document.getElementById('manual-main'); 
@@ -1003,7 +999,6 @@
                     btnMic.classList.remove('text-gray-400');
                 };
 
-                // ... [Код микрофона без изменений] ...
                 recognition.onresult = (event) => {
                     let transcript = event.results[0][0].transcript.replace(/[.,!?]$/, '').trim();
                     if (!currentIsGermanQuestion && w.word_type === 'noun') {
@@ -1059,20 +1054,17 @@
                 document.getElementById('btn-show-answer').classList.remove('hidden');
 
             } else if (state === 'L2') {
-                if(badge) { badge.innerText = `LEVEL 2: ПИСЬМО (ХАРДКОР)`; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"; }
+                if(badge) { badge.innerText = `LEVEL 2: ПИСЬМО (${w.score === 4 ? '1/2' : 'ФИНАЛ'})`; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"; }
                 
-                // Фича 3: Хардкорный режим - генерация Lückentext для прокачки контекста
-                if (!currentIsGermanQuestion && w.example && exQ) {
-                    if (qEl) qEl.innerText = "Вспомни слово по контексту:";
+                // Возвращенная логика: главное слово на русском, пример с пропусками — просто подсказка
+                if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
+                
+                if(!currentIsGermanQuestion && w.example && exQ) { 
                     try {
                         const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         exQ.innerHTML = w.example.replace(new RegExp(safeWord, 'ig'), '_____'); 
                     } catch(e) { exQ.innerHTML = w.example; }
-                    exQ.classList.remove('hidden');
-                    // Делаем пример жирным и заметным
-                    exQ.className = "text-sm text-gray-800 dark:text-gray-200 font-bold mb-5 px-3 py-4 leading-relaxed bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 w-full"; 
-                } else {
-                    if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
+                    exQ.classList.remove('hidden'); 
                 }
                 
                 document.getElementById('train-manual-block').classList.remove('hidden');
