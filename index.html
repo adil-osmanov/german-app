@@ -23,7 +23,7 @@
 </head>
 <body class="bg-[#f2f2f7] dark:bg-black text-gray-900 dark:text-white transition-colors duration-300 min-h-screen flex flex-col overflow-hidden">
 
-    <div class="hidden bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 line-through grayscale opacity-60"></div>
+    <div class="hidden bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 line-through grayscale opacity-60 bg-emerald-500 text-emerald-50 text-teal-500"></div>
 
     <header class="fixed top-0 left-0 right-0 pt-12 pb-3 px-4 glass border-b border-gray-200 dark:border-gray-800 z-40 transition-all">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
@@ -151,7 +151,7 @@
         <section id="view-stats" class="hidden pb-10 space-y-3 pt-4 sm:mt-8"></section>
     </main>
 
-    <div id="backup-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center pb-24 sm:pb-32 p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+    <div id="backup-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
         <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center animate-in zoom-in-95 duration-200 relative">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-black dark:text-white">Данные</h2>
@@ -172,91 +172,93 @@
         </div>
     </div>
 
-    <div id="add-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center pb-24 sm:pb-32 p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] overflow-y-auto relative">
+    <div id="add-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] flex flex-col relative" onclick="event.stopPropagation()">
             
-            <div class="flex justify-between items-center mb-3 sticky top-0 bg-white dark:bg-gray-900 z-10 py-1">
+            <div class="flex justify-between items-center mb-3 flex-shrink-0">
                 <h2 id="modal-title" class="text-xl font-black dark:text-white tracking-tight">Новое слово</h2>
-                <button id="close-modal" class="text-gray-400 bg-gray-100 dark:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">×</button>
+                <button id="close-modal" class="text-gray-400 bg-gray-100 dark:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg hover:text-red-500 transition-colors">×</button>
             </div>
             
-            <div id="modal-tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-3">
-                <button id="tab-single" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all">Одно слово</button>
-                <button id="tab-bulk" class="flex-1 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 transition-all">Пачка (CSV)</button>
-            </div>
-            
-            <div id="form-single">
-                <div class="flex bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
-                    <button id="type-noun" class="flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-md bg-white dark:bg-gray-600 shadow-sm dark:text-white transition-all">СУЩЕСТВИТЕЛЬНОЕ</button>
-                    <button id="type-verb" class="flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all">ГЛАГОЛ / ИНОЕ</button>
+            <div class="overflow-y-auto pr-1 -mr-1 pb-1">
+                <div id="modal-tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-3">
+                    <button id="tab-single" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all">Одно слово</button>
+                    <button id="tab-bulk" class="flex-1 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 transition-all">Пачка (CSV)</button>
                 </div>
-                <form id="add-form" class="space-y-2.5">
-                    
-                    <div id="article-selector" class="flex gap-1 w-full mb-1">
-                        <button type="button" id="btn-art-der" onclick="selectArticle('der')" class="flex-1 py-1.5 rounded-lg border-2 border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold transition-all shadow-sm transform scale-[1.02] text-sm">der</button>
-                        <button type="button" id="btn-art-die" onclick="selectArticle('die')" class="flex-1 py-1.5 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-bold transition-all shadow-sm text-sm">die</button>
-                        <button type="button" id="btn-art-das" onclick="selectArticle('das')" class="flex-1 py-1.5 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-bold transition-all shadow-sm text-sm">das</button>
+                
+                <div id="form-single">
+                    <div class="flex bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
+                        <button id="type-noun" class="flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-md bg-white dark:bg-gray-600 shadow-sm dark:text-white transition-all">СУЩЕСТВИТЕЛЬНОЕ</button>
+                        <button id="type-verb" class="flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all">ГЛАГОЛ / ИНОЕ</button>
                     </div>
+                    <form id="add-form" class="space-y-2.5">
+                        
+                        <div id="article-selector" class="flex gap-1 w-full mb-1">
+                            <button type="button" id="btn-art-der" onclick="selectArticle('der')" class="flex-1 py-1.5 rounded-lg border-2 border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold transition-all shadow-sm transform scale-[1.02] text-sm">der</button>
+                            <button type="button" id="btn-art-die" onclick="selectArticle('die')" class="flex-1 py-1.5 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-bold transition-all shadow-sm text-sm">die</button>
+                            <button type="button" id="btn-art-das" onclick="selectArticle('das')" class="flex-1 py-1.5 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-bold transition-all shadow-sm text-sm">das</button>
+                        </div>
 
-                    <div class="flex w-full items-center">
-                        <input type="text" id="word-de" placeholder="Слово (напр. Tisch)..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all text-sm">
-                    </div>
-                    
-                    <div class="flex gap-2 w-full" id="plural-input-group">
-                        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 text-center outline-none font-bold text-gray-400 dark:text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die</div>
-                        <input type="text" id="word-plural" placeholder="Мн. число (Plural)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
-                    </div>
+                        <div class="flex w-full items-center">
+                            <input type="text" id="word-de" placeholder="Слово (напр. Tisch)..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all text-sm">
+                        </div>
+                        
+                        <div class="flex gap-2 w-full" id="plural-input-group">
+                            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 text-center outline-none font-bold text-gray-400 dark:text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die</div>
+                            <input type="text" id="word-plural" placeholder="Мн. число (Plural)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
+                        </div>
 
-                    <div class="flex gap-2 w-full hidden" id="verb-forms-group">
-                        <input type="text" id="word-praeteritum" placeholder="Präteritum (machte)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
-                        <input type="text" id="word-partizip" placeholder="Partizip II (gemacht)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
-                    </div>
+                        <div class="flex gap-2 w-full hidden" id="verb-forms-group">
+                            <input type="text" id="word-praeteritum" placeholder="Präteritum (machte)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
+                            <input type="text" id="word-partizip" placeholder="Partizip II (gemacht)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
+                        </div>
 
-                    <div id="add-umlauts" class="flex justify-center gap-1.5 mt-1 mb-1">
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ä</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ö</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ü</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ß</button>
-                    </div>
-                    <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 dark:text-white transition-all text-sm">
-                    <input type="text" id="word-example" placeholder="Пример (необязательно)..." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none italic text-xs dark:text-gray-300 focus:ring-2 ring-blue-500 transition-all">
-                    
+                        <div id="add-umlauts" class="flex justify-center gap-1.5 mt-1 mb-1">
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ä</button>
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ö</button>
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ü</button>
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ß</button>
+                        </div>
+                        <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 dark:text-white transition-all text-sm">
+                        <input type="text" id="word-example" placeholder="Пример (необязательно)..." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none italic text-xs dark:text-gray-300 focus:ring-2 ring-blue-500 transition-all">
+                        
+                        <div class="flex w-full gap-2">
+                            <div class="flex-[2] min-w-0">
+                                <input type="text" id="word-folder" list="folder-list" placeholder="Курс" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500">
+                            </div>
+                            <div class="flex-[1] min-w-0">
+                                <input type="text" id="word-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500 text-center uppercase">
+                            </div>
+                            <div class="flex-[2] min-w-0">
+                                <input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 mt-1 active:scale-95 transition-all text-sm">Сохранить</button>
+                    </form>
+                </div>
+                
+                <div class="hidden space-y-3" id="form-bulk">
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 text-center mb-2">Добавляет новые слова к текущим.</p>
                     <div class="flex w-full gap-2">
                         <div class="flex-[2] min-w-0">
-                            <input type="text" id="word-folder" list="folder-list" placeholder="Курс" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500">
+                            <input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none font-bold dark:text-white text-xs">
                         </div>
                         <div class="flex-[1] min-w-0">
-                            <input type="text" id="word-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500 text-center uppercase">
+                            <input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 outline-none font-bold dark:text-white text-xs text-center uppercase">
                         </div>
                         <div class="flex-[2] min-w-0">
-                            <input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500">
+                            <input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none font-bold dark:text-white text-xs">
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 mt-1 active:scale-95 transition-all text-sm">Сохранить</button>
-                </form>
-            </div>
-            
-            <div class="hidden space-y-3" id="form-bulk">
-                <p class="text-[10px] text-gray-500 dark:text-gray-400 text-center mb-2">Добавляет новые слова к текущим.</p>
-                <div class="flex w-full gap-2">
-                    <div class="flex-[2] min-w-0">
-                        <input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none font-bold dark:text-white text-xs">
+                    <div class="mt-2 p-5 border-2 border-dashed border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 rounded-xl text-center transition-all group hover:bg-green-50 dark:hover:bg-green-900/20">
+                        <input type="file" id="bulk-file" accept=".csv" class="hidden">
+                        <label for="bulk-file" class="cursor-pointer flex flex-col items-center gap-2">
+                            <svg class="w-6 h-6 text-green-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <span class="text-green-600 dark:text-green-400 font-bold text-xs">Выбрать CSV файл</span>
+                        </label>
                     </div>
-                    <div class="flex-[1] min-w-0">
-                        <input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 outline-none font-bold dark:text-white text-xs text-center uppercase">
-                    </div>
-                    <div class="flex-[2] min-w-0">
-                        <input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none font-bold dark:text-white text-xs">
-                    </div>
+                    <button id="btn-upload-csv" class="w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/40 mt-2 active:scale-95 transition-all text-sm">Загрузить пачку</button>
                 </div>
-                <div class="mt-2 p-5 border-2 border-dashed border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 rounded-xl text-center transition-all group hover:bg-green-50 dark:hover:bg-green-900/20">
-                    <input type="file" id="bulk-file" accept=".csv" class="hidden">
-                    <label for="bulk-file" class="cursor-pointer flex flex-col items-center gap-2">
-                        <svg class="w-6 h-6 text-green-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        <span class="text-green-600 dark:text-green-400 font-bold text-xs">Выбрать CSV файл</span>
-                    </label>
-                </div>
-                <button id="btn-upload-csv" class="w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/40 mt-2 active:scale-95 transition-all text-sm">Загрузить пачку</button>
             </div>
         </div>
     </div>
@@ -294,6 +296,9 @@
         let trainDirection = 'auto'; 
         let currentIsGermanQuestion = false;
         let currentArticle = 'der';
+
+        // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ СОХРАНЕНИЯ СОСТОЯНИЯ ПАПОК
+        let collapsedDictTopics = {};
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
@@ -377,12 +382,9 @@
         };
         document.addEventListener('keydown', handleEnter);
 
-        // ИНТЕЛЛЕКТУАЛЬНОЕ СОХРАНЕНИЕ ВРЕМЕНИ ДЛЯ ГРАФИКОВ
         function saveSessionTime() {
             if (sessionStartMs > 0) {
                 const elapsedMs = Date.now() - sessionStartMs;
-                
-                // Получаем сегодняшнюю дату в формате YYYY-MM-DD локально
                 const tzoffset = (new Date()).getTimezoneOffset() * 60000;
                 const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
                 
@@ -490,7 +492,18 @@
         };
 
         const searchInp = document.getElementById('search-input');
-        searchInp.oninput = () => renderDict(searchInp.value.toLowerCase());
+        searchInp.oninput = () => {
+            // Если ищем текст, разворачиваем все папки принудительно, чтобы было видно результат
+            if (searchInp.value.trim().length > 0) {
+                collapsedDictTopics = {};
+            }
+            renderDict(searchInp.value.toLowerCase());
+        };
+
+        window.toggleTopic = (topicKey) => {
+            collapsedDictTopics[topicKey] = !collapsedDictTopics[topicKey];
+            renderDict(searchInp.value.toLowerCase());
+        };
 
         function renderDict(query = searchInp.value.toLowerCase()) {
             const container = document.getElementById('dict-list');
@@ -516,29 +529,48 @@
 
             let html = '';
             for (const f in grouped) {
-                html += `<h2 class="text-xl font-extrabold mt-5 mb-1 dark:text-white tracking-tight pl-1 border-b border-gray-200 dark:border-gray-800 pb-1">${f}</h2>`;
+                html += `<h2 class="text-xl font-extrabold mt-6 mb-2 dark:text-white tracking-tight pl-1 border-b border-gray-200 dark:border-gray-800 pb-2 flex items-center gap-2"><svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>${f}</h2>`;
+                
                 for (const l in grouped[f]) {
                     for (const s in grouped[f][l]) {
+                        const topicKey = `${f}|${l}|${s}`;
+                        
+                        // Если статус не задан, тема свернута по умолчанию (true)
+                        if (collapsedDictTopics[topicKey] === undefined) {
+                            collapsedDictTopics[topicKey] = true; 
+                        }
+                        
+                        const isCollapsed = collapsedDictTopics[topicKey];
+                        const chevronClass = isCollapsed ? '' : 'rotate-180';
+                        const wordsInTopic = grouped[f][l][s];
+
                         html += `
-                        <div class="flex justify-between items-center mt-3 mb-1.5 px-1">
-                            <div class="flex items-center gap-2 min-w-0">
-                                ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
-                                <h3 class="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest truncate">${s}</h3>
+                        <div class="mb-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-all">
+                            
+                            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-800/80 p-3 pr-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" onclick="toggleTopic('${topicKey.replace(/'/g,"\\'")}')">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
+                                    <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">${s} <span class="text-gray-400 font-normal">(${wordsInTopic.length})</span></h3>
+                                </div>
+                                <div class="flex items-center gap-1 pl-2">
+                                    <button onclick="fastAdd('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ СЛОВО</button>
+                                    <button onclick="deleteFolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all" title="Удалить тему">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex gap-2 items-center flex-shrink-0 ml-2">
-                                <button onclick="fastAdd('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}')" class="text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-md text-[9px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all">+ БЫСТРО</button>
-                                <button onclick="deleteFolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}')" class="text-red-500 bg-red-50 dark:bg-red-900/30 p-1.5 rounded-md hover:scale-105 active:scale-95 transition-all" title="Удалить тему">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </div>
-                        </div>`;
-                        grouped[f][l][s].forEach(w => {
+
+                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800'}">
+                        `;
+                        
+                        wordsInTopic.forEach(w => {
                             let extraInfo = '';
                             if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
                             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
 
                             html += `
-                            <div onclick="openEdit(${w.id})" class="bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-2 flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
+                            <div onclick="openEdit(${w.id})" class="bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800 flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
                                 <div class="flex-1 pr-3 min-w-0">
                                     <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
                                     <p class="text-gray-400 text-xs font-medium mt-0.5 truncate">${w.word_ru}</p>
@@ -553,6 +585,8 @@
                                 </div>
                             </div>`;
                         });
+                        
+                        html += `</div></div>`; // Закрытие темы
                     }
                 }
             }
@@ -575,7 +609,6 @@
         document.getElementById('type-noun').onclick = () => setType('noun');
         document.getElementById('type-verb').onclick = () => setType('verb');
 
-        // ЛОГИКА ЦВЕТА КНОПОК ВКЛАДОК ДОБАВЛЕНИЯ
         const showSingleTab = () => {
             document.getElementById('form-single').classList.remove('hidden'); document.getElementById('form-bulk').classList.add('hidden');
             document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all";
@@ -583,7 +616,6 @@
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
-            // АКЦЕНТНЫЙ ЗЕЛЕНЫЙ ЦВЕТ ДЛЯ ПАЧКИ
             document.getElementById('tab-bulk').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-green-500 shadow-md shadow-green-500/40 text-white transition-all transform scale-[1.02]";
             document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 transition-all";
         };
@@ -658,6 +690,11 @@
             const url = editId ? `${API_URL}/${editId}/full` : API_URL;
             await apiFetch(url, { method: editId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
             modal.classList.add('hidden'); searchInp.value = ''; 
+            
+            // Автоматически разворачиваем папку, в которую добавили слово
+            const newTopicKey = `${payload.folder}|${payload.level || 'Общее'}|${payload.subfolder}`;
+            collapsedDictTopics[newTopicKey] = false;
+
             await fetchWords(); 
             renderDict();
         };
@@ -675,6 +712,11 @@
             try {
                 await apiFetch('/upload_csv', { method: 'POST', body: f }); 
                 modal.classList.add('hidden'); 
+                
+                // Автоматически разворачиваем папку, в которую загрузили пачку
+                const newTopicKey = `${folder}|${level || 'Общее'}|${subfolder}`;
+                collapsedDictTopics[newTopicKey] = false;
+
                 await fetchWords(); 
                 renderDict();
             } catch(e) { alert("Ошибка загрузки!"); }
@@ -760,7 +802,27 @@
             const masteredTopicsHTML = [];
 
             for (const folder in groupedTopics) {
-                let folderActiveHTML = `<h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder}</h3>`;
+                
+                // --- НОВАЯ ФИЧА: ТРЕНИРОВКА ЦЕЛЫМ КУРСОМ ---
+                const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
+                const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review)).length;
+                const cWaitingCount = courseWords.filter(w => w.score === 5 && Date.now() < w.next_review).length;
+                
+                let folderActiveHTML = '';
+                if (cWordsCount > 0) {
+                    folderActiveHTML += `
+                        <button onclick="startTraining('course|${folder.replace(/'/g,"\\'")}')" class="w-full text-left bg-gradient-to-r from-teal-500 to-emerald-500 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-sm text-white mb-2 mt-5 flex justify-between items-center group">
+                            <div>
+                                <h3 class="text-base font-bold">🎓 Весь курс: ${folder}</h3>
+                                <p class="text-[10px] font-medium opacity-80 mt-0.5">Доступно слов: ${cWordsCount} ${cWaitingCount>0?`| Ждут 24ч: ${cWaitingCount}`:''}</p>
+                            </div>
+                            <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+                        </button>
+                    `;
+                } else {
+                    folderActiveHTML += `<h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder}</h3>`;
+                }
+
                 let folderMasteredHTML = `<h3 class="text-[10px] font-black text-gray-400/50 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder} (Архив)</h3>`;
                 
                 let hasActive = false;
@@ -777,29 +839,29 @@
                     if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
                         hasMastered = true;
                         folderMasteredHTML += `
-                            <button onclick="startTraining('${t}', true)" class="w-full text-left bg-gray-50 dark:bg-gray-800/40 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-none border border-gray-100 dark:border-gray-800 flex justify-between items-center mb-1.5 opacity-60 grayscale">
+                            <button onclick="startTraining('${t}', true)" class="w-full text-left bg-gray-50 dark:bg-gray-800/40 hover:scale-[0.98] transition-all p-3 rounded-xl shadow-none border border-gray-100 dark:border-gray-800 flex justify-between items-center mb-1.5 opacity-60 grayscale">
                                 <div>
                                     <div class="flex items-center gap-2 mb-0.5">
                                         <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-gray-200 text-gray-500">ВЫУЧЕНО</span>
-                                        <h3 class="text-base font-bold dark:text-gray-400 line-through">${s}</h3>
+                                        <h3 class="text-sm font-bold dark:text-gray-400 line-through">${s}</h3>
                                     </div>
                                     <p class="text-[10px] text-gray-400 font-medium">В архиве: ${archivedCount}</p>
                                 </div>
-                                <div class="bg-gray-200 dark:bg-gray-700 w-7 h-7 rounded-full flex items-center justify-center text-green-500">✓</div>
+                                <div class="bg-gray-200 dark:bg-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-green-500">✓</div>
                             </button>
                         `;
                     } else {
                         hasActive = true;
                         folderActiveHTML += `
-                            <button onclick="startTraining('${t}')" class="w-full text-left bg-white dark:bg-gray-800 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center mb-1.5">
+                            <button onclick="startTraining('${t}')" class="w-full text-left bg-white dark:bg-gray-800 hover:scale-[0.98] transition-all p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center mb-1.5 ml-2 w-[calc(100%-8px)]">
                                 <div>
                                     <div class="flex items-center gap-2 mb-0.5">
                                         ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${getLevelColor(l)}">${l}</span>` : ''}
-                                        <h3 class="text-base font-bold dark:text-white">${s}</h3>
+                                        <h3 class="text-sm font-bold dark:text-white">${s}</h3>
                                     </div>
-                                    <p class="text-[10px] text-gray-400 font-medium">Учить: ${wordsCount} <span class="opacity-50">${waitingCount>0?`| Ждут 24ч: ${waitingCount}`:''}</span></p>
+                                    <p class="text-[10px] text-gray-400 font-medium">Слов: ${wordsCount} <span class="opacity-50">${waitingCount>0?`| Ждут: ${waitingCount}`:''}</span></p>
                                 </div>
-                                <div class="bg-gray-50 dark:bg-gray-700 w-7 h-7 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-300"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                                <div class="bg-gray-50 dark:bg-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-300"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                             </button>
                         `;
                     }
@@ -820,6 +882,11 @@
 
             if (sel === 'all') { trainList = availableWords; } 
             else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 4); }
+            else if (sel.startsWith('course|')) {
+                // ТРЕНИРОВКА ЦЕЛЫМ КУРСОМ
+                const courseName = sel.split('|')[1];
+                trainList = availableWords.filter(w => (w.folder || 'Без курса') === courseName);
+            }
             else if (sel === 'mastered' || forceArchive) { 
                 if (forceArchive) {
                     const [f, l, s] = sel.split('|');
@@ -1150,62 +1217,53 @@
             }
         };
 
-        // --- ЛОГИКА ГРАФИКОВ И СТАТИСТИКИ ---
+        document.getElementById('btn-trigger-restore').onclick = () => document.getElementById('file-restore').click();
+        
+        document.getElementById('file-restore').onchange = async function() {
+            if(!this.files[0]) return;
+            if(!confirm("⚠️ ВНИМАНИЕ! Это действие полностью удалит текущие слова и заменит их данными из бэкапа. Вы уверены?")) {
+                this.value = '';
+                return;
+            }
+            
+            const f = new FormData();
+            f.append('file', this.files[0]);
+            
+            const btn = document.getElementById('btn-trigger-restore');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Восстановление...';
+            btn.disabled = true;
+            
+            try {
+                const res = await apiFetch('/restore_backup', { method: 'POST', body: f });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    document.getElementById('backup-modal').classList.add('hidden');
+                    alert(`✅ База успешно восстановлена! Загружено слов: ${result.restored}`);
+                    await fetchWords();
+                    loadStats();
+                } else {
+                    alert("Ошибка сервера при восстановлении!");
+                }
+            } catch(e) { alert("Ошибка при восстановлении базы! Проверьте файл бэкапа."); }
+            finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                this.value = '';
+            }
+        };
+
+        window.resetFolderStats = async (f, l, s) => {
+            if(confirm(`Обнулить прогресс для темы "${s}"?`)){
+                await apiFetch('/words/reset_folder', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder:f, level:l, subfolder:s})});
+                await fetchWords(); 
+                loadStats();
+            }
+        };
+
         function loadStats() {
             const stats = document.getElementById('view-stats');
-            const total = globalWords.length; 
-            const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
-            
-            // Получение истории тренировок
-            const history = JSON.parse(localStorage.getItem('studyHistory')) || {};
-            
-            // Расчет стрика (дней подряд)
-            const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-            let currentTempDate = new Date(Date.now() - tzoffset);
-            let streak = 0;
-            let checkDateStr = currentTempDate.toISOString().slice(0, 10);
-            
-            // Если сегодня еще не занимался, проверяем со вчерашнего дня
-            if (!history[checkDateStr] || history[checkDateStr] < 60000) {
-                currentTempDate.setDate(currentTempDate.getDate() - 1);
-                checkDateStr = currentTempDate.toISOString().slice(0, 10);
-            }
-
-            while (history[checkDateStr] && history[checkDateStr] >= 60000) { // Минимум 1 минута для засчитывания дня
-                streak++;
-                currentTempDate.setDate(currentTempDate.getDate() - 1);
-                checkDateStr = currentTempDate.toISOString().slice(0, 10);
-            }
-
-            // Подготовка данных для графика за последние 7 дней
-            const chartData = [];
-            let maxMinutes = 0;
-            for(let i=6; i>=0; i--) {
-                const d = new Date(Date.now() - tzoffset);
-                d.setDate(d.getDate() - i);
-                const ds = d.toISOString().slice(0, 10);
-                const dayName = d.toLocaleDateString('ru-RU', {weekday: 'short'}).toUpperCase();
-                const ms = history[ds] || 0;
-                const mins = Math.floor(ms / 60000);
-                if (mins > maxMinutes) maxMinutes = mins;
-                chartData.push({ day: dayName, mins: mins });
-            }
-            
-            const chartScale = Math.max(maxMinutes, DAILY_GOAL_MINUTES); // Чтобы столбцы не вылетали за потолок
-
-            let chartHTML = chartData.map(item => {
-                const heightPct = Math.min(100, (item.mins / chartScale) * 100);
-                const isGoalMet = item.mins >= DAILY_GOAL_MINUTES;
-                const barColor = isGoalMet ? 'bg-green-400' : 'bg-blue-400';
-                return `
-                <div class="flex flex-col items-center gap-1 flex-1">
-                    <div class="w-full h-24 bg-white/10 rounded-md relative flex items-end overflow-hidden">
-                        <div class="w-full rounded-md transition-all duration-1000 ${barColor}" style="height: ${heightPct}%"></div>
-                    </div>
-                    <span class="text-[9px] font-black opacity-60">${item.day}</span>
-                </div>`;
-            }).join('');
-
+            const total = globalWords.length; const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
             const folders = {};
             globalWords.forEach(w => { 
                 const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
@@ -1213,34 +1271,29 @@
                 folders[k].total++; if(w.score>=MAX_SCORE) folders[k].done++; 
             });
 
+            const today = new Date().toDateString();
+            let dailyStats = JSON.parse(localStorage.getItem('dailyStudy')) || { date: today, ms: 0 };
+            if (dailyStats.date !== today) dailyStats = { date: today, ms: 0 };
+            
+            const minutesToday = Math.floor(dailyStats.ms / 60000);
+            const timeProgressPct = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
+
             stats.innerHTML = `
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div class="bg-gradient-to-br from-orange-400 to-red-500 p-4 rounded-3xl text-white shadow-lg shadow-orange-500/30 flex flex-col justify-center relative overflow-hidden">
-                        <svg class="absolute -right-4 -bottom-4 w-24 h-24 opacity-20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"></path></svg>
-                        <p class="text-[10px] font-black opacity-80 uppercase tracking-widest relative z-10">В ударе</p>
-                        <div class="flex items-end gap-1 mt-1 relative z-10">
-                            <h2 class="text-3xl font-black tracking-tighter">${streak}</h2>
-                            <span class="text-xs font-bold opacity-80 mb-1">дней</span>
-                        </div>
+                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-3xl text-white shadow-xl shadow-purple-500/30">
+                    <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Цель на сегодня</p>
+                    <div class="flex items-end gap-2 mt-0.5">
+                        <h2 class="text-4xl font-black tracking-tighter">${minutesToday}</h2>
+                        <span class="text-sm font-bold opacity-80 mb-1">/ ${DAILY_GOAL_MINUTES} мин</span>
                     </div>
-                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-3xl text-white shadow-lg shadow-blue-500/30 flex flex-col justify-center">
-                        <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Mastery</p>
-                        <div class="flex items-end gap-1 mt-1">
-                            <h2 class="text-3xl font-black tracking-tighter">${mastered}</h2>
-                            <span class="text-xs font-bold opacity-80 mb-1">слов</span>
-                        </div>
-                        <p class="text-[10px] opacity-80 mt-1">Это ${Math.round((mastered/total||0)*100)}% от базы</p>
+                    <div class="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mt-3 relative">
+                        <div class="bg-white h-full transition-all duration-1000" style="width: ${timeProgressPct}%"></div>
                     </div>
                 </div>
 
-                <div class="bg-gray-800 p-5 rounded-3xl text-white shadow-xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Активность (7 дней)</p>
-                        <p class="text-[10px] font-bold text-blue-400 bg-blue-900/30 px-2 py-1 rounded-md">Цель: ${DAILY_GOAL_MINUTES} мин</p>
-                    </div>
-                    <div class="flex gap-2 justify-between items-end h-32">
-                        ${chartHTML}
-                    </div>
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-5 rounded-3xl text-white shadow-xl shadow-blue-500/30">
+                    <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Уровень Mastery</p>
+                    <h2 class="text-4xl font-black mt-0.5 tracking-tighter">${Math.round((mastered/total||0)*100)}%</h2>
+                    <p class="mt-2 text-xs font-medium">Закреплено ${mastered} из ${total} слов.</p>
                 </div>
                 
                 <h3 class="font-bold text-base mt-6 mb-1 dark:text-white px-1">Темы</h3>
