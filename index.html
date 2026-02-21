@@ -9,6 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } } };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
@@ -25,6 +26,8 @@
         .dark .glass { background: rgba(17, 24, 39, 0.85); border-color: rgba(255,255,255,0.05); }
         .active-tab { color: #3b82f6; transform: translateY(-2px); }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
+        /* Класс для эффекта при перетаскивании */
+        .sortable-ghost { opacity: 0.4; }
     </style>
 </head>
 <body class="bg-[#f2f2f7] dark:bg-[#11151c] text-gray-900 dark:text-white transition-colors duration-300 min-h-screen flex flex-col overflow-hidden">
@@ -517,6 +520,7 @@
             renderDict(searchInp.value.toLowerCase());
         };
 
+        // --- ОБНОВЛЕННЫЙ РЕНДЕР СЛОВАРЯ ДЛЯ ПОДДЕРЖКИ ПЕРЕТАСКИВАНИЯ ---
         function renderDict(query = searchInp.value.toLowerCase()) {
             const container = document.getElementById('dict-list');
             
@@ -539,88 +543,171 @@
                 grouped[f][l][s].push(w); 
             });
 
-            let html = '';
-            for (const f in grouped) {
-                // НОВАЯ ШАПКА КУРСА С КНОПКАМИ
+            // Достаем сохраненный порядок из localStorage
+            let savedFolderOrder = JSON.parse(localStorage.getItem('folderOrder')) || [];
+            let savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {};
+
+            // Сортируем курсы по пользовательскому порядку
+            const folderNames = Object.keys(grouped).sort((a, b) => {
+                let idxA = savedFolderOrder.indexOf(a);
+                let idxB = savedFolderOrder.indexOf(b);
+                if (idxA === -1) idxA = 9999; // Если новый курс - в конец
+                if (idxB === -1) idxB = 9999;
+                return idxA - idxB;
+            });
+
+            let html = '<div id="dict-folders-container">';
+            
+            folderNames.forEach(f => {
                 html += `
-                <div class="flex justify-between items-center mt-6 mb-2 border-b border-gray-200 dark:border-[#252b36] pb-2 pl-1">
-                    <h2 class="text-xl font-extrabold dark:text-white tracking-tight flex items-center gap-2 flex-1 min-w-0">
-                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                        <span class="truncate">${f}</span>
-                    </h2>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <button onclick="renameFolder('${f.replace(/'/g,"\\'")}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать курс">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        </button>
-                        <button onclick="fastAddCourse('${f.replace(/'/g,"\\'")}')" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ В КУРС</button>
+                <div class="dict-folder mb-6" data-folder="${f.replace(/"/g, '&quot;')}">
+                    <div class="flex justify-between items-center mb-2 border-b border-gray-200 dark:border-[#252b36] pb-2 pl-1">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <div class="cursor-move drag-handle-folder text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                            </div>
+                            <h2 class="text-xl font-extrabold dark:text-white tracking-tight flex items-center gap-2 truncate">
+                                <span class="truncate">${f}</span>
+                            </h2>
+                        </div>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            <button onclick="renameFolder('${f.replace(/'/g,"\\'")}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать курс">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            <button onclick="fastAddCourse('${f.replace(/'/g,"\\'")}')" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ В КУРС</button>
+                        </div>
                     </div>
-                </div>`;
+                    <div class="dict-topics-container space-y-2" data-folder="${f.replace(/"/g, '&quot;')}">
+                `;
                 
+                let topics = [];
                 for (const l in grouped[f]) {
                     for (const s in grouped[f][l]) {
-                        const topicKey = `${f}|${l}|${s}`;
-                        
-                        if (collapsedDictTopics[topicKey] === undefined) {
-                            collapsedDictTopics[topicKey] = true; 
-                        }
-                        
-                        const isCollapsed = collapsedDictTopics[topicKey];
-                        const chevronClass = isCollapsed ? '' : 'rotate-180';
-                        const wordsInTopic = grouped[f][l][s];
+                        topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` });
+                    }
+                }
 
-                        html += `
-                        <div class="mb-2 bg-white dark:bg-[#1a202a] rounded-2xl shadow-sm border border-gray-100 dark:border-transparent overflow-hidden transition-all">
-                            
-                            <div class="flex justify-between items-center bg-gray-50 dark:bg-[#1f2530] p-3 pr-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#252b36] transition-colors" onclick="toggleTopic('${topicKey.replace(/'/g,"\\'")}')">
-                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                // Сортируем темы внутри курса
+                topics.sort((a, b) => {
+                    let orderArr = savedTopicOrder[f] || [];
+                    let idxA = orderArr.indexOf(a.key);
+                    let idxB = orderArr.indexOf(b.key);
+                    if (idxA === -1) idxA = 9999;
+                    if (idxB === -1) idxB = 9999;
+                    return idxA - idxB;
+                });
+
+                topics.forEach(t => {
+                    const l = t.l;
+                    const s = t.s;
+                    const wordsInTopic = t.words;
+                    const topicKey = t.key;
+                    
+                    if (collapsedDictTopics[topicKey] === undefined) {
+                        collapsedDictTopics[topicKey] = true; 
+                    }
+                    
+                    const isCollapsed = collapsedDictTopics[topicKey];
+                    const chevronClass = isCollapsed ? '' : 'rotate-180';
+
+                    html += `
+                    <div class="dict-topic bg-white dark:bg-[#1a202a] rounded-2xl shadow-sm border border-gray-100 dark:border-transparent overflow-hidden transition-all" data-topic="${topicKey.replace(/"/g, '&quot;')}">
+                        
+                        <div class="flex justify-between items-center bg-gray-50 dark:bg-[#1f2530] p-3 pr-2 transition-colors">
+                            <div class="flex items-center gap-2 min-w-0 flex-1">
+                                <div class="cursor-move drag-handle-topic text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                                </div>
+                                <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${topicKey.replace(/'/g,"\\'")}')">
                                     <svg class="w-4 h-4 text-gray-400 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
                                     <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">${s} <span class="text-gray-400 font-normal">(${wordsInTopic.length})</span></h3>
                                 </div>
-                                <div class="flex items-center gap-1 pl-2">
-                                    <button onclick="renameSubfolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="p-1.5 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать тему">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                    </button>
-                                    <button onclick="fastAdd('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ СЛОВО</button>
-                                    <button onclick="deleteFolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all" title="Удалить тему">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
                             </div>
+                            <div class="flex items-center gap-1 pl-2">
+                                <button onclick="renameSubfolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="p-1.5 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать тему">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </button>
+                                <button onclick="fastAdd('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ СЛОВО</button>
+                                <button onclick="deleteFolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all" title="Удалить тему">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </div>
 
-                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-white dark:bg-[#1a202a] border-t border-gray-100 dark:border-[#252b36]'}">
-                        `;
-                        
-                        wordsInTopic.forEach(w => {
-                            let extraInfo = '';
-                            if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
-                            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
+                        <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-white dark:bg-[#1a202a] border-t border-gray-100 dark:border-[#252b36]'}">
+                    `;
+                    
+                    wordsInTopic.forEach(w => {
+                        let extraInfo = '';
+                        if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
+                        else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
 
-                            html += `
-                            <div onclick="openEdit(${w.id})" class="bg-white dark:bg-[#252b36] p-3 rounded-xl border border-gray-100 dark:border-transparent flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
-                                <div class="flex-1 pr-3 min-w-0">
-                                    <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
-                                    <p class="text-gray-400 text-xs font-medium mt-0.5 truncate">${w.word_ru}</p>
-                                    ${w.example ? `<p class="text-[11px] text-blue-500/80 dark:text-blue-400 mt-1 italic font-medium leading-tight truncate">"${w.example}"</p>` : ''}
+                        html += `
+                        <div onclick="openEdit(${w.id})" class="bg-white dark:bg-[#252b36] p-3 rounded-xl border border-gray-100 dark:border-transparent flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
+                            <div class="flex-1 pr-3 min-w-0">
+                                <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
+                                <p class="text-gray-400 text-xs font-medium mt-0.5 truncate">${w.word_ru}</p>
+                                ${w.example ? `<p class="text-[11px] text-blue-500/80 dark:text-blue-400 mt-1 italic font-medium leading-tight truncate">"${w.example}"</p>` : ''}
+                            </div>
+                            <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                                <div class="flex gap-1 mb-1">
+                                    <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+w.word_de}', event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
+                                    <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-red-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                 </div>
-                                <div class="flex flex-col items-end gap-1 flex-shrink-0">
-                                    <div class="flex gap-1 mb-1">
-                                        <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+w.word_de}', event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
-                                        <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-red-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                    </div>
-                                    <span class="text-[9px] font-black ${w.score>=MAX_SCORE?'text-das':(w.score>=4?'text-orange-500':'text-gray-300')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
-                                </div>
-                            </div>`;
-                        });
-                        
-                        html += `</div></div>`;
-                    }
-                }
+                                <span class="text-[9px] font-black ${w.score>=MAX_SCORE?'text-das':(w.score>=4?'text-orange-500':'text-gray-300')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    html += `</div></div>`;
+                });
+                html += `</div></div>`; // Закрытие курса
             }
+            html += '</div>'; // Закрытие главного контейнера
+            
             container.innerHTML = html || `<div class="text-center py-10"><p class="text-gray-400 font-bold text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все слова выучены 🎉'}</p></div>`;
+
+            // Запускаем инициализацию перетаскивания
+            setTimeout(initSortable, 50);
         }
 
-        // НОВЫЕ ФУНКЦИИ ДЛЯ ПЕРЕИМЕНОВАНИЯ ПАПОК И ТЕМ
+        // --- ИНИЦИАЛИЗАЦИЯ ПЕРЕТАСКИВАНИЯ (SortableJS) ---
+        function initSortable() {
+            if (typeof Sortable === 'undefined') return;
+            
+            // Перетаскивание папок (курсов)
+            const folderContainer = document.getElementById('dict-folders-container');
+            if (folderContainer) {
+                new Sortable(folderContainer, {
+                    handle: '.drag-handle-folder',
+                    animation: 250,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function () {
+                        const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.dataset.folder);
+                        localStorage.setItem('folderOrder', JSON.stringify(order));
+                    }
+                });
+            }
+
+            // Перетаскивание тем внутри курсов
+            document.querySelectorAll('.dict-topics-container').forEach(topicContainer => {
+                new Sortable(topicContainer, {
+                    handle: '.drag-handle-topic',
+                    animation: 250,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function (evt) {
+                        const f = evt.item.closest('.dict-folder').dataset.folder;
+                        const order = Array.from(topicContainer.querySelectorAll('.dict-topic')).map(el => el.dataset.topic);
+                        
+                        let savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {};
+                        savedTopicOrder[f] = order;
+                        localStorage.setItem('topicOrder', JSON.stringify(savedTopicOrder));
+                    }
+                });
+            });
+        }
+
         window.renameFolder = async (oldFolder) => {
             const newFolder = prompt(`Введите новое название для курса "${oldFolder}":`, oldFolder);
             if (newFolder && newFolder.trim() !== '' && newFolder.trim() !== oldFolder) {
@@ -697,7 +784,6 @@
             editId = null; document.getElementById('modal-title').innerText = "Новое слово"; 
             document.getElementById('add-form').reset(); 
             
-            // Очищаем форму CSV
             document.getElementById('bulk-folder').value = ''; 
             document.getElementById('bulk-level').value = ''; 
             document.getElementById('bulk-subfolder').value = ''; 
@@ -742,14 +828,12 @@
             modal.classList.remove('hidden'); setTimeout(() => document.getElementById('word-de').focus(), 150);
         };
 
-        // НОВАЯ ФУНКЦИЯ ДЛЯ ДОБАВЛЕНИЯ ПРЯМО В КУРС
         window.fastAddCourse = (folder) => {
             editId = null; 
             document.getElementById('modal-title').innerText = "Новая тема / слова";
             document.getElementById('add-form').reset(); 
             setType('noun'); showSingleTab(); selectArticle('der');
             
-            // Заполняем только курс, остальное пустое, чтобы ты вписал тему
             document.getElementById('word-folder').value = folder; 
             document.getElementById('word-level').value = ''; 
             document.getElementById('word-subfolder').value = ''; 
