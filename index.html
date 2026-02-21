@@ -12,6 +12,13 @@
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } } };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+        
+        // Фича 1: Инициализация PWA (Офлайн режим)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => console.log('SW не найден, но готов к работе'));
+            });
+        }
     </script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; height: 100dvh; }
@@ -38,13 +45,13 @@
         </div>
     </header>
 
-    <main id="main-scroll" class="pt-20 pb-24 max-w-2xl mx-auto px-3 w-full overflow-y-auto">
+    <main id="main-scroll" class="pt-28 pb-24 max-w-2xl mx-auto px-3 w-full overflow-y-auto">
         
-        <section id="view-dict" class="pt-2 pb-6">
-            <div class="mb-4">
+        <section id="view-dict" class="pt-4 pb-6">
+            <div class="mb-5 mt-2">
                 <div class="relative group">
-                    <input type="text" id="search-input" placeholder="Поиск (нем / рус)..." autocomplete="off" class="w-full bg-white dark:bg-gray-900 border-none rounded-xl py-2.5 pl-9 shadow-sm outline-none focus:ring-2 ring-blue-500 transition-all dark:text-white text-sm">
-                    <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="search-input" placeholder="Поиск (нем / рус)..." autocomplete="off" class="w-full bg-white dark:bg-gray-900 border-none rounded-xl py-3 pl-10 shadow-sm outline-none focus:ring-2 ring-blue-500 transition-all dark:text-white text-sm">
+                    <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
             
@@ -399,6 +406,9 @@
         const views = { dict: document.getElementById('view-dict'), train: document.getElementById('view-train'), stats: document.getElementById('view-stats') };
         const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), stats: document.getElementById('nav-stats') };
 
+        // Фича 2: Проверка на доступность интервального повторения
+        const isWordDue = (w) => Date.now() >= (w.next_review || 0);
+
         async function fetchWords() {
             try {
                 const res = await apiFetch(API_URL); 
@@ -746,16 +756,16 @@
             const container = document.getElementById('train-topics-container');
             container.innerHTML = '';
             
-            const newWordsCount = globalWords.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review)).length;
+            const newWordsCount = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
             const masteredCount = globalWords.filter(w => w.score >= MAX_SCORE).length;
-            const waitingCount = globalWords.filter(w => w.score === 5 && Date.now() < w.next_review).length;
-            const weakWordsCount = globalWords.filter(w => w.score < 4).length;
+            const waitingCount = globalWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
+            const weakWordsCount = globalWords.filter(w => w.score < 4 && isWordDue(w)).length;
 
             let html = `
                 <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-blue-500 to-blue-600 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-blue-500/30 flex justify-between items-center group mb-2">
                     <div>
-                        <h3 class="text-white text-lg font-bold">📚 Новые и в процессе</h3>
-                        <p class="text-blue-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Учить: ${newWordsCount} ${waitingCount>0?`| Ждут 24ч: ${waitingCount}`:''}</p>
+                        <h3 class="text-white text-lg font-bold">📚 Доступно для изучения</h3>
+                        <p class="text-blue-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Слов: ${newWordsCount} ${waitingCount>0?`| Ждут повторения: ${waitingCount}`:''}</p>
                     </div>
                     <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                 </button>
@@ -765,7 +775,7 @@
                 html += `
                     <button onclick="startTraining('weak')" class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-orange-500/30 flex justify-between items-center group mb-2">
                         <div>
-                            <h3 class="text-white text-lg font-bold">⚠️ Level 1 (Узнавание)</h3>
+                            <h3 class="text-white text-lg font-bold">⚠️ Level 1 (Слабые места)</h3>
                             <p class="text-orange-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Флеш-карточки (${weakWordsCount})</p>
                         </div>
                         <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
@@ -799,8 +809,8 @@
             for (const folder in groupedTopics) {
                 
                 const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
-                const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review)).length;
-                const cWaitingCount = courseWords.filter(w => w.score === 5 && Date.now() < w.next_review).length;
+                const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
+                const cWaitingCount = courseWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
                 
                 let folderActiveHTML = '';
                 if (cWordsCount > 0) {
@@ -808,7 +818,7 @@
                         <button onclick="startTraining('course|${folder.replace(/'/g,"\\'")}')" class="w-full text-left bg-gradient-to-r from-teal-500 to-emerald-500 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-sm text-white mb-2 mt-5 flex justify-between items-center group">
                             <div>
                                 <h3 class="text-base font-bold">🎓 Весь курс: ${folder}</h3>
-                                <p class="text-[10px] font-medium opacity-80 mt-0.5">Доступно слов: ${cWordsCount} ${cWaitingCount>0?`| Ждут 24ч: ${cWaitingCount}`:''}</p>
+                                <p class="text-[10px] font-medium opacity-80 mt-0.5">Доступно: ${cWordsCount} ${cWaitingCount>0?`| Ждут интервала: ${cWaitingCount}`:''}</p>
                             </div>
                             <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
                         </button>
@@ -826,8 +836,8 @@
                     const [f, l, s] = t.split('|');
                     const allInTopic = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
                     
-                    const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review)).length;
-                    const waitingCount = allInTopic.filter(w => w.score === 5 && Date.now() < w.next_review).length;
+                    const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
+                    const waitingCount = allInTopic.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
                     const archivedCount = allInTopic.filter(w => w.score >= MAX_SCORE).length;
                     
                     if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
@@ -872,7 +882,7 @@
         }
 
         window.startTraining = (sel, forceArchive = false) => {
-            let availableWords = globalWords.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review));
+            let availableWords = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w));
 
             if (sel === 'all') { trainList = availableWords; } 
             else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 4); }
@@ -894,7 +904,7 @@
             }
             
             if (!trainList.length) {
-                if (sel !== 'mastered' && !forceArchive) return alert('🎉 На сегодня новые слова закончились! (Некоторые ждут 24 часа для проверки)');
+                if (sel !== 'mastered' && !forceArchive) return alert('🎉 На сегодня доступные слова закончились! (Остальные слова находятся в режиме ожидания интервального повторения)');
                 return alert('Архив пуст.');
             }
             
@@ -939,7 +949,10 @@
             document.getElementById('btn-show-answer').classList.add('hidden');
             document.getElementById('manual-feedback').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
-            if(exQ) exQ.classList.add('hidden');
+            if(exQ) {
+                exQ.classList.add('hidden');
+                exQ.className = "text-[11px] text-gray-400 italic mb-5 hidden px-2 leading-relaxed"; // Сброс стилей
+            }
 
             const manArt = document.getElementById('manual-article'); 
             const manMain = document.getElementById('manual-main'); 
@@ -990,9 +1003,9 @@
                     btnMic.classList.remove('text-gray-400');
                 };
 
+                // ... [Код микрофона без изменений] ...
                 recognition.onresult = (event) => {
                     let transcript = event.results[0][0].transcript.replace(/[.,!?]$/, '').trim();
-                    
                     if (!currentIsGermanQuestion && w.word_type === 'noun') {
                         const parts = transcript.split(' ');
                         const art = parts[0].toLowerCase();
@@ -1006,14 +1019,11 @@
                         manMain.value = transcript;
                     }
                 };
-
                 recognition.onend = () => {
                     btnMic.classList.remove('text-red-500', 'animate-pulse');
                     btnMic.classList.add('text-gray-400');
                 };
-
-                recognition.onerror = (event) => {
-                    console.error("Ошибка микрофона:", event.error);
+                recognition.onerror = () => {
                     btnMic.classList.remove('text-red-500', 'animate-pulse');
                     btnMic.classList.add('text-gray-400');
                 };
@@ -1049,15 +1059,20 @@
                 document.getElementById('btn-show-answer').classList.remove('hidden');
 
             } else if (state === 'L2') {
-                if(badge) { badge.innerText = `LEVEL 2: ПИСЬМО (${w.score === 4 ? '1/2' : 'ФИНАЛ'})`; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"; }
-                if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
+                if(badge) { badge.innerText = `LEVEL 2: ПИСЬМО (ХАРДКОР)`; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"; }
                 
-                if(!currentIsGermanQuestion && w.example && exQ) { 
+                // Фича 3: Хардкорный режим - генерация Lückentext для прокачки контекста
+                if (!currentIsGermanQuestion && w.example && exQ) {
+                    if (qEl) qEl.innerText = "Вспомни слово по контексту:";
                     try {
                         const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         exQ.innerHTML = w.example.replace(new RegExp(safeWord, 'ig'), '_____'); 
                     } catch(e) { exQ.innerHTML = w.example; }
-                    exQ.classList.remove('hidden'); 
+                    exQ.classList.remove('hidden');
+                    // Делаем пример жирным и заметным
+                    exQ.className = "text-sm text-gray-800 dark:text-gray-200 font-bold mb-5 px-3 py-4 leading-relaxed bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 w-full"; 
+                } else {
+                    if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
                 }
                 
                 document.getElementById('train-manual-block').classList.remove('hidden');
@@ -1097,7 +1112,19 @@
             }
         }
 
-        async function updateScore(newScore, nextReviewMs) {
+        async function updateScore(newScore, isCorrect) {
+            let nextReviewMs = 0;
+            // Логика интервального повторения
+            if (isCorrect) {
+                const now = Date.now();
+                if (newScore <= 1) nextReviewMs = now + 12 * 3600000; // 12 часов
+                else if (newScore === 2) nextReviewMs = now + 86400000; // 1 день
+                else if (newScore === 3) nextReviewMs = now + 3 * 86400000; // 3 дня
+                else if (newScore === 4) nextReviewMs = now + 7 * 86400000; // 7 дней
+                else if (newScore === 5) nextReviewMs = now + 14 * 86400000; // 14 дней
+                else nextReviewMs = now + 30 * 86400000; // 30 дней в архиве
+            }
+            
             await apiFetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})});
             const gwItem = globalWords.find(gw => gw.id === trainList[curIdx].id);
             if(gwItem) { gwItem.score = newScore; gwItem.next_review = nextReviewMs; }
@@ -1117,11 +1144,10 @@
             }
         };
         
-        document.getElementById('btn-forgot').onclick = () => updateScore(0, 0); 
+        document.getElementById('btn-forgot').onclick = () => updateScore(0, false); 
         document.getElementById('btn-remembered').onclick = () => {
             const w = trainList[curIdx];
-            if (w.score < 4) updateScore(w.score + 1, 0);
-            else updateScore(w.score, 0); 
+            updateScore(Math.min(w.score + 1, MAX_SCORE), true); 
         };
         
         document.getElementById('btn-check-manual').onclick = () => {
@@ -1193,20 +1219,13 @@
                 feedback.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900/40', 'dark:text-green-400');
                 feedback.innerText = "🎉 Отлично!";
                 feedback.classList.remove('hidden');
-                
-                if (w.score === 4) {
-                    setTimeout(() => updateScore(5, Date.now() + (24 * 60 * 60 * 1000)), 1000); 
-                } else if (w.score === 5) {
-                    setTimeout(() => updateScore(6, 0), 1000); 
-                } else {
-                    setTimeout(() => updateScore(w.score + 1, 0), 1000);
-                }
+                setTimeout(() => updateScore(Math.min(w.score + 1, MAX_SCORE), true), 1000);
 
             } else {
                 feedback.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900/40', 'dark:text-red-400');
                 feedback.innerText = `❌ Ошибка! Правильно: ${correctAnswer}`;
                 feedback.classList.remove('hidden');
-                setTimeout(() => updateScore(0, 0), 2500);
+                setTimeout(() => updateScore(0, false), 2500);
             }
         };
 
