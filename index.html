@@ -100,7 +100,7 @@
                         <div class="relative w-full flex justify-center items-center min-h-[40px] px-10">
                             <p id="train-de-word" class="text-lg sm:text-xl font-bold dark:text-white leading-tight tracking-tight m-0 text-center"></p>
                             <div class="absolute right-0 top-1/2 -translate-y-1/2">
-                                <button id="btn-speak-answer" class="bg-blue-50 dark:bg-blue-900/30 w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:scale-110 transition-transform shadow-sm text-base">🔊</button>
+                                <button id="btn-speak-answer" class="hidden bg-blue-50 dark:bg-blue-900/30 w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:scale-110 transition-transform shadow-sm text-base">🔊</button>
                             </div>
                         </div>
                         <p id="train-de-plural" class="text-[11px] font-bold text-gray-500 mt-1 hidden"></p>
@@ -861,6 +861,7 @@
             const btnCheck = document.getElementById('btn-check-manual');
             const umlautBar = document.getElementById('train-umlauts');
             const btnSpeakQ = document.getElementById('btn-speak-question');
+            const btnSpeakAns = document.getElementById('btn-speak-answer');
             const btnMic = document.getElementById('btn-mic');
 
             if(manArt) manArt.disabled = false;
@@ -878,6 +879,15 @@
                 currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
             } 
 
+            // ИСПРАВЛЕННАЯ ЛОГИКА ДИНАМИКА (ТОЛЬКО НА НЕМЕЦКОМ)
+            if (currentIsGermanQuestion) {
+                if(btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
+                if(btnSpeakAns) btnSpeakAns.classList.add('hidden');
+            } else {
+                if(btnSpeakQ) btnSpeakQ.classList.add('hidden');
+                if(btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
+            }
+
             // НАСТРОЙКА КНОПКИ МИКРОФОНА
             if (recognition && btnMic) {
                 btnMic.classList.remove('hidden');
@@ -891,7 +901,6 @@
                 recognition.onresult = (event) => {
                     let transcript = event.results[0][0].transcript.replace(/[.,!?]$/, '').trim();
                     
-                    // Умная обработка немецких существительных
                     if (!currentIsGermanQuestion && w.word_type === 'noun') {
                         const parts = transcript.split(' ');
                         const art = parts[0].toLowerCase();
@@ -918,13 +927,6 @@
                 };
             } else if (btnMic) {
                 btnMic.classList.add('hidden');
-            }
-
-            document.getElementById('btn-speak-answer').onclick = (e) => speakWord(fullGerman, e);
-            if (currentIsGermanQuestion) {
-                if(btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
-            } else {
-                if(btnSpeakQ) btnSpeakQ.classList.add('hidden');
             }
 
             const ansEx = document.getElementById('train-answer-example');
