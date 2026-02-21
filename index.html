@@ -1270,8 +1270,8 @@
             const sortedFolders = Object.values(folders).sort((a, b) => {
                 const pctA = a.done / a.total;
                 const pctB = b.done / b.total;
-                if (pctB !== pctA) return pctA - pctB; // Сначала те, где прогресс меньше
-                return a.s.localeCompare(b.s); // Потом по алфавиту
+                if (pctB !== pctA) return pctA - pctB; 
+                return a.s.localeCompare(b.s); 
             });
 
             const today = new Date().toDateString();
@@ -1307,30 +1307,30 @@
                         const ringColor = isDone ? 'ring-green-500/50' : 'ring-blue-500/30';
                         const barColor = isDone ? 'bg-green-500' : 'bg-blue-500';
                         
-                        return \`
+                        return `
                         <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative flex flex-col justify-between hover:shadow-md transition-shadow group min-h-[100px]">
-                            <button onclick="resetFolderStats('\${dat.f.replace(/'/g,"\\\\'")}', '\${dat.l.replace(/'/g,"\\\\'")}', '\${dat.s.replace(/'/g,"\\\\'")}')" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Сбросить прогресс">
+                            <button onclick="resetFolderStats('${dat.f.replace(/'/g,"\\'")}', '${dat.l.replace(/'/g,"\\'")}', '${dat.s.replace(/'/g,"\\'")}')" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Сбросить прогресс">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                             </button>
                             
                             <div>
                                 <div class="flex items-center gap-1.5 mb-1.5 pr-6">
-                                    \${dat.l !== 'Общее' ? \`<span class="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded \${getLevelColor(dat.l)}">\${dat.l}</span>\` : ''}
-                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest truncate">\${dat.f}</span>
+                                    ${dat.l !== 'Общее' ? `<span class="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${getLevelColor(dat.l)}">${dat.l}</span>` : ''}
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest truncate">${dat.f}</span>
                                 </div>
-                                <h4 class="font-extrabold text-sm dark:text-white leading-tight mb-3 pr-4">\${dat.s}</h4>
+                                <h4 class="font-extrabold text-sm dark:text-white leading-tight mb-3 pr-4">${dat.s}</h4>
                             </div>
                             
                             <div>
                                 <div class="flex justify-between items-end mb-1.5">
-                                    <span class="text-xs font-bold \${isDone ? 'text-green-500' : 'text-blue-500'}">\${pct}%</span>
-                                    <span class="text-[10px] font-medium text-gray-400">\${dat.done} / \${dat.total}</span>
+                                    <span class="text-xs font-bold ${isDone ? 'text-green-500' : 'text-blue-500'}">${pct}%</span>
+                                    <span class="text-[10px] font-medium text-gray-400">${dat.done} / ${dat.total}</span>
                                 </div>
-                                <div class="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden ring-1 ring-inset \${ringColor}">
-                                    <div class="\${barColor} h-full transition-all duration-1000" style="width: \${pct}%"></div>
+                                <div class="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden ring-1 ring-inset ${ringColor}">
+                                    <div class="${barColor} h-full transition-all duration-1000" style="width: ${pct}%"></div>
                                 </div>
                             </div>
-                        </div>\`;
+                        </div>`;
                     }).join('')}
                 </div>
                 
