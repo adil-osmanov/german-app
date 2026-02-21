@@ -116,7 +116,13 @@
                 <div id="train-manual-block" class="hidden w-full mt-3">
                     <div class="flex gap-2 mb-2 w-full">
                         <input type="text" id="manual-article" placeholder="der" autocomplete="off" class="w-[60px] bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-1 text-center outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-sm" style="text-align-last: center;">
-                        <input type="text" id="manual-main" placeholder="Слово..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-sm">
+                        
+                        <div class="flex-1 relative flex items-center min-w-0">
+                            <input type="text" id="manual-main" placeholder="Слово..." autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 pl-3 pr-10 outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-sm">
+                            <button id="btn-mic" type="button" class="absolute right-1 p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-md active:scale-90" title="Голосовой ввод">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="flex gap-2 mb-2 w-full hidden" id="manual-plural-container">
@@ -262,6 +268,8 @@
         </div>
     </nav>
 
+    <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
+
     <script>
         const API_URL = '/words';
         let currentType = 'noun';
@@ -277,7 +285,15 @@
         let currentIsGermanQuestion = false;
         let currentArticle = 'der';
 
-        // Вернули стандартный fetch (без пароля)
+        // ИНИЦИАЛИЗАЦИЯ ГОЛОСОВОГО ВВОДА (Web Speech API)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+        }
+
         async function apiFetch(url, options = {}) {
             const res = await fetch(url, options);
             if (!res.ok) throw new Error('Ошибка сети');
@@ -646,7 +662,6 @@
             if(this.files[0]) label.innerText = this.files[0].name; else label.innerText = 'Выбрать CSV файл';
         };
 
-        // Экспорт без пароля
         window.exportData = () => {
             window.location.href = `/export_csv`;
         };
@@ -829,7 +844,7 @@
             
             const progressFill = document.getElementById('train-card-progress-fill');
             const progressText = document.getElementById('train-card-progress-text');
-            if(progressText) progressText.innerText = `Очки слова: ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
+            if(progressText) progressText.innerText = `Очки: ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
             if(progressFill) progressFill.style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
             
             document.getElementById('train-answer-block').classList.add('hidden'); 
@@ -846,6 +861,7 @@
             const btnCheck = document.getElementById('btn-check-manual');
             const umlautBar = document.getElementById('train-umlauts');
             const btnSpeakQ = document.getElementById('btn-speak-question');
+            const btnMic = document.getElementById('btn-mic');
 
             if(manArt) manArt.disabled = false;
             if(manMain) manMain.disabled = false;
@@ -861,6 +877,48 @@
             else { 
                 currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
             } 
+
+            // НАСТРОЙКА КНОПКИ МИКРОФОНА
+            if (recognition && btnMic) {
+                btnMic.classList.remove('hidden');
+                btnMic.onclick = () => {
+                    recognition.lang = currentIsGermanQuestion ? 'ru-RU' : 'de-DE';
+                    recognition.start();
+                    btnMic.classList.add('text-red-500', 'animate-pulse');
+                    btnMic.classList.remove('text-gray-400');
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = event.results[0][0].transcript.replace(/[.,!?]$/, '').trim();
+                    
+                    // Умная обработка немецких существительных
+                    if (!currentIsGermanQuestion && w.word_type === 'noun') {
+                        const parts = transcript.split(' ');
+                        const art = parts[0].toLowerCase();
+                        if (['der', 'die', 'das'].includes(art)) {
+                            manArt.value = art;
+                            manMain.value = parts.slice(1).join(' ');
+                        } else {
+                            manMain.value = transcript;
+                        }
+                    } else {
+                        manMain.value = transcript;
+                    }
+                };
+
+                recognition.onend = () => {
+                    btnMic.classList.remove('text-red-500', 'animate-pulse');
+                    btnMic.classList.add('text-gray-400');
+                };
+
+                recognition.onerror = (event) => {
+                    console.error("Ошибка микрофона:", event.error);
+                    btnMic.classList.remove('text-red-500', 'animate-pulse');
+                    btnMic.classList.add('text-gray-400');
+                };
+            } else if (btnMic) {
+                btnMic.classList.add('hidden');
+            }
 
             document.getElementById('btn-speak-answer').onclick = (e) => speakWord(fullGerman, e);
             if (currentIsGermanQuestion) {
@@ -1027,7 +1085,6 @@
             }
         };
 
-        // --- БЭКАП ЛОГИКА ---
         document.getElementById('btn-trigger-restore').onclick = () => document.getElementById('file-restore').click();
         
         document.getElementById('file-restore').onchange = async function() {
