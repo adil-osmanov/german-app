@@ -9,15 +9,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } } };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
-        
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(() => console.log('SW не найден, но готов к работе'));
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
         }
     </script>
     <style>
@@ -26,8 +25,10 @@
         .dark .glass { background: rgba(17, 24, 39, 0.85); border-color: rgba(255,255,255,0.05); }
         .active-tab { color: #3b82f6; transform: translateY(-2px); }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        /* Класс для эффекта при перетаскивании */
-        .sortable-ghost { opacity: 0.4; }
+        
+        /* Защита от багов скролла на мобилках при перетаскивании */
+        .drag-handle-folder, .drag-handle-topic { touch-action: none; }
+        .sortable-ghost { opacity: 0.3; transform: scale(0.98); }
     </style>
 </head>
 <body class="bg-[#f2f2f7] dark:bg-[#11151c] text-gray-900 dark:text-white transition-colors duration-300 min-h-screen flex flex-col overflow-hidden">
@@ -292,6 +293,8 @@
     <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
 
     <script>
+        const escapeStr = (str) => (str||'').replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        
         const API_URL = '/words';
         let currentType = 'noun';
         let editId = null;
@@ -396,11 +399,12 @@
                 const tzoffset = (new Date()).getTimezoneOffset() * 60000;
                 const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
                 
-                let history = JSON.parse(localStorage.getItem('studyHistory')) || {};
-                if (!history[localISOTime]) history[localISOTime] = 0;
-                history[localISOTime] += elapsedMs;
-                
-                localStorage.setItem('studyHistory', JSON.stringify(history));
+                try {
+                    let history = JSON.parse(localStorage.getItem('studyHistory')) || {};
+                    if (!history[localISOTime]) history[localISOTime] = 0;
+                    history[localISOTime] += elapsedMs;
+                    localStorage.setItem('studyHistory', JSON.stringify(history));
+                } catch(e) {}
                 sessionStartMs = 0;
             }
         }
@@ -413,18 +417,29 @@
         async function fetchWords() {
             try {
                 const res = await apiFetch(API_URL); 
-                globalWords = await res.json();
-                localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    globalWords = data;
+                    localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
+                }
             } catch (e) { 
                 console.warn("Офлайн! Грузим слова из памяти устройства.");
-                const saved = localStorage.getItem('offline_words_db');
-                if (saved) globalWords = JSON.parse(saved);
-                else globalWords = [];
+                try {
+                    const saved = localStorage.getItem('offline_words_db');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed)) globalWords = parsed;
+                    }
+                } catch(err) { console.error("Ошибка чтения кэша", err); }
             }
             
-            document.getElementById('folder-list').innerHTML = [...new Set(globalWords.map(w => w.folder))].map(f => `<option value="${f}">`).join('');
-            document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(l=>l))].map(l => `<option value="${l}">`).join('');
-            document.getElementById('subfolder-list').innerHTML = [...new Set(globalWords.map(w => w.subfolder))].map(s => `<option value="${s}">`).join('');
+            if (!Array.isArray(globalWords)) globalWords = [];
+            
+            try {
+                document.getElementById('folder-list').innerHTML = [...new Set(globalWords.map(w => w.folder))].filter(Boolean).map(f => `<option value="${escapeStr(f)}">`).join('');
+                document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(Boolean))].map(l => `<option value="${escapeStr(l)}">`).join('');
+                document.getElementById('subfolder-list').innerHTML = [...new Set(globalWords.map(w => w.subfolder))].filter(Boolean).map(s => `<option value="${escapeStr(s)}">`).join('');
+            } catch(e) {}
         }
 
         async function switchView(target) {
@@ -442,15 +457,18 @@
                     navBtns[v].classList.add('text-gray-400', 'dark:text-gray-500', 'hover:text-gray-600');
                 }
             });
-            document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', stats:'Прогресс'}[target];
-            
+            document.getElementById('header-title').innerText = "Загрузка...";
             document.getElementById('add-btn').classList.toggle('hidden', target !== 'dict');
             
             await fetchWords();
             
-            if (target === 'dict') renderDict();
-            if (target === 'train') setupTrainMenu();
-            if (target === 'stats') loadStats();
+            document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', stats:'Прогресс'}[target];
+            
+            try {
+                if (target === 'dict') renderDict();
+                if (target === 'train') setupTrainMenu();
+                if (target === 'stats') loadStats();
+            } catch(e) { console.error("Ошибка рендера:", e); }
             
             window.scrollTo(0, 0);
         }
@@ -520,168 +538,182 @@
             renderDict(searchInp.value.toLowerCase());
         };
 
-        // --- ОБНОВЛЕННЫЙ РЕНДЕР СЛОВАРЯ ДЛЯ ПОДДЕРЖКИ ПЕРЕТАСКИВАНИЯ ---
         function renderDict(query = searchInp.value.toLowerCase()) {
             const container = document.getElementById('dict-list');
             
-            let filtered = globalWords.filter(w => (w.word_de || "").toLowerCase().includes(query) || (w.word_ru || "").toLowerCase().includes(query));
-            if (dictTabFilter === 'active') {
-                filtered = filtered.filter(w => w.score < MAX_SCORE);
-            } else {
-                filtered = filtered.filter(w => w.score >= MAX_SCORE);
-            }
-
-            const colors = { der: 'text-der', die: 'text-die', das: 'text-das' };
-            const grouped = {};
-            filtered.forEach(w => { 
-                const f = w.folder || 'Без курса';
-                const l = w.level || 'Общее';
-                const s = w.subfolder || 'Без темы';
-                if (!grouped[f]) grouped[f] = {}; 
-                if (!grouped[f][l]) grouped[f][l] = {}; 
-                if (!grouped[f][l][s]) grouped[f][l][s] = []; 
-                grouped[f][l][s].push(w); 
-            });
-
-            // Достаем сохраненный порядок из localStorage
-            let savedFolderOrder = JSON.parse(localStorage.getItem('folderOrder')) || [];
-            let savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {};
-
-            // Сортируем курсы по пользовательскому порядку
-            const folderNames = Object.keys(grouped).sort((a, b) => {
-                let idxA = savedFolderOrder.indexOf(a);
-                let idxB = savedFolderOrder.indexOf(b);
-                if (idxA === -1) idxA = 9999; // Если новый курс - в конец
-                if (idxB === -1) idxB = 9999;
-                return idxA - idxB;
-            });
-
-            let html = '<div id="dict-folders-container">';
-            
-            folderNames.forEach(f => {
-                html += `
-                <div class="dict-folder mb-6" data-folder="${f.replace(/"/g, '&quot;')}">
-                    <div class="flex justify-between items-center mb-2 border-b border-gray-200 dark:border-[#252b36] pb-2 pl-1">
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
-                            <div class="cursor-move drag-handle-folder text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-                            </div>
-                            <h2 class="text-xl font-extrabold dark:text-white tracking-tight flex items-center gap-2 truncate">
-                                <span class="truncate">${f}</span>
-                            </h2>
-                        </div>
-                        <div class="flex items-center gap-1 flex-shrink-0">
-                            <button onclick="renameFolder('${f.replace(/'/g,"\\'")}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать курс">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            </button>
-                            <button onclick="fastAddCourse('${f.replace(/'/g,"\\'")}')" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ В КУРС</button>
-                        </div>
-                    </div>
-                    <div class="dict-topics-container space-y-2" data-folder="${f.replace(/"/g, '&quot;')}">
-                `;
-                
-                let topics = [];
-                for (const l in grouped[f]) {
-                    for (const s in grouped[f][l]) {
-                        topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` });
-                    }
+            try {
+                let filtered = globalWords.filter(w => (w.word_de || "").toLowerCase().includes(query) || (w.word_ru || "").toLowerCase().includes(query));
+                if (dictTabFilter === 'active') {
+                    filtered = filtered.filter(w => w.score < MAX_SCORE);
+                } else {
+                    filtered = filtered.filter(w => w.score >= MAX_SCORE);
                 }
 
-                // Сортируем темы внутри курса
-                topics.sort((a, b) => {
-                    let orderArr = savedTopicOrder[f] || [];
-                    let idxA = orderArr.indexOf(a.key);
-                    let idxB = orderArr.indexOf(b.key);
-                    if (idxA === -1) idxA = 9999;
+                if (filtered.length === 0) {
+                    container.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 font-bold text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все слова выучены 🎉'}</p></div>`;
+                    return;
+                }
+
+                const colors = { der: 'text-der', die: 'text-die', das: 'text-das' };
+                const grouped = {};
+                filtered.forEach(w => { 
+                    const f = w.folder || 'Без курса';
+                    const l = w.level || 'Общее';
+                    const s = w.subfolder || 'Без темы';
+                    if (!grouped[f]) grouped[f] = {}; 
+                    if (!grouped[f][l]) grouped[f][l] = {}; 
+                    if (!grouped[f][l][s]) grouped[f][l][s] = []; 
+                    grouped[f][l][s].push(w); 
+                });
+
+                let savedFolderOrder = [];
+                let savedTopicOrder = {};
+                try { savedFolderOrder = JSON.parse(localStorage.getItem('folderOrder')) || []; } catch(e){}
+                try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch(e){}
+
+                const folderNames = Object.keys(grouped).sort((a, b) => {
+                    let idxA = savedFolderOrder.indexOf(a);
+                    let idxB = savedFolderOrder.indexOf(b);
+                    if (idxA === -1) idxA = 9999; 
                     if (idxB === -1) idxB = 9999;
                     return idxA - idxB;
                 });
 
-                topics.forEach(t => {
-                    const l = t.l;
-                    const s = t.s;
-                    const wordsInTopic = t.words;
-                    const topicKey = t.key;
-                    
-                    if (collapsedDictTopics[topicKey] === undefined) {
-                        collapsedDictTopics[topicKey] = true; 
-                    }
-                    
-                    const isCollapsed = collapsedDictTopics[topicKey];
-                    const chevronClass = isCollapsed ? '' : 'rotate-180';
-
+                let html = '<div id="dict-folders-container">';
+                
+                folderNames.forEach(f => {
+                    const safeF = escapeStr(f);
                     html += `
-                    <div class="dict-topic bg-white dark:bg-[#1a202a] rounded-2xl shadow-sm border border-gray-100 dark:border-transparent overflow-hidden transition-all" data-topic="${topicKey.replace(/"/g, '&quot;')}">
-                        
-                        <div class="flex justify-between items-center bg-gray-50 dark:bg-[#1f2530] p-3 pr-2 transition-colors">
-                            <div class="flex items-center gap-2 min-w-0 flex-1">
-                                <div class="cursor-move drag-handle-topic text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                    <div class="dict-folder mb-6" data-folder="${safeF}">
+                        <div class="flex justify-between items-center mb-2 border-b border-gray-200 dark:border-[#252b36] pb-2 pl-1">
+                            <div class="flex items-center gap-2 flex-1 min-w-0">
+                                <div class="cursor-move drag-handle-folder text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                                 </div>
-                                <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${topicKey.replace(/'/g,"\\'")}')">
-                                    <svg class="w-4 h-4 text-gray-400 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
-                                    <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">${s} <span class="text-gray-400 font-normal">(${wordsInTopic.length})</span></h3>
-                                </div>
+                                <h2 class="text-xl font-extrabold dark:text-white tracking-tight flex items-center gap-2 truncate">
+                                    <span class="truncate">${f}</span>
+                                </h2>
                             </div>
-                            <div class="flex items-center gap-1 pl-2">
-                                <button onclick="renameSubfolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="p-1.5 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать тему">
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <button onclick="renameFolder('${safeF}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать курс">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                 </button>
-                                <button onclick="fastAdd('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ СЛОВО</button>
-                                <button onclick="deleteFolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all" title="Удалить тему">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
+                                <button onclick="fastAddCourse('${safeF}')" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ В КУРС</button>
                             </div>
                         </div>
-
-                        <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-white dark:bg-[#1a202a] border-t border-gray-100 dark:border-[#252b36]'}">
+                        <div class="dict-topics-container space-y-2" data-folder="${safeF}">
                     `;
                     
-                    wordsInTopic.forEach(w => {
-                        let extraInfo = '';
-                        if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
-                        else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
+                    let topics = [];
+                    for (const l in grouped[f]) {
+                        for (const s in grouped[f][l]) {
+                            topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` });
+                        }
+                    }
+
+                    topics.sort((a, b) => {
+                        let orderArr = savedTopicOrder[f] || [];
+                        let idxA = orderArr.indexOf(a.key);
+                        let idxB = orderArr.indexOf(b.key);
+                        if (idxA === -1) idxA = 9999;
+                        if (idxB === -1) idxB = 9999;
+                        return idxA - idxB;
+                    });
+
+                    topics.forEach(t => {
+                        const l = t.l;
+                        const s = t.s;
+                        const wordsInTopic = t.words;
+                        const topicKey = t.key;
+                        const safeL = escapeStr(l);
+                        const safeS = escapeStr(s);
+                        const safeTopicKey = escapeStr(topicKey);
+                        
+                        if (collapsedDictTopics[topicKey] === undefined) {
+                            collapsedDictTopics[topicKey] = true; 
+                        }
+                        
+                        const isCollapsed = collapsedDictTopics[topicKey];
+                        const chevronClass = isCollapsed ? '' : 'rotate-180';
 
                         html += `
-                        <div onclick="openEdit(${w.id})" class="bg-white dark:bg-[#252b36] p-3 rounded-xl border border-gray-100 dark:border-transparent flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
-                            <div class="flex-1 pr-3 min-w-0">
-                                <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
-                                <p class="text-gray-400 text-xs font-medium mt-0.5 truncate">${w.word_ru}</p>
-                                ${w.example ? `<p class="text-[11px] text-blue-500/80 dark:text-blue-400 mt-1 italic font-medium leading-tight truncate">"${w.example}"</p>` : ''}
-                            </div>
-                            <div class="flex flex-col items-end gap-1 flex-shrink-0">
-                                <div class="flex gap-1 mb-1">
-                                    <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+w.word_de}', event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
-                                    <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-red-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        <div class="dict-topic bg-white dark:bg-[#1a202a] rounded-2xl shadow-sm border border-gray-100 dark:border-transparent overflow-hidden transition-all" data-topic="${safeTopicKey}">
+                            
+                            <div class="flex justify-between items-center bg-gray-50 dark:bg-[#1f2530] p-3 pr-2 transition-colors">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <div class="cursor-move drag-handle-topic text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                                    </div>
+                                    <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${safeTopicKey}')">
+                                        <svg class="w-4 h-4 text-gray-400 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
+                                        <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">${s} <span class="text-gray-400 font-normal">(${wordsInTopic.length})</span></h3>
+                                    </div>
                                 </div>
-                                <span class="text-[9px] font-black ${w.score>=MAX_SCORE?'text-das':(w.score>=4?'text-orange-500':'text-gray-300')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+                                <div class="flex items-center gap-1 pl-2">
+                                    <button onclick="renameSubfolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать тему">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
+                                    <button onclick="fastAdd('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ СЛОВО</button>
+                                    <button onclick="deleteFolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all" title="Удалить тему">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
                             </div>
-                        </div>`;
-                    });
-                    
-                    html += `</div></div>`;
-                });
-                html += `</div></div>`; // Закрытие курса
-            }
-            html += '</div>'; // Закрытие главного контейнера
-            
-            container.innerHTML = html || `<div class="text-center py-10"><p class="text-gray-400 font-bold text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все слова выучены 🎉'}</p></div>`;
 
-            // Запускаем инициализацию перетаскивания
-            setTimeout(initSortable, 50);
+                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-white dark:bg-[#1a202a] border-t border-gray-100 dark:border-[#252b36]'}">
+                        `;
+                        
+                        wordsInTopic.forEach(w => {
+                            let extraInfo = '';
+                            if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
+                            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
+                            const safeWordDe = escapeStr(w.word_de);
+
+                            html += `
+                            <div onclick="openEdit(${w.id})" class="bg-white dark:bg-[#252b36] p-3 rounded-xl border border-gray-100 dark:border-transparent flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
+                                <div class="flex-1 pr-3 min-w-0">
+                                    <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
+                                    <p class="text-gray-400 text-xs font-medium mt-0.5 truncate">${w.word_ru}</p>
+                                    ${w.example ? `<p class="text-[11px] text-blue-500/80 dark:text-blue-400 mt-1 italic font-medium leading-tight truncate">"${escapeStr(w.example)}"</p>` : ''}
+                                </div>
+                                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                                    <div class="flex gap-1 mb-1">
+                                        <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+safeWordDe}', event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
+                                        <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-gray-50 dark:bg-[#1a202a] rounded-full text-gray-400 hover:text-red-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                    </div>
+                                    <span class="text-[9px] font-black ${w.score>=MAX_SCORE?'text-das':(w.score>=4?'text-orange-500':'text-gray-300')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+                                </div>
+                            </div>`;
+                        });
+                        
+                        html += `</div></div>`;
+                    });
+                    html += `</div></div>`; 
+                });
+                html += '</div>'; 
+                
+                container.innerHTML = html;
+                setTimeout(initSortable, 100);
+            } catch(err) {
+                console.error(err);
+                container.innerHTML = `<div class="text-center py-20 text-red-500 font-bold">Критическая ошибка рендера :( <br>Очистите кеш сайта.</div>`;
+            }
         }
 
-        // --- ИНИЦИАЛИЗАЦИЯ ПЕРЕТАСКИВАНИЯ (SortableJS) ---
         function initSortable() {
-            if (typeof Sortable === 'undefined') return;
+            if (typeof Sortable === 'undefined') {
+                setTimeout(initSortable, 500); // Ждем загрузки библиотеки
+                return;
+            }
             
-            // Перетаскивание папок (курсов)
             const folderContainer = document.getElementById('dict-folders-container');
             if (folderContainer) {
                 new Sortable(folderContainer, {
                     handle: '.drag-handle-folder',
                     animation: 250,
+                    delay: 150, 
+                    delayOnTouchOnly: true,
                     ghostClass: 'sortable-ghost',
                     onEnd: function () {
                         const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.dataset.folder);
@@ -690,17 +722,19 @@
                 });
             }
 
-            // Перетаскивание тем внутри курсов
             document.querySelectorAll('.dict-topics-container').forEach(topicContainer => {
                 new Sortable(topicContainer, {
                     handle: '.drag-handle-topic',
                     animation: 250,
+                    delay: 150,
+                    delayOnTouchOnly: true,
                     ghostClass: 'sortable-ghost',
                     onEnd: function (evt) {
                         const f = evt.item.closest('.dict-folder').dataset.folder;
                         const order = Array.from(topicContainer.querySelectorAll('.dict-topic')).map(el => el.dataset.topic);
                         
-                        let savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {};
+                        let savedTopicOrder = {};
+                        try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch(e){}
                         savedTopicOrder[f] = order;
                         localStorage.setItem('topicOrder', JSON.stringify(savedTopicOrder));
                     }
@@ -940,131 +974,132 @@
         
         function setupTrainMenu() {
             const container = document.getElementById('train-topics-container');
-            container.innerHTML = '';
-            
-            const newWordsCount = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
-            const masteredCount = globalWords.filter(w => w.score >= MAX_SCORE).length;
-            const waitingCount = globalWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
-            const weakWordsCount = globalWords.filter(w => w.score < 4 && isWordDue(w)).length;
+            try {
+                container.innerHTML = '';
+                
+                const newWordsCount = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
+                const masteredCount = globalWords.filter(w => w.score >= MAX_SCORE).length;
+                const waitingCount = globalWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
+                const weakWordsCount = globalWords.filter(w => w.score < 4 && isWordDue(w)).length;
 
-            let html = `
-                <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-blue-500 to-blue-600 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-blue-500/30 flex justify-between items-center group mb-2">
-                    <div>
-                        <h3 class="text-white text-lg font-bold">📚 Доступно для изучения</h3>
-                        <p class="text-blue-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Слов: ${newWordsCount} ${waitingCount>0?`| Ждут повторения: ${waitingCount}`:''}</p>
-                    </div>
-                    <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
-                </button>
-            `;
-
-            if (weakWordsCount > 0) {
-                html += `
-                    <button onclick="startTraining('weak')" class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-orange-500/30 flex justify-between items-center group mb-2">
+                let html = `
+                    <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-blue-500 to-blue-600 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-blue-500/30 flex justify-between items-center group mb-2">
                         <div>
-                            <h3 class="text-white text-lg font-bold">⚠️ Level 1 (Слабые места)</h3>
-                            <p class="text-orange-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Флеш-карточки (${weakWordsCount})</p>
+                            <h3 class="text-white text-lg font-bold">📚 Доступно для изучения</h3>
+                            <p class="text-blue-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Слов: ${newWordsCount} ${waitingCount>0?`| Ждут: ${waitingCount}`:''}</p>
                         </div>
                         <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                     </button>
                 `;
-            }
 
-            if (masteredCount > 0) {
-                html += `
-                    <button onclick="startTraining('mastered')" class="w-full text-left bg-gradient-to-br from-yellow-400 to-yellow-600 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-yellow-500/30 flex justify-between items-center group mb-3">
-                        <div>
-                            <h3 class="text-white text-lg font-bold">🏆 Золотой запас</h3>
-                            <p class="text-yellow-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Повторить архив (${masteredCount})</p>
-                        </div>
-                        <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
-                    </button>
-                `;
-            }
-
-            const groupedTopics = {};
-            globalWords.forEach(w => {
-                const f = w.folder || 'Без курса';
-                const key = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`;
-                if (!groupedTopics[f]) groupedTopics[f] = new Set();
-                groupedTopics[f].add(key);
-            });
-
-            const activeTopicsHTML = [];
-            const masteredTopicsHTML = [];
-
-            for (const folder in groupedTopics) {
-                
-                const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
-                const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
-                const cWaitingCount = courseWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
-                
-                let folderActiveHTML = '';
-                if (cWordsCount > 0) {
-                    folderActiveHTML += `
-                        <button onclick="startTraining('course|${folder.replace(/'/g,"\\'")}')" class="w-full text-left bg-gradient-to-r from-teal-500 to-emerald-500 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-sm text-white mb-2 mt-5 flex justify-between items-center group">
+                if (weakWordsCount > 0) {
+                    html += `
+                        <button onclick="startTraining('weak')" class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-orange-500/30 flex justify-between items-center group mb-2">
                             <div>
-                                <h3 class="text-base font-bold">🎓 Весь курс: ${folder}</h3>
-                                <p class="text-[10px] font-medium opacity-80 mt-0.5">Доступно: ${cWordsCount} ${cWaitingCount>0?`| Ждут интервала: ${cWaitingCount}`:''}</p>
+                                <h3 class="text-white text-lg font-bold">⚠️ Level 1 (Слабые места)</h3>
+                                <p class="text-orange-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Флеш-карточки (${weakWordsCount})</p>
                             </div>
-                            <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+                            <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                         </button>
                     `;
-                } else {
-                    folderActiveHTML += `<h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder}</h3>`;
                 }
 
-                let folderMasteredHTML = `<h3 class="text-[10px] font-black text-gray-400/50 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder} (Архив)</h3>`;
-                
-                let hasActive = false;
-                let hasMastered = false;
+                if (masteredCount > 0) {
+                    html += `
+                        <button onclick="startTraining('mastered')" class="w-full text-left bg-gradient-to-br from-yellow-400 to-yellow-600 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-yellow-500/30 flex justify-between items-center group mb-3">
+                            <div>
+                                <h3 class="text-white text-lg font-bold">🏆 Золотой запас</h3>
+                                <p class="text-yellow-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Повторить архив (${masteredCount})</p>
+                            </div>
+                            <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                        </button>
+                    `;
+                }
 
-                groupedTopics[folder].forEach(t => {
-                    const [f, l, s] = t.split('|');
-                    const allInTopic = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
+                const groupedTopics = {};
+                globalWords.forEach(w => {
+                    const f = w.folder || 'Без курса';
+                    const key = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`;
+                    if (!groupedTopics[f]) groupedTopics[f] = new Set();
+                    groupedTopics[f].add(key);
+                });
+
+                const activeTopicsHTML = [];
+                const masteredTopicsHTML = [];
+
+                for (const folder in groupedTopics) {
+                    const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
+                    const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
+                    const cWaitingCount = courseWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
                     
-                    const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
-                    const waitingCount = allInTopic.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
-                    const archivedCount = allInTopic.filter(w => w.score >= MAX_SCORE).length;
-                    
-                    if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
-                        hasMastered = true;
-                        folderMasteredHTML += `
-                            <button onclick="startTraining('${t}', true)" class="w-full text-left bg-gray-50 dark:bg-[#1a202a] hover:scale-[0.98] transition-all p-3 rounded-xl shadow-none border border-gray-100 dark:border-transparent flex justify-between items-center mb-1.5 opacity-60 grayscale">
+                    let folderActiveHTML = '';
+                    if (cWordsCount > 0) {
+                        folderActiveHTML += `
+                            <button onclick="startTraining('course|${escapeStr(folder)}')" class="w-full text-left bg-gradient-to-r from-teal-500 to-emerald-500 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-sm text-white mb-2 mt-5 flex justify-between items-center group">
                                 <div>
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-gray-200 text-gray-500">ВЫУЧЕНО</span>
-                                        <h3 class="text-sm font-bold dark:text-gray-400 line-through">${s}</h3>
-                                    </div>
-                                    <p class="text-[10px] text-gray-400 font-medium">В архиве: ${archivedCount}</p>
+                                    <h3 class="text-base font-bold">🎓 Весь курс: ${folder}</h3>
+                                    <p class="text-[10px] font-medium opacity-80 mt-0.5">Доступно: ${cWordsCount} ${cWaitingCount>0?`| Ждут интервала: ${cWaitingCount}`:''}</p>
                                 </div>
-                                <div class="bg-gray-200 dark:bg-[#252b36] w-6 h-6 rounded-full flex items-center justify-center text-green-500">✓</div>
+                                <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
                             </button>
                         `;
                     } else {
-                        hasActive = true;
-                        folderActiveHTML += `
-                            <button onclick="startTraining('${t}')" class="w-full text-left bg-white dark:bg-[#1a202a] hover:scale-[0.98] transition-all p-3 rounded-xl shadow-sm border border-gray-100 dark:border-transparent flex justify-between items-center mb-1.5 ml-2 w-[calc(100%-8px)]">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${getLevelColor(l)}">${l}</span>` : ''}
-                                        <h3 class="text-sm font-bold dark:text-white">${s}</h3>
-                                    </div>
-                                    <p class="text-[10px] text-gray-400 font-medium">Слов: ${wordsCount} <span class="opacity-50">${waitingCount>0?`| Ждут: ${waitingCount}`:''}</span></p>
-                                </div>
-                                <div class="bg-gray-50 dark:bg-[#252b36] w-6 h-6 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-300"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
-                            </button>
-                        `;
+                        folderActiveHTML += `<h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder}</h3>`;
                     }
-                });
 
-                if (hasActive) activeTopicsHTML.push(folderActiveHTML);
-                if (hasMastered) masteredTopicsHTML.push(folderMasteredHTML);
-            }
+                    let folderMasteredHTML = `<h3 class="text-[10px] font-black text-gray-400/50 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder} (Архив)</h3>`;
+                    
+                    let hasActive = false;
+                    let hasMastered = false;
 
-            container.innerHTML = html + activeTopicsHTML.join('') + (masteredTopicsHTML.length > 0 ? '<div class="mt-6 border-t border-gray-200 dark:border-[#252b36] pt-3"></div><h2 class="text-sm font-bold text-center text-gray-400 mb-3">✅ Завершенные темы</h2>' + masteredTopicsHTML.join('') : '');
-            
-            document.getElementById('train-setup-block').classList.remove('hidden'); 
-            document.getElementById('train-card-block').classList.add('hidden');
+                    groupedTopics[folder].forEach(t => {
+                        const [f, l, s] = t.split('|');
+                        const allInTopic = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
+                        
+                        const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
+                        const waitingCount = allInTopic.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
+                        const archivedCount = allInTopic.filter(w => w.score >= MAX_SCORE).length;
+                        
+                        if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
+                            hasMastered = true;
+                            folderMasteredHTML += `
+                                <button onclick="startTraining('${escapeStr(t)}', true)" class="w-full text-left bg-gray-50 dark:bg-[#1a202a] hover:scale-[0.98] transition-all p-3 rounded-xl shadow-none border border-gray-100 dark:border-transparent flex justify-between items-center mb-1.5 opacity-60 grayscale">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-0.5">
+                                            <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-gray-200 text-gray-500">ВЫУЧЕНО</span>
+                                            <h3 class="text-sm font-bold dark:text-gray-400 line-through">${s}</h3>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 font-medium">В архиве: ${archivedCount}</p>
+                                    </div>
+                                    <div class="bg-gray-200 dark:bg-[#252b36] w-6 h-6 rounded-full flex items-center justify-center text-green-500">✓</div>
+                                </button>
+                            `;
+                        } else {
+                            hasActive = true;
+                            folderActiveHTML += `
+                                <button onclick="startTraining('${escapeStr(t)}')" class="w-full text-left bg-white dark:bg-[#1a202a] hover:scale-[0.98] transition-all p-3 rounded-xl shadow-sm border border-gray-100 dark:border-transparent flex justify-between items-center mb-1.5 ml-2 w-[calc(100%-8px)]">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-0.5">
+                                            ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${getLevelColor(l)}">${l}</span>` : ''}
+                                            <h3 class="text-sm font-bold dark:text-white">${s}</h3>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 font-medium">Слов: ${wordsCount} <span class="opacity-50">${waitingCount>0?`| Ждут: ${waitingCount}`:''}</span></p>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-[#252b36] w-6 h-6 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-300"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                                </button>
+                            `;
+                        }
+                    });
+
+                    if (hasActive) activeTopicsHTML.push(folderActiveHTML);
+                    if (hasMastered) masteredTopicsHTML.push(folderMasteredHTML);
+                }
+
+                container.innerHTML = html + activeTopicsHTML.join('') + (masteredTopicsHTML.length > 0 ? '<div class="mt-6 border-t border-gray-200 dark:border-[#252b36] pt-3"></div><h2 class="text-sm font-bold text-center text-gray-400 mb-3">✅ Завершенные темы</h2>' + masteredTopicsHTML.join('') : '');
+                
+                document.getElementById('train-setup-block').classList.remove('hidden'); 
+                document.getElementById('train-card-block').classList.add('hidden');
+            } catch(err) { console.error(err); }
         }
 
         window.startTraining = (sel, forceArchive = false) => {
@@ -1090,7 +1125,7 @@
             }
             
             if (!trainList.length) {
-                if (sel !== 'mastered' && !forceArchive) return alert('🎉 На сегодня доступные слова закончились! (Остальные слова находятся в режиме ожидания интервального повторения)');
+                if (sel !== 'mastered' && !forceArchive) return alert('🎉 На сегодня доступные слова закончились!');
                 return alert('Архив пуст.');
             }
             
@@ -1168,9 +1203,7 @@
 
             if (trainDirection === 'de-ru') { currentIsGermanQuestion = true; } 
             else if (trainDirection === 'ru-de') { currentIsGermanQuestion = false; } 
-            else { 
-                currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
-            } 
+            else { currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5; } 
 
             if (currentIsGermanQuestion) {
                 if(btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
@@ -1197,12 +1230,8 @@
                         if (['der', 'die', 'das'].includes(art)) {
                             manArt.value = art;
                             manMain.value = parts.slice(1).join(' ');
-                        } else {
-                            manMain.value = transcript;
-                        }
-                    } else {
-                        manMain.value = transcript;
-                    }
+                        } else { manMain.value = transcript; }
+                    } else { manMain.value = transcript; }
                 };
                 recognition.onend = () => {
                     btnMic.classList.remove('text-red-500', 'animate-pulse');
@@ -1212,17 +1241,13 @@
                     btnMic.classList.remove('text-red-500', 'animate-pulse');
                     btnMic.classList.add('text-gray-400');
                 };
-            } else if (btnMic) {
-                btnMic.classList.add('hidden');
-            }
+            } else if (btnMic) { btnMic.classList.add('hidden'); }
 
             const ansEx = document.getElementById('train-answer-example');
             if (w.example && ansEx) {
                 ansEx.innerText = '"' + w.example + '"';
                 ansEx.classList.remove('hidden');
-            } else if (ansEx) {
-                ansEx.classList.add('hidden');
-            }
+            } else if (ansEx) { ansEx.classList.add('hidden'); }
 
             document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru||'') : fullGerman;
             
@@ -1251,8 +1276,8 @@
                 if(!currentIsGermanQuestion && w.example && exQ) { 
                     try {
                         const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        exQ.innerHTML = w.example.replace(new RegExp(safeWord, 'ig'), '_____'); 
-                    } catch(e) { exQ.innerHTML = w.example; }
+                        exQ.innerHTML = escapeStr(w.example).replace(new RegExp(safeWord, 'ig'), '_____'); 
+                    } catch(e) { exQ.innerHTML = escapeStr(w.example); }
                     exQ.classList.remove('hidden'); 
                 }
                 
@@ -1268,22 +1293,15 @@
                 } else {
                     if(manArt) { manArt.classList.remove('hidden'); manArt.classList.toggle('hidden', w.word_type==='verb'); manArt.value = ''; }
                     if(manMain) { manMain.value = ''; manMain.placeholder = "Слово на немецком..."; }
-                    
                     if (w.word_type === 'noun' && w.plural) {
                         if(manPluralContainer) manPluralContainer.classList.remove('hidden');
                         if(manPlural) manPlural.value = '';
-                    } else {
-                        if(manPluralContainer) manPluralContainer.classList.add('hidden');
-                    }
-
+                    } else { if(manPluralContainer) manPluralContainer.classList.add('hidden'); }
                     if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
                         if(manVerbContainer) manVerbContainer.classList.remove('hidden');
                         if(manPraet) manPraet.value = '';
                         if(manPart) manPart.value = '';
-                    } else {
-                        if(manVerbContainer) manVerbContainer.classList.add('hidden');
-                    }
-
+                    } else { if(manVerbContainer) manVerbContainer.classList.add('hidden'); }
                     if(umlautBar) umlautBar.classList.remove('hidden'); 
                     setTimeout(() => { 
                         const target = w.word_type==='noun' ? document.getElementById('manual-article') : document.getElementById('manual-main');
@@ -1323,13 +1341,9 @@
         document.getElementById('btn-show-answer').onclick = () => { 
             document.getElementById('btn-show-answer').classList.add('hidden'); 
             document.getElementById('train-answer-block').classList.remove('hidden'); 
-            
             const w = trainList[curIdx];
-            if (w.word_type === 'noun' && w.plural) {
-                document.getElementById('train-de-plural').classList.remove('hidden');
-            } else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
-                document.getElementById('train-de-plural').classList.remove('hidden');
-            }
+            if (w.word_type === 'noun' && w.plural) { document.getElementById('train-de-plural').classList.remove('hidden'); } 
+            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) { document.getElementById('train-de-plural').classList.remove('hidden'); }
         };
         
         document.getElementById('btn-forgot').onclick = () => updateScore(0, false); 
@@ -1340,7 +1354,6 @@
         
         document.getElementById('btn-check-manual').onclick = () => {
             const w = trainList[curIdx]; 
-            
             const artRaw = document.getElementById('manual-article').value;
             const mainRaw = document.getElementById('manual-main').value;
             const pluralRaw = document.getElementById('manual-plural').value;
@@ -1380,9 +1393,7 @@
                     if (w.praeteritum || w.partizip) {
                         formsCorrect = (typedPraet === expectedPraet) && (typedPart === expectedPart);
                         correctAnswer = `${w.word_de} (${w.praeteritum}, ${w.partizip})`;
-                    } else {
-                        correctAnswer = w.word_de;
-                    }
+                    } else { correctAnswer = w.word_de; }
                     isCorrect = baseCorrect && formsCorrect;
                 } else {
                     isCorrect = main.toLowerCase() === expectedWord;
@@ -1408,7 +1419,6 @@
                 feedback.innerText = "🎉 Отлично!";
                 feedback.classList.remove('hidden');
                 setTimeout(() => updateScore(Math.min(w.score + 1, MAX_SCORE), true), 1000);
-
             } else {
                 feedback.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900/40', 'dark:text-red-400');
                 feedback.innerText = `❌ Ошибка! Правильно: ${correctAnswer}`;
@@ -1422,13 +1432,10 @@
         document.getElementById('file-restore').onchange = async function() {
             if(!this.files[0]) return;
             if(!confirm("⚠️ ВНИМАНИЕ! Это действие полностью удалит текущие слова и заменит их данными из бэкапа. Вы уверены?")) {
-                this.value = '';
-                return;
+                this.value = ''; return;
             }
-            
             const f = new FormData();
             f.append('file', this.files[0]);
-            
             const btn = document.getElementById('btn-trigger-restore');
             const originalText = btn.innerHTML;
             btn.innerHTML = '⏳ Восстановление...';
@@ -1440,16 +1447,11 @@
                 if(result.status === 'success') {
                     document.getElementById('backup-modal').classList.add('hidden');
                     alert(`✅ База успешно восстановлена! Загружено слов: ${result.restored}`);
-                    await fetchWords();
-                    loadStats();
-                } else {
-                    alert("Ошибка сервера при восстановлении!");
-                }
+                    await fetchWords(); loadStats();
+                } else { alert("Ошибка сервера при восстановлении!"); }
             } catch(e) { alert("Ошибка при восстановлении базы! Проверьте файл бэкапа."); }
             finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                this.value = '';
+                btn.innerHTML = originalText; btn.disabled = false; this.value = '';
             }
         };
 
@@ -1463,156 +1465,157 @@
 
         function loadStats() {
             const stats = document.getElementById('view-stats');
-            const total = globalWords.length; 
-            const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
-            const pctMastery = total === 0 ? 0 : Math.round((mastered / total) * 100);
+            try {
+                const total = globalWords.length; 
+                const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
+                const pctMastery = total === 0 ? 0 : Math.round((mastered / total) * 100);
 
-            const folders = {};
-            globalWords.forEach(w => { 
-                const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
-                if(!folders[k]) folders[k] = {f:w.folder, l:w.level||'Общее', s:w.subfolder, total:0, done:0}; 
-                folders[k].total++; 
-                if(w.score>=MAX_SCORE) folders[k].done++; 
-            });
+                const folders = {};
+                globalWords.forEach(w => { 
+                    const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
+                    if(!folders[k]) folders[k] = {f:w.folder, l:w.level||'Общее', s:w.subfolder, total:0, done:0}; 
+                    folders[k].total++; 
+                    if(w.score>=MAX_SCORE) folders[k].done++; 
+                });
 
-            const sortedFolders = Object.values(folders).sort((a, b) => {
-                const pctA = a.done / a.total;
-                const pctB = b.done / b.total;
-                if (pctB !== pctA) return pctA - pctB; 
-                return a.s.localeCompare(b.s); 
-            });
+                const sortedFolders = Object.values(folders).sort((a, b) => {
+                    const pctA = a.done / a.total;
+                    const pctB = b.done / b.total;
+                    if (pctB !== pctA) return pctA - pctB; 
+                    return a.s.localeCompare(b.s); 
+                });
 
-            const history = JSON.parse(localStorage.getItem('studyHistory')) || {};
-            
-            let streak = 0;
-            let d = new Date();
-            let tz = d.getTimezoneOffset() * 60000;
-            let todayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
-            d.setDate(d.getDate() - 1);
-            let yesterdayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
+                let history = {};
+                try { history = JSON.parse(localStorage.getItem('studyHistory')) || {}; } catch(e){}
+                
+                let streak = 0;
+                let d = new Date();
+                let tz = d.getTimezoneOffset() * 60000;
+                let todayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
+                d.setDate(d.getDate() - 1);
+                let yesterdayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
 
-            let checkD = new Date();
-            if (history[todayIso] > 0) {
-            } else if (history[yesterdayIso] > 0) {
-                checkD.setDate(checkD.getDate() - 1);
-            } else {
-                checkD = null;
-            }
+                let checkD = new Date();
+                if (history[todayIso] > 0) {} 
+                else if (history[yesterdayIso] > 0) { checkD.setDate(checkD.getDate() - 1); } 
+                else { checkD = null; }
 
-            if (checkD) {
-                while (true) {
-                    let iso = new Date(checkD.getTime() - checkD.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-                    if (history[iso] > 0) {
-                        streak++;
-                        checkD.setDate(checkD.getDate() - 1);
-                    } else {
-                        break;
+                if (checkD) {
+                    while (true) {
+                        let iso = new Date(checkD.getTime() - checkD.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+                        if (history[iso] > 0) {
+                            streak++;
+                            checkD.setDate(checkD.getDate() - 1);
+                        } else { break; }
                     }
                 }
-            }
 
-            const daysHtml = [];
-            const maxDailyMs = DAILY_GOAL_MINUTES * 60000;
-            for (let i = 6; i >= 0; i--) {
-                let iterD = new Date();
-                iterD.setDate(iterD.getDate() - i);
-                let tzIter = iterD.getTimezoneOffset() * 60000;
-                let iso = new Date(iterD.getTime() - tzIter).toISOString().slice(0, 10);
-                let ms = history[iso] || 0;
-                let pct = Math.min(100, (ms / maxDailyMs) * 100);
-                let dayName = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'][iterD.getDay()];
-                
-                daysHtml.push(`
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-full bg-gray-100 dark:bg-[#323946] rounded-md h-24 relative overflow-hidden">
-                            <div class="absolute bottom-0 left-0 right-0 bg-blue-500 dark:bg-[#4c5df0] transition-all duration-1000 rounded-md" style="height: ${pct}%"></div>
+                const daysHtml = [];
+                const maxDailyMs = DAILY_GOAL_MINUTES * 60000;
+                let minutesToday = Math.floor((history[todayIso] || 0) / 60000);
+                let timeProgressPct = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
+
+                for (let i = 6; i >= 0; i--) {
+                    let iterD = new Date();
+                    iterD.setDate(iterD.getDate() - i);
+                    let tzIter = iterD.getTimezoneOffset() * 60000;
+                    let iso = new Date(iterD.getTime() - tzIter).toISOString().slice(0, 10);
+                    let ms = history[iso] || 0;
+                    let pct = Math.min(100, (ms / maxDailyMs) * 100);
+                    let dayName = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'][iterD.getDay()];
+                    
+                    daysHtml.push(`
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-full bg-gray-100 dark:bg-[#323946] rounded-md h-24 relative overflow-hidden">
+                                <div class="absolute bottom-0 left-0 right-0 bg-blue-500 dark:bg-[#4c5df0] transition-all duration-1000 rounded-md" style="height: ${pct}%"></div>
+                            </div>
+                            <span class="text-[10px] font-extrabold text-gray-500 dark:text-gray-400">${dayName}</span>
                         </div>
-                        <span class="text-[10px] font-extrabold text-gray-500 dark:text-gray-400">${dayName}</span>
-                    </div>
-                `);
-            }
+                    `);
+                }
 
-            const foldersHtml = sortedFolders.map(dat => {
-                const pct = Math.round((dat.done / dat.total) * 100);
-                const isDone = pct === 100;
-                const barGradient = isDone ? 'from-green-400 to-emerald-500' : 'from-blue-400 to-indigo-500';
-                const bgClass = isDone ? 'bg-green-50/30 dark:bg-green-900/10 border-green-100 dark:border-green-800/30' : 'bg-white dark:bg-[#252a36] border-gray-100 dark:border-[#333a45]';
-                const textClass = isDone ? 'text-green-700 dark:text-green-400' : 'text-gray-800 dark:text-white';
-                
-                return `
-                <div class="${bgClass} p-4 rounded-[1.5rem] shadow-sm border relative flex flex-col justify-between hover:shadow-md transition-all group overflow-hidden">
-                    <button onclick="resetFolderStats('${dat.f.replace(/'/g,"\\'")}', '${dat.l.replace(/'/g,"\\'")}', '${dat.s.replace(/'/g,"\\'")}')" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 z-10" title="Сбросить прогресс">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                const foldersHtml = sortedFolders.map(dat => {
+                    const pct = Math.round((dat.done / dat.total) * 100);
+                    const isDone = pct === 100;
+                    const barGradient = isDone ? 'from-green-400 to-emerald-500' : 'from-blue-400 to-indigo-500';
+                    const bgClass = isDone ? 'bg-green-50/30 dark:bg-green-900/10 border-green-100 dark:border-green-800/30' : 'bg-white dark:bg-[#252a36] border-gray-100 dark:border-[#333a45]';
+                    const textClass = isDone ? 'text-green-700 dark:text-green-400' : 'text-gray-800 dark:text-white';
+                    
+                    return `
+                    <div class="${bgClass} p-4 rounded-[1.5rem] shadow-sm border relative flex flex-col justify-between hover:shadow-md transition-all group overflow-hidden">
+                        <button onclick="resetFolderStats('${escapeStr(dat.f)}', '${escapeStr(dat.l)}', '${escapeStr(dat.s)}')" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 z-10" title="Сбросить прогресс">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                        
+                        <div class="relative z-10 mb-4">
+                            <div class="flex items-center gap-1.5 mb-2 pr-6">
+                                ${dat.l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${getLevelColor(dat.l)} shadow-sm">${dat.l}</span>` : ''}
+                                <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest truncate">${dat.f}</span>
+                            </div>
+                            <h4 class="font-extrabold text-base ${textClass} leading-tight pr-4">${dat.s}</h4>
+                        </div>
+                        
+                        <div class="relative z-10 mt-auto">
+                            <div class="flex justify-between items-end mb-2">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-xl font-black tracking-tighter ${isDone ? 'text-green-500' : 'text-blue-500'}">${pct}%</span>
+                                </div>
+                                <span class="text-[11px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-lg">${dat.done} / ${dat.total}</span>
+                            </div>
+                            <div class="w-full bg-gray-100 dark:bg-gray-700 h-2.5 rounded-full overflow-hidden shadow-inner">
+                                <div class="bg-gradient-to-r ${barGradient} h-full transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                stats.innerHTML = `
+                    <div class="grid grid-cols-2 gap-3 mb-4 mt-2">
+                        <div class="bg-gradient-to-br from-[#f88f62] to-[#ed5b36] p-4 rounded-[1.2rem] text-white shadow-md relative overflow-hidden flex flex-col justify-between h-[110px]">
+                            <div class="absolute -right-3 -bottom-4 opacity-20">
+                                <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M11.25 22.5c-4.14 0-7.5-3.36-7.5-7.5 0-3.3 2.1-6.17 5.16-7.14.33-.1.66.19.57.53-.29 1.13-.1 2.37.53 3.37.19.3.62.3.81 0 1.25-1.95.83-4.54-.95-5.99-.24-.19-.19-.57.1-.68 3.51-1.22 7.42 1.35 7.42 5.34 0 1.63-.58 3.12-1.57 4.29-.2.24-.16.6.1.76 1.76.67 3.01 2.38 3.01 4.38 0 4.14-3.36 7.5-7.5 7.5z"/></svg>
+                            </div>
+                            <p class="text-[10px] font-black opacity-90 uppercase tracking-widest z-10 drop-shadow-sm">В ударе</p>
+                            <div class="z-10 mt-auto">
+                                <div class="flex items-baseline gap-1.5 drop-shadow-sm">
+                                    <h2 class="text-4xl font-black tracking-tighter leading-none">${streak}</h2>
+                                    <span class="text-sm font-bold opacity-90">дней</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-[#687dfa] to-[#4c5df0] p-4 rounded-[1.2rem] text-white shadow-md relative overflow-hidden flex flex-col justify-between h-[110px]">
+                            <p class="text-[10px] font-black opacity-90 uppercase tracking-widest z-10 drop-shadow-sm">Mastery</p>
+                            <div class="z-10 mt-auto">
+                                <div class="flex items-baseline gap-1.5 drop-shadow-sm">
+                                    <h2 class="text-4xl font-black tracking-tighter leading-none">${mastered}</h2>
+                                    <span class="text-sm font-bold opacity-90">слов</span>
+                                </div>
+                                <p class="text-[10px] font-medium opacity-80 mt-1.5 drop-shadow-sm">Это ${pctMastery}% от базы</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-[#252a36] p-4 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-transparent mb-6">
+                        <div class="flex justify-between items-center mb-5">
+                            <h3 class="text-[10px] font-black text-gray-800 dark:text-gray-100 uppercase tracking-widest">Активность (7 дней)</h3>
+                            <span class="text-[10px] font-bold bg-blue-50 text-blue-600 dark:bg-[#2a3654] dark:text-[#8aa2e2] px-2.5 py-1 rounded-md">Цель: ${DAILY_GOAL_MINUTES} мин</span>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1.5">
+                            ${daysHtml.join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
+                        ${foldersHtml}
+                    </div>
+                    
+                    <button onclick="document.getElementById('backup-modal').classList.remove('hidden')" class="w-full mb-4 bg-white dark:bg-[#252a36] text-gray-700 dark:text-gray-200 font-bold py-4 rounded-[1.5rem] hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex justify-center items-center gap-2 shadow-sm border border-gray-100 dark:border-transparent text-sm active:scale-95">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg> 
+                        Управление данными
                     </button>
-                    
-                    <div class="relative z-10 mb-4">
-                        <div class="flex items-center gap-1.5 mb-2 pr-6">
-                            ${dat.l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${getLevelColor(dat.l)} shadow-sm">${dat.l}</span>` : ''}
-                            <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest truncate">${dat.f}</span>
-                        </div>
-                        <h4 class="font-extrabold text-base ${textClass} leading-tight pr-4">${dat.s}</h4>
-                    </div>
-                    
-                    <div class="relative z-10 mt-auto">
-                        <div class="flex justify-between items-end mb-2">
-                            <div class="flex items-baseline gap-1">
-                                <span class="text-xl font-black tracking-tighter ${isDone ? 'text-green-500' : 'text-blue-500'}">${pct}%</span>
-                            </div>
-                            <span class="text-[11px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-lg">${dat.done} / ${dat.total}</span>
-                        </div>
-                        <div class="w-full bg-gray-100 dark:bg-gray-700 h-2.5 rounded-full overflow-hidden shadow-inner">
-                            <div class="bg-gradient-to-r ${barGradient} h-full transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-
-            stats.innerHTML = `
-                <div class="grid grid-cols-2 gap-3 mb-4 mt-2">
-                    <div class="bg-gradient-to-br from-[#f88f62] to-[#ed5b36] p-4 rounded-[1.2rem] text-white shadow-md relative overflow-hidden flex flex-col justify-between h-[110px]">
-                        <div class="absolute -right-3 -bottom-4 opacity-20">
-                            <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M11.25 22.5c-4.14 0-7.5-3.36-7.5-7.5 0-3.3 2.1-6.17 5.16-7.14.33-.1.66.19.57.53-.29 1.13-.1 2.37.53 3.37.19.3.62.3.81 0 1.25-1.95.83-4.54-.95-5.99-.24-.19-.19-.57.1-.68 3.51-1.22 7.42 1.35 7.42 5.34 0 1.63-.58 3.12-1.57 4.29-.2.24-.16.6.1.76 1.76.67 3.01 2.38 3.01 4.38 0 4.14-3.36 7.5-7.5 7.5z"/></svg>
-                        </div>
-                        <p class="text-[10px] font-black opacity-90 uppercase tracking-widest z-10 drop-shadow-sm">В ударе</p>
-                        <div class="z-10 mt-auto">
-                            <div class="flex items-baseline gap-1.5 drop-shadow-sm">
-                                <h2 class="text-4xl font-black tracking-tighter leading-none">${streak}</h2>
-                                <span class="text-sm font-bold opacity-90">дней</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-[#687dfa] to-[#4c5df0] p-4 rounded-[1.2rem] text-white shadow-md relative overflow-hidden flex flex-col justify-between h-[110px]">
-                        <p class="text-[10px] font-black opacity-90 uppercase tracking-widest z-10 drop-shadow-sm">Mastery</p>
-                        <div class="z-10 mt-auto">
-                            <div class="flex items-baseline gap-1.5 drop-shadow-sm">
-                                <h2 class="text-4xl font-black tracking-tighter leading-none">${mastered}</h2>
-                                <span class="text-sm font-bold opacity-90">слов</span>
-                            </div>
-                            <p class="text-[10px] font-medium opacity-80 mt-1.5 drop-shadow-sm">Это ${pctMastery}% от базы</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-[#252a36] p-4 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-transparent mb-6">
-                    <div class="flex justify-between items-center mb-5">
-                        <h3 class="text-[10px] font-black text-gray-800 dark:text-gray-100 uppercase tracking-widest">Активность (7 дней)</h3>
-                        <span class="text-[10px] font-bold bg-blue-50 text-blue-600 dark:bg-[#2a3654] dark:text-[#8aa2e2] px-2.5 py-1 rounded-md">Цель: ${DAILY_GOAL_MINUTES} мин</span>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1.5">
-                        ${daysHtml.join('')}
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
-                    ${foldersHtml}
-                </div>
-                
-                <button onclick="document.getElementById('backup-modal').classList.remove('hidden')" class="w-full mb-4 bg-white dark:bg-[#252a36] text-gray-700 dark:text-gray-200 font-bold py-4 rounded-[1.5rem] hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex justify-center items-center gap-2 shadow-sm border border-gray-100 dark:border-transparent text-sm active:scale-95">
-                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg> 
-                    Управление данными
-                </button>
-            `;
+                `;
+            } catch(err) { console.error("Ошибка статистики", err); }
         }
 
         switchView('dict');
