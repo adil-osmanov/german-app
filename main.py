@@ -7,18 +7,15 @@ from psycopg2.extras import RealDictCursor
 import os
 import csv
 import io
-import time
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# Подключение к базе через переменную окружения (для безопасности на Render)
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_rgLF4vIjyqH1@ep-sparkling-truth-aiwf28f5-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require")
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
-# Инициализация таблиц
 def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -99,13 +96,43 @@ def edit_word(word_id: int, word: WordCreate):
     conn.close()
     return {"status": "success"}
 
+# ИСПРАВЛЕНА ЛОГИКА ЗАГРУЗКИ (ОДНО ПОДКЛЮЧЕНИЕ ДЛЯ ВСЕХ СЛОВ)
+@app.post("/upload_csv")
+async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), file: UploadFile = File(...)):
+    content = await file.read()
+    try: text_data = content.decode("utf-8-sig")
+    except: text_data = content.decode("cp1251", errors="replace")
+        
+    csv_reader = csv.reader(io.StringIO(text_data), delimiter=';')
+    words_added = 0
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    for row in csv_reader:
+        if len(row) < 4: continue
+        if row[0].lower() == 'word_type': continue 
+        w_type, article, word_de, word_ru = row[0].strip(), row[1].strip(), row[2].strip(), row[3].strip()
+        ex = row[4].strip() if len(row) > 4 else ""
+        
+        cur.execute(
+            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review) VALUES (%s, %s, %s, '', %s, %s, %s, %s, 0, %s, 0)", 
+            (w_type, article, word_de, word_ru, folder, level, subfolder, ex)
+        )
+        words_added += 1
+        
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success", "added": words_added}
+
 @app.post("/restore_backup")
 async def restore_backup(file: UploadFile = File(...)):
     content = await file.read()
     try: text_data = content.decode("utf-8-sig")
-    except: text_data = content.decode("cp1251", errors="replace")
+    except UnicodeDecodeError: text_data = content.decode("cp1251", errors="replace")
     csv_reader = csv.reader(io.StringIO(text_data), delimiter=';')
-    next(csv_reader, None) # Пропуск заголовка
+    next(csv_reader, None) 
     
     conn = get_db_connection()
     cur = conn.cursor()
@@ -135,6 +162,16 @@ def update_score(word_id: int, data: ScoreUpdate):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("UPDATE words SET score = %s, next_review = %s WHERE id = %s", (data.score, data.next_review, word_id))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success"}
+
+@app.put("/words/reset_folder")
+def reset_folder(data: FolderReset):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE words SET score = 0, next_review = 0 WHERE folder = %s AND level = %s AND subfolder = %s", (data.folder, data.level, data.subfolder))
     conn.commit()
     cur.close()
     conn.close()

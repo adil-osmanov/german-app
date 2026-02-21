@@ -140,14 +140,14 @@
         <section id="view-stats" class="hidden pb-10 space-y-3 pt-4 sm:mt-8"></section>
     </main>
 
-    <div id="backup-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+    <div id="backup-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center pb-24 sm:pb-32 p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
         <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center animate-in zoom-in-95 duration-200 relative">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-black dark:text-white">Данные</h2>
                 <button onclick="document.getElementById('backup-modal').classList.add('hidden')" class="text-gray-400 bg-gray-100 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold">×</button>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-5 text-left leading-relaxed">Здесь можно сохранить весь прогресс или перенести его на другое устройство.</p>
-            <button onclick="window.location.href='/export_csv'" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 mb-4 hover:scale-105 active:scale-95 transition-all flex justify-center items-center gap-2 text-sm">
+            <button onclick="exportData()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 mb-4 hover:scale-105 active:scale-95 transition-all flex justify-center items-center gap-2 text-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Скачать бэкап
             </button>
             <div class="relative mb-4">
@@ -161,7 +161,7 @@
         </div>
     </div>
 
-    <div id="add-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+    <div id="add-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center pb-24 sm:pb-32 p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
         <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] overflow-y-auto relative">
             
             <div class="flex justify-between items-center mb-3 sticky top-0 bg-white dark:bg-gray-900 z-10 py-1">
@@ -262,8 +262,6 @@
         </div>
     </nav>
 
-    <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
-
     <script>
         const API_URL = '/words';
         let currentType = 'noun';
@@ -277,8 +275,14 @@
         let dictTabFilter = 'active'; 
         let trainDirection = 'auto'; 
         let currentIsGermanQuestion = false;
-        
         let currentArticle = 'der';
+
+        // Вернули стандартный fetch (без пароля)
+        async function apiFetch(url, options = {}) {
+            const res = await fetch(url, options);
+            if (!res.ok) throw new Error('Ошибка сети');
+            return res;
+        }
 
         const getLevelColor = (level) => {
             if (!level) return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
@@ -334,13 +338,14 @@
 
         const handleEnter = (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault();
                 const btnCheck = document.getElementById('btn-check-manual');
                 const btnNext = document.getElementById('btn-show-answer');
                 
-                if (!btnCheck.disabled && !document.getElementById('train-manual-block').classList.contains('hidden')) {
+                if (btnCheck && !btnCheck.disabled && !document.getElementById('train-manual-block').classList.contains('hidden')) {
+                    e.preventDefault();
                     btnCheck.click();
-                } else if (!btnNext.classList.contains('hidden')) {
+                } else if (btnNext && !btnNext.classList.contains('hidden')) {
+                    e.preventDefault();
                     btnNext.click();
                 }
             }
@@ -364,12 +369,14 @@
 
         async function fetchWords() {
             try {
-                const res = await fetch(API_URL); 
+                const res = await apiFetch(API_URL); 
                 globalWords = await res.json();
                 document.getElementById('folder-list').innerHTML = [...new Set(globalWords.map(w => w.folder))].map(f => `<option value="${f}">`).join('');
                 document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(l=>l))].map(l => `<option value="${l}">`).join('');
                 document.getElementById('subfolder-list').innerHTML = [...new Set(globalWords.map(w => w.subfolder))].map(s => `<option value="${s}">`).join('');
-            } catch (e) { console.error("Ошибка:", e); globalWords = []; }
+            } catch (e) { 
+                console.error("Ошибка сети", e); 
+            }
         }
 
         async function switchView(target) {
@@ -576,16 +583,15 @@
         window.deleteWord = async (id, event) => { 
             if (event) event.stopPropagation(); 
             if (confirm('Точно удалить слово?')) { 
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); 
+                await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); 
                 await fetchWords(); 
                 renderDict();
             } 
         };
 
-        // --- НОВАЯ ЛОГИКА УДАЛЕНИЯ ПАПКИ ---
         window.deleteFolder = async (f, l, s) => {
             if (confirm(`⚠️ ВНИМАНИЕ! Вы точно хотите удалить всю тему "${s}" со всеми словами? Это действие необратимо!`)) {
-                await fetch('/words/delete_folder', { 
+                await apiFetch('/words/delete_folder', { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify({folder: f, level: l, subfolder: s}) 
@@ -607,7 +613,7 @@
                 folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim()
             };
             const url = editId ? `${API_URL}/${editId}/full` : API_URL;
-            await fetch(url, { method: editId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            await apiFetch(url, { method: editId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
             modal.classList.add('hidden'); searchInp.value = ''; 
             await fetchWords(); 
             renderDict();
@@ -624,7 +630,7 @@
             btn.disabled = true;
             
             try {
-                await fetch('/upload_csv', { method: 'POST', body: f }); 
+                await apiFetch('/upload_csv', { method: 'POST', body: f }); 
                 modal.classList.add('hidden'); 
                 await fetchWords(); 
                 renderDict();
@@ -640,7 +646,11 @@
             if(this.files[0]) label.innerText = this.files[0].name; else label.innerText = 'Выбрать CSV файл';
         };
 
-        // --- ЛОГИКА ТРЕНИРОВКИ ---
+        // Экспорт без пароля
+        window.exportData = () => {
+            window.location.href = `/export_csv`;
+        };
+
         let trainList = []; let curIdx = 0;
 
         window.setDirection = (dir) => {
@@ -925,7 +935,7 @@
         }
 
         async function updateScore(newScore, nextReviewMs) {
-            await fetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})});
+            await apiFetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})});
             const gwItem = globalWords.find(gw => gw.id === trainList[curIdx].id);
             if(gwItem) { gwItem.score = newScore; gwItem.next_review = nextReviewMs; }
             trainList[curIdx].score = newScore; 
@@ -1036,7 +1046,7 @@
             btn.disabled = true;
             
             try {
-                const res = await fetch('/restore_backup', { method: 'POST', body: f });
+                const res = await apiFetch('/restore_backup', { method: 'POST', body: f });
                 const result = await res.json();
                 if(result.status === 'success') {
                     document.getElementById('backup-modal').classList.add('hidden');
@@ -1056,7 +1066,7 @@
 
         window.resetFolderStats = async (f, l, s) => {
             if(confirm(`Обнулить прогресс для темы "${s}"?`)){
-                await fetch('/words/reset_folder', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder:f, level:l, subfolder:s})});
+                await apiFetch('/words/reset_folder', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder:f, level:l, subfolder:s})});
                 await fetchWords(); 
                 loadStats();
             }
