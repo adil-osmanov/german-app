@@ -150,7 +150,7 @@
                         <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-100 dark:bg-[#252b36] w-9 h-9 rounded-lg font-bold text-sm dark:text-white shadow-sm hover:bg-gray-200 active:scale-90">ü</button>
                         <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-100 dark:bg-[#252b36] w-9 h-9 rounded-lg font-bold text-sm dark:text-white shadow-sm hover:bg-gray-200 active:scale-90">ß</button>
                     </div>
-                    <button id="btn-check-manual" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 active:scale-95 transition-all disabled:opacity-50 text-sm">Проверить</button>
+                    <button id="btn-check-manual" class="w-full bg-blue-50 text-blue-600 dark:bg-[#2a3654] dark:text-[#8aa2e2] font-bold py-3 rounded-xl active:scale-95 transition-all disabled:opacity-50 text-sm">Проверить</button>
                 </div>
             </div>
         </section>
@@ -240,7 +240,7 @@
                                 <input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема" required class="w-full bg-gray-50 dark:bg-[#252b36] rounded-xl py-2.5 px-3 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500">
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 mt-1 active:scale-95 transition-all text-sm">Сохранить</button>
+                        <button type="submit" class="w-full bg-blue-50 text-blue-600 dark:bg-[#2a3654] dark:text-[#8aa2e2] font-bold py-3.5 rounded-xl mt-1 active:scale-95 transition-all text-sm">Сохранить</button>
                     </form>
                 </div>
                 
@@ -264,7 +264,7 @@
                             <span class="text-green-600 dark:text-green-400 font-bold text-xs">Выбрать CSV файл</span>
                         </label>
                     </div>
-                    <button id="btn-upload-csv" class="w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/40 mt-2 active:scale-95 transition-all text-sm">Загрузить пачку</button>
+                    <button id="btn-upload-csv" class="w-full bg-green-50 text-green-600 dark:bg-green-900/40 dark:text-green-400 font-bold py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm">Загрузить пачку</button>
                 </div>
             </div>
         </div>
@@ -314,7 +314,6 @@
             recognition.maxAlternatives = 1;
         }
 
-        // ОБНОВЛЕННАЯ ФУНКЦИЯ FETCH (проглатывает ошибки сети для офлайна)
         async function apiFetch(url, options = {}) {
             const res = await fetch(url, options);
             if (!res.ok) throw new Error('Ошибка сети');
@@ -409,12 +408,11 @@
 
         const isWordDue = (w) => Date.now() >= (w.next_review || 0);
 
-        // ОБНОВЛЕННАЯ ЗАГРУЗКА СЛОВ (с резервной копией в localStorage)
         async function fetchWords() {
             try {
                 const res = await apiFetch(API_URL); 
                 globalWords = await res.json();
-                localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); // Сохраняем в память!
+                localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
             } catch (e) { 
                 console.warn("Офлайн! Грузим слова из памяти устройства.");
                 const saved = localStorage.getItem('offline_words_db');
@@ -443,6 +441,8 @@
                 }
             });
             document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', stats:'Прогресс'}[target];
+            
+            // Если мы переходим куда-либо кроме вкладки "Словарь", кнопка добавления должна исчезнуть.
             document.getElementById('add-btn').classList.toggle('hidden', target !== 'dict');
             
             await fetchWords();
@@ -636,9 +636,21 @@
         document.getElementById('tab-single').onclick = showSingleTab;
         document.getElementById('tab-bulk').onclick = showBulkTab;
 
+        // ИСПРАВЛЕННАЯ КНОПКА ДОБАВЛЕНИЯ (очищает все старые данные)
         document.getElementById('add-btn').onclick = () => { 
             editId = null; document.getElementById('modal-title').innerText = "Новое слово"; 
-            document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der'); modal.classList.remove('hidden'); 
+            document.getElementById('add-form').reset(); 
+            
+            // Очищаем форму CSV
+            document.getElementById('bulk-folder').value = ''; 
+            document.getElementById('bulk-level').value = ''; 
+            document.getElementById('bulk-subfolder').value = ''; 
+            const bulkFile = document.getElementById('bulk-file');
+            if(bulkFile) bulkFile.value = '';
+            const bulkLabel = document.querySelector('label[for="bulk-file"] span');
+            if(bulkLabel) bulkLabel.innerText = 'Выбрать CSV файл';
+
+            setType('noun'); showSingleTab(); selectArticle('der'); modal.classList.remove('hidden'); 
         };
         document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
         
@@ -657,12 +669,23 @@
             modal.classList.remove('hidden');
         };
 
+        // ИСПРАВЛЕННОЕ БЫСТРОЕ ДОБАВЛЕНИЕ (заполняет обе формы: одиночную и CSV)
         window.fastAdd = (folder, level, subfolder) => {
             editId = null; document.getElementById('modal-title').innerText = "Быстрое добавление";
             document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der');
+            
+            const lvl = level === 'Общее' ? '' : level;
+            
+            // Заполняем форму для одиночного добавления
             document.getElementById('word-folder').value = folder; 
-            document.getElementById('word-level').value = level === 'Общее' ? '' : level; 
+            document.getElementById('word-level').value = lvl; 
             document.getElementById('word-subfolder').value = subfolder;
+            
+            // Заполняем форму для массовой загрузки (CSV)
+            document.getElementById('bulk-folder').value = folder; 
+            document.getElementById('bulk-level').value = lvl; 
+            document.getElementById('bulk-subfolder').value = subfolder;
+            
             modal.classList.remove('hidden'); setTimeout(() => document.getElementById('word-de').focus(), 150);
         };
 
@@ -1113,7 +1136,6 @@
             }
         }
 
-        // ОБНОВЛЕННОЕ СОХРАНЕНИЕ ОЧКОВ (не ломается при отсутствии интернета)
         async function updateScore(newScore, isCorrect) {
             let nextReviewMs = 0;
             if (isCorrect) {
@@ -1136,7 +1158,7 @@
             if(gwItem) { gwItem.score = newScore; gwItem.next_review = nextReviewMs; }
             trainList[curIdx].score = newScore; 
             
-            localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); // Запоминаем успех офлайн!
+            localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
             
             curIdx++; renderCard();
         }
