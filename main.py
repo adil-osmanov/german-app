@@ -36,6 +36,20 @@ def init_db():
         )
     """)
     conn.commit()
+    
+    # Безопасное добавление новых колонок для глаголов (если их еще нет)
+    try:
+        cur.execute("ALTER TABLE words ADD COLUMN praeteritum TEXT DEFAULT ''")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        
+    try:
+        cur.execute("ALTER TABLE words ADD COLUMN partizip TEXT DEFAULT ''")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
     cur.close()
     conn.close()
 
@@ -51,6 +65,8 @@ class WordCreate(BaseModel):
     level: str = ""
     subfolder: str
     example: str = ""
+    praeteritum: str = ""
+    partizip: str = ""
 
 class ScoreUpdate(BaseModel):
     score: int
@@ -76,8 +92,8 @@ def add_word(word: WordCreate):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0)", 
-        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example)
+        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s)", 
+        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip)
     )
     conn.commit()
     cur.close()
@@ -89,14 +105,13 @@ def edit_word(word_id: int, word: WordCreate):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s WHERE id=%s
-    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word_id))
+        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s WHERE id=%s
+    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word_id))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
-# ИСПРАВЛЕНА ЛОГИКА ЗАГРУЗКИ (ОДНО ПОДКЛЮЧЕНИЕ ДЛЯ ВСЕХ СЛОВ)
 @app.post("/upload_csv")
 async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), file: UploadFile = File(...)):
     content = await file.read()
@@ -116,7 +131,7 @@ async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder:
         ex = row[4].strip() if len(row) > 4 else ""
         
         cur.execute(
-            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review) VALUES (%s, %s, %s, '', %s, %s, %s, %s, 0, %s, 0)", 
+            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip) VALUES (%s, %s, %s, '', %s, %s, %s, %s, 0, %s, 0, '', '')", 
             (w_type, article, word_de, word_ru, folder, level, subfolder, ex)
         )
         words_added += 1
@@ -145,9 +160,11 @@ async def restore_backup(file: UploadFile = File(...)):
             score = int(row[8]) if row[8] else 0
             next_rev = int(row[10]) if len(row) > 10 and row[10] else 0
             plural_val = row[11] if len(row) > 11 else ""
+            praet = row[12] if len(row) > 12 else ""
+            part = row[13] if len(row) > 13 else ""
             cur.execute(
-                "INSERT INTO words (word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
-                (row[1], row[2], row[3], row[4], row[5], row[6], row[7], score, row[9], next_rev, plural_val)
+                "INSERT INTO words (word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                (row[1], row[2], row[3], row[4], row[5], row[6], row[7], score, row[9], next_rev, plural_val, praet, part)
             )
             words_added += 1
         except: continue
@@ -201,13 +218,13 @@ def delete_word(word_id: int):
 def export_csv():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural FROM words")
+    cur.execute("SELECT id, word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip FROM words")
     rows = cur.fetchall()
     output = io.StringIO(newline='')
     writer = csv.writer(output, delimiter=';')
-    writer.writerow(["id", "word_type", "article", "word_de", "word_ru", "folder", "level", "subfolder", "score", "example", "next_review", "plural"])
+    writer.writerow(["id", "word_type", "article", "word_de", "word_ru", "folder", "level", "subfolder", "score", "example", "next_review", "plural", "praeteritum", "partizip"])
     for r in rows:
-        writer.writerow([r['id'], r['word_type'], r['article'], r['word_de'], r['word_ru'], r['folder'], r['level'], r['subfolder'], r['score'], r['example'], r['next_review'], r['plural']])
+        writer.writerow([r['id'], r['word_type'], r['article'], r['word_de'], r['word_ru'], r['folder'], r['level'], r['subfolder'], r['score'], r['example'], r['next_review'], r['plural'], r['praeteritum'], r['partizip']])
     csv_string = '\ufeff' + output.getvalue()
     cur.close()
     conn.close()

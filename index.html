@@ -130,6 +130,11 @@
                         <input type="text" id="manual-plural" placeholder="Мн. число..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-sm">
                     </div>
 
+                    <div class="flex gap-2 mb-2 w-full hidden" id="manual-verb-forms-container">
+                        <input type="text" id="manual-praeteritum" placeholder="Präteritum (machte)" autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-2 text-center outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-xs">
+                        <input type="text" id="manual-partizip" placeholder="Partizip II (gemacht)" autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-2 text-center outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-xs">
+                    </div>
+
                     <div id="manual-feedback" class="hidden w-full text-center py-2.5 rounded-lg font-bold text-sm mb-2 transition-all animate-in fade-in zoom-in duration-200"></div>
 
                     <div id="train-umlauts" class="flex justify-center gap-1.5 mb-3">
@@ -200,6 +205,11 @@
                     <div class="flex gap-2 w-full" id="plural-input-group">
                         <div class="bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 text-center outline-none font-bold text-gray-400 dark:text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die</div>
                         <input type="text" id="word-plural" placeholder="Мн. число (Plural)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
+                    </div>
+
+                    <div class="flex gap-2 w-full hidden" id="verb-forms-group">
+                        <input type="text" id="word-praeteritum" placeholder="Präteritum (machte)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
+                        <input type="text" id="word-partizip" placeholder="Partizip II (gemacht)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
                     </div>
 
                     <div id="add-umlauts" class="flex justify-center gap-1.5 mt-1 mb-1">
@@ -285,7 +295,6 @@
         let currentIsGermanQuestion = false;
         let currentArticle = 'der';
 
-        // ИНИЦИАЛИЗАЦИЯ ГОЛОСОВОГО ВВОДА (Web Speech API)
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
         if (SpeechRecognition) {
@@ -518,10 +527,15 @@
                             </div>
                         </div>`;
                         grouped[f][l][s].forEach(w => {
+                            // ОТОБРАЖЕНИЕ ФОРМ ГЛАГОЛОВ В СЛОВАРЕ
+                            let extraInfo = '';
+                            if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
+                            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
+
                             html += `
                             <div onclick="openEdit(${w.id})" class="bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-2 flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
                                 <div class="flex-1 pr-3 min-w-0">
-                                    <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${w.plural ? `(pl. ${w.plural})` : ''}</span></p>
+                                    <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
                                     <p class="text-gray-400 text-xs font-medium mt-0.5 truncate">${w.word_ru}</p>
                                     ${w.example ? `<p class="text-[11px] text-blue-500/80 dark:text-blue-400 mt-1 italic font-medium leading-tight truncate">"${w.example}"</p>` : ''}
                                 </div>
@@ -547,8 +561,11 @@
             document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-md bg-white dark:bg-gray-600 shadow-sm dark:text-white transition-all" : "flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all";
             
             document.getElementById('article-selector').classList.toggle('hidden', t === 'verb');
-            document.getElementById('add-umlauts').classList.toggle('hidden', t === 'verb'); 
             document.getElementById('plural-input-group').classList.toggle('hidden', t === 'verb');
+            
+            // ПОКАЗАТЬ ПОЛЯ ГЛАГОЛОВ
+            const verbGroup = document.getElementById('verb-forms-group');
+            if(verbGroup) verbGroup.classList.toggle('hidden', t !== 'verb');
         };
 
         document.getElementById('type-noun').onclick = () => setType('noun');
@@ -582,6 +599,8 @@
             
             document.getElementById('word-de').value = w.word_de; document.getElementById('word-ru').value = w.word_ru;
             document.getElementById('word-plural').value = w.plural || "";
+            document.getElementById('word-praeteritum').value = w.praeteritum || "";
+            document.getElementById('word-partizip').value = w.partizip || "";
             document.getElementById('word-example').value = w.example || "";
             document.getElementById('word-folder').value = w.folder; document.getElementById('word-level').value = w.level || ""; document.getElementById('word-subfolder').value = w.subfolder;
             modal.classList.remove('hidden');
@@ -624,6 +643,8 @@
                 article: currentType==='noun' ? currentArticle : '',
                 word_de: document.getElementById('word-de').value.trim(), 
                 plural: currentType==='noun' ? document.getElementById('word-plural').value.trim() : '',
+                praeteritum: currentType==='verb' ? document.getElementById('word-praeteritum').value.trim() : '',
+                partizip: currentType==='verb' ? document.getElementById('word-partizip').value.trim() : '',
                 word_ru: document.getElementById('word-ru').value.trim(),
                 example: document.getElementById('word-example').value.trim(),
                 folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim()
@@ -858,6 +879,11 @@
             const manMain = document.getElementById('manual-main'); 
             const manPluralContainer = document.getElementById('manual-plural-container');
             const manPlural = document.getElementById('manual-plural');
+            
+            const manVerbContainer = document.getElementById('manual-verb-forms-container');
+            const manPraet = document.getElementById('manual-praeteritum');
+            const manPart = document.getElementById('manual-partizip');
+            
             const btnCheck = document.getElementById('btn-check-manual');
             const umlautBar = document.getElementById('train-umlauts');
             const btnSpeakQ = document.getElementById('btn-speak-question');
@@ -867,6 +893,8 @@
             if(manArt) manArt.disabled = false;
             if(manMain) manMain.disabled = false;
             if(manPlural) manPlural.disabled = false;
+            if(manPraet) manPraet.disabled = false;
+            if(manPart) manPart.disabled = false;
             if(btnCheck) btnCheck.disabled = false;
 
             const fullGerman = (w.word_type==='noun' ? (w.article||'') + ' ' : '') + (w.word_de||'');
@@ -879,7 +907,6 @@
                 currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
             } 
 
-            // ИСПРАВЛЕННАЯ ЛОГИКА ДИНАМИКА (ТОЛЬКО НА НЕМЕЦКОМ)
             if (currentIsGermanQuestion) {
                 if(btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
                 if(btnSpeakAns) btnSpeakAns.classList.add('hidden');
@@ -888,7 +915,6 @@
                 if(btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
             }
 
-            // НАСТРОЙКА КНОПКИ МИКРОФОНА
             if (recognition && btnMic) {
                 btnMic.classList.remove('hidden');
                 btnMic.onclick = () => {
@@ -939,8 +965,11 @@
 
             document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru||'') : fullGerman;
             
+            // ВЫВОД ФОРМ В ОТВЕТЕ
             if (w.word_type === 'noun' && w.plural) {
                 document.getElementById('train-de-plural').innerText = `Plural: die ${w.plural}`;
+            } else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
+                document.getElementById('train-de-plural').innerText = `Formen: ${w.praeteritum || '-'}, ${w.partizip || '-'}`;
             }
 
             if (state === 'L1' || state === 'Archive') {
@@ -972,6 +1001,7 @@
                     if(manArt) manArt.classList.add('hidden'); 
                     if(manMain) { manMain.value = ''; manMain.placeholder = "Перевод на русский..."; }
                     if(manPluralContainer) manPluralContainer.classList.add('hidden');
+                    if(manVerbContainer) manVerbContainer.classList.add('hidden');
                     if(umlautBar) umlautBar.classList.add('hidden'); 
                     setTimeout(() => { if(manMain) manMain.focus() }, 150);
                 } else {
@@ -983,6 +1013,15 @@
                         if(manPlural) manPlural.value = '';
                     } else {
                         if(manPluralContainer) manPluralContainer.classList.add('hidden');
+                    }
+
+                    // ПОКАЗ ПОЛЕЙ ГЛАГОЛА В ТРЕНИРОВКЕ
+                    if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
+                        if(manVerbContainer) manVerbContainer.classList.remove('hidden');
+                        if(manPraet) manPraet.value = '';
+                        if(manPart) manPart.value = '';
+                    } else {
+                        if(manVerbContainer) manVerbContainer.classList.add('hidden');
                     }
 
                     if(umlautBar) umlautBar.classList.remove('hidden'); 
@@ -1009,6 +1048,8 @@
             const w = trainList[curIdx];
             if (w.word_type === 'noun' && w.plural) {
                 document.getElementById('train-de-plural').classList.remove('hidden');
+            } else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
+                document.getElementById('train-de-plural').classList.remove('hidden');
             }
         };
         
@@ -1025,10 +1066,14 @@
             const artRaw = document.getElementById('manual-article').value;
             const mainRaw = document.getElementById('manual-main').value;
             const pluralRaw = document.getElementById('manual-plural').value;
+            const praetRaw = document.getElementById('manual-praeteritum').value;
+            const partRaw = document.getElementById('manual-partizip').value;
 
             const art = (artRaw ? artRaw.trim().toLowerCase() : ""); 
             const main = (mainRaw ? mainRaw.trim() : "");
             const typedPlural = (pluralRaw ? pluralRaw.trim().toLowerCase() : "");
+            const typedPraet = (praetRaw ? praetRaw.trim().toLowerCase() : "");
+            const typedPart = (partRaw ? partRaw.trim().toLowerCase() : "");
             
             const feedback = document.getElementById('manual-feedback');
             const btnCheck = document.getElementById('btn-check-manual');
@@ -1040,6 +1085,8 @@
                 const expectedArt = (w.article ? w.article.toLowerCase() : "");
                 const expectedWord = (w.word_de ? w.word_de.toLowerCase() : "");
                 const expectedPlural = (w.plural ? w.plural.toLowerCase() : "");
+                const expectedPraet = (w.praeteritum ? w.praeteritum.toLowerCase() : "");
+                const expectedPart = (w.partizip ? w.partizip.toLowerCase() : "");
                 
                 if (w.word_type === 'noun') {
                     if (w.plural) {
@@ -1049,6 +1096,17 @@
                         isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord);
                         correctAnswer = `${w.article} ${w.word_de}`;
                     }
+                } else if (w.word_type === 'verb') {
+                    // ПРОВЕРКА ФОРМ ГЛАГОЛА
+                    let baseCorrect = (main.toLowerCase() === expectedWord);
+                    let formsCorrect = true;
+                    if (w.praeteritum || w.partizip) {
+                        formsCorrect = (typedPraet === expectedPraet) && (typedPart === expectedPart);
+                        correctAnswer = `${w.word_de} (${w.praeteritum}, ${w.partizip})`;
+                    } else {
+                        correctAnswer = w.word_de;
+                    }
+                    isCorrect = baseCorrect && formsCorrect;
                 } else {
                     isCorrect = main.toLowerCase() === expectedWord;
                     correctAnswer = w.word_de;
@@ -1062,6 +1120,8 @@
             document.getElementById('manual-article').disabled = true;
             document.getElementById('manual-main').disabled = true;
             document.getElementById('manual-plural').disabled = true;
+            document.getElementById('manual-praeteritum').disabled = true;
+            document.getElementById('manual-partizip').disabled = true;
             btnCheck.disabled = true;
 
             feedback.className = "w-full text-center py-2.5 rounded-lg font-bold text-sm mb-2 transition-all animate-in fade-in zoom-in duration-200 shadow-sm";
