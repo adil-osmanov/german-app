@@ -1,6 +1,6 @@
 const CACHE_NAME = 'woerterbuch-v1';
 
-// Список файлов, которые сохранятся в памяти телефона
+// Список файлов, которые браузер скачает и спрячет в память телефона
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -8,7 +8,7 @@ const STATIC_ASSETS = [
     '/manifest.json'
 ];
 
-// 1. Установка: браузер скачивает и прячет статику в кеш
+// 1. Установка: кешируем базовую статику
 self.addEventListener('install', (e) => {
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
@@ -16,7 +16,7 @@ self.addEventListener('install', (e) => {
     self.skipWaiting();
 });
 
-// 2. Активация: удаляем старый мусор, если выйдет новая версия
+// 2. Активация: чистим старый кеш, если ты обновишь код
 self.addEventListener('activate', (e) => {
     e.waitUntil(
         caches.keys().then((keys) => {
@@ -28,28 +28,25 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
 });
 
-// 3. Магия офлайна: перехват всех запросов
+// 3. Перехват запросов (основная магия офлайна)
 self.addEventListener('fetch', (e) => {
-    
-    // Если приложение запрашивает слова с сервера (/words)
+    // Если приложение стучится к базе данных за словами (/words)
     if (e.request.url.includes('/words')) {
-        // Стратегия "Network First" (Сначала сеть, потом кеш)
         e.respondWith(
+            // Сначала пробуем получить свежие данные через интернет
             fetch(e.request)
                 .then((response) => {
-                    // Интернет есть! Сохраняем свежие слова в кеш на будущее
                     const clonedResponse = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clonedResponse));
                     return response;
                 })
                 .catch(() => {
-                    // Интернета нет (офлайн). Достаем последние сохраненные слова!
+                    // Если интернета нет, достаем последние слова из памяти телефона!
                     return caches.match(e.request);
                 })
         );
     } else {
-        // Для обычных файлов (HTML, картинки, манифест)
-        // Стратегия "Cache First" (Отдаем мгновенно из кеша)
+        // Для обычных файлов (index.html, картинки) - сразу отдаем из памяти для скорости
         e.respondWith(
             caches.match(e.request).then((cachedResponse) => {
                 return cachedResponse || fetch(e.request);
