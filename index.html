@@ -98,7 +98,7 @@
                     </div>
                 </div>
                 
-                <p id="train-example-q" class="text-[11px] text-gray-400 italic mb-5 hidden px-2 leading-relaxed"></p>
+                <p id="train-example-q" class="text-[11px] text-gray-400 italic mb-5 hidden px-2 leading-relaxed block"></p>
                 
                 <button id="btn-show-answer" class="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl active:scale-95 transition-all mt-2 text-sm">Показать ответ</button>
                 
@@ -948,7 +948,10 @@
             document.getElementById('btn-show-answer').classList.add('hidden');
             document.getElementById('manual-feedback').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
-            if(exQ) exQ.classList.add('hidden');
+            if(exQ) {
+                exQ.classList.add('hidden');
+                exQ.className = "text-[11px] text-gray-400 italic mb-5 hidden px-2 leading-relaxed block"; // Сброс стилей
+            }
 
             const manArt = document.getElementById('manual-article'); 
             const manMain = document.getElementById('manual-main'); 
@@ -1056,7 +1059,6 @@
             } else if (state === 'L2') {
                 if(badge) { badge.innerText = `LEVEL 2: ПИСЬМО (${w.score === 4 ? '1/2' : 'ФИНАЛ'})`; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"; }
                 
-                // Возвращенная логика: главное слово на русском, пример с пропусками — просто подсказка
                 if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
                 
                 if(!currentIsGermanQuestion && w.example && exQ) { 
@@ -1106,15 +1108,14 @@
 
         async function updateScore(newScore, isCorrect) {
             let nextReviewMs = 0;
-            // Логика интервального повторения
             if (isCorrect) {
                 const now = Date.now();
-                if (newScore <= 1) nextReviewMs = now + 12 * 3600000; // 12 часов
-                else if (newScore === 2) nextReviewMs = now + 86400000; // 1 день
-                else if (newScore === 3) nextReviewMs = now + 3 * 86400000; // 3 дня
-                else if (newScore === 4) nextReviewMs = now + 7 * 86400000; // 7 дней
-                else if (newScore === 5) nextReviewMs = now + 14 * 86400000; // 14 дней
-                else nextReviewMs = now + 30 * 86400000; // 30 дней в архиве
+                if (newScore <= 1) nextReviewMs = now + 12 * 3600000; 
+                else if (newScore === 2) nextReviewMs = now + 86400000; 
+                else if (newScore === 3) nextReviewMs = now + 3 * 86400000; 
+                else if (newScore === 4) nextReviewMs = now + 7 * 86400000; 
+                else if (newScore === 5) nextReviewMs = now + 14 * 86400000; 
+                else nextReviewMs = now + 30 * 86400000; 
             }
             
             await apiFetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})});
@@ -1292,6 +1293,38 @@
             const minutesToday = Math.floor(dailyStats.ms / 60000);
             const timeProgressPct = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
 
+            const foldersHtml = sortedFolders.map(dat => {
+                const pct = Math.round((dat.done / dat.total) * 100);
+                const isDone = pct === 100;
+                const ringColor = isDone ? 'ring-green-500/50' : 'ring-blue-500/30';
+                const barColor = isDone ? 'bg-green-500' : 'bg-blue-500';
+                
+                return `
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative flex flex-col justify-between hover:shadow-md transition-shadow group min-h-[100px]">
+                    <button onclick="resetFolderStats('${dat.f.replace(/'/g,"\\'")}', '${dat.l.replace(/'/g,"\\'")}', '${dat.s.replace(/'/g,"\\'")}')" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Сбросить прогресс">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </button>
+                    
+                    <div>
+                        <div class="flex items-center gap-1.5 mb-1.5 pr-6">
+                            ${dat.l !== 'Общее' ? `<span class="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${getLevelColor(dat.l)}">${dat.l}</span>` : ''}
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest truncate">${dat.f}</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm dark:text-white leading-tight mb-3 pr-4">${dat.s}</h4>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between items-end mb-1.5">
+                            <span class="text-xs font-bold ${isDone ? 'text-green-500' : 'text-blue-500'}">${pct}%</span>
+                            <span class="text-[10px] font-medium text-gray-400">${dat.done} / ${dat.total}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden ring-1 ring-inset ${ringColor}">
+                            <div class="${barColor} h-full transition-all duration-1000" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
             stats.innerHTML = `
                 <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-3xl text-white shadow-xl shadow-purple-500/30">
                     <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Цель на сегодня</p>
@@ -1312,37 +1345,7 @@
                 
                 <h3 class="font-bold text-base mt-6 mb-1 dark:text-white px-1">Прогресс по темам</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    ${sortedFolders.map(dat => {
-                        const pct = Math.round((dat.done / dat.total) * 100);
-                        const isDone = pct === 100;
-                        const ringColor = isDone ? 'ring-green-500/50' : 'ring-blue-500/30';
-                        const barColor = isDone ? 'bg-green-500' : 'bg-blue-500';
-                        
-                        return `
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative flex flex-col justify-between hover:shadow-md transition-shadow group min-h-[100px]">
-                            <button onclick="resetFolderStats('${dat.f.replace(/'/g,"\\'")}', '${dat.l.replace(/'/g,"\\'")}', '${dat.s.replace(/'/g,"\\'")}')" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Сбросить прогресс">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            </button>
-                            
-                            <div>
-                                <div class="flex items-center gap-1.5 mb-1.5 pr-6">
-                                    ${dat.l !== 'Общее' ? `<span class="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${getLevelColor(dat.l)}">${dat.l}</span>` : ''}
-                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest truncate">${dat.f}</span>
-                                </div>
-                                <h4 class="font-extrabold text-sm dark:text-white leading-tight mb-3 pr-4">${dat.s}</h4>
-                            </div>
-                            
-                            <div>
-                                <div class="flex justify-between items-end mb-1.5">
-                                    <span class="text-xs font-bold ${isDone ? 'text-green-500' : 'text-blue-500'}">${pct}%</span>
-                                    <span class="text-[10px] font-medium text-gray-400">${dat.done} / ${dat.total}</span>
-                                </div>
-                                <div class="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden ring-1 ring-inset ${ringColor}">
-                                    <div class="${barColor} h-full transition-all duration-1000" style="width: ${pct}%"></div>
-                                </div>
-                            </div>
-                        </div>`;
-                    }).join('')}
+                    ${foldersHtml}
                 </div>
                 
                 <button onclick="document.getElementById('backup-modal').classList.remove('hidden')" class="w-full mt-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold py-3.5 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all flex justify-center items-center gap-2 shadow-sm text-sm">
