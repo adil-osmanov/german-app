@@ -38,7 +38,7 @@
         </div>
     </header>
 
-    <main id="main-scroll" class="pt-24 pb-40 max-w-2xl mx-auto px-3 w-full overflow-y-auto">
+   <main id="main-scroll" class="pt-24 pb-24 max-w-2xl mx-auto px-3 w-full overflow-y-auto">
         
         <section id="view-dict" class="pt-4 pb-10">
             <div class="mb-4">
@@ -1263,12 +1263,23 @@
 
         function loadStats() {
             const stats = document.getElementById('view-stats');
-            const total = globalWords.length; const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
+            const total = globalWords.length; 
+            const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
             const folders = {};
+            
             globalWords.forEach(w => { 
                 const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
                 if(!folders[k]) folders[k] = {f:w.folder, l:w.level||'Общее', s:w.subfolder, total:0, done:0}; 
-                folders[k].total++; if(w.score>=MAX_SCORE) folders[k].done++; 
+                folders[k].total++; 
+                if(w.score>=MAX_SCORE) folders[k].done++; 
+            });
+
+            // Сортируем статистику: сначала те, где больше % выученного (но не 100%), затем по алфавиту
+            const sortedFolders = Object.values(folders).sort((a, b) => {
+                const pctA = a.done / a.total;
+                const pctB = b.done / b.total;
+                if (pctB !== pctA) return pctB - pctA;
+                return a.s.localeCompare(b.s);
             });
 
             const today = new Date().toDateString();
@@ -1296,11 +1307,9 @@
                     <p class="mt-2 text-xs font-medium">Закреплено ${mastered} из ${total} слов.</p>
                 </div>
                 
-                <h3 class="font-bold text-base mt-6 mb-1 dark:text-white px-1">Темы</h3>
+                <h3 class="font-bold text-base mt-6 mb-1 dark:text-white px-1">Прогресс по темам</h3>
                 <div class="space-y-2.5">
-                    ${Object.keys(folders).map(k => {
-                        const dat = folders[k];
-                        return `
+                    ${sortedFolders.map(dat => `
                         <div class="bg-white dark:bg-gray-800 p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 relative">
                             <button onclick="resetFolderStats('${dat.f.replace(/'/g,"\\'")}', '${dat.l.replace(/'/g,"\\'")}', '${dat.s.replace(/'/g,"\\'")}')" class="absolute top-3 right-3 text-gray-300 hover:text-orange-500 transition-colors">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -1314,12 +1323,10 @@
                             <div class="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
                                 <div class="bg-blue-500 h-full transition-all duration-1000" style="width: ${(dat.done/dat.total)*100}%"></div>
                             </div>
-                        </div>`;
-                    }).join('')}
+                        </div>`).join('')}
                 </div>
                 
                 <button onclick="document.getElementById('backup-modal').classList.remove('hidden')" class="w-full mt-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold py-3.5 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all flex justify-center items-center gap-2 shadow-sm text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> 
                     Управление данными (Бэкап)
                 </button>
             `;
