@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Wörterbuch Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } } };
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; height: 100dvh; }
+        .glass { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .dark .glass { background: rgba(17, 24, 39, 0.85); border-color: rgba(255,255,255,0.05); }
+        .active-tab { color: #3b82f6; transform: translateY(-2px); }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
+</head>
+<body class="bg-[#f2f2f7] dark:bg-black text-gray-900 dark:text-white transition-colors duration-300 min-h-screen flex flex-col overflow-hidden">
+
+    <div class="hidden bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 line-through grayscale opacity-60"></div>
+
+    <header class="fixed top-0 left-0 right-0 pt-12 pb-3 px-4 glass border-b border-gray-200 dark:border-gray-800 z-40 transition-all">
+        <div class="flex justify-between items-center max-w-2xl mx-auto">
+            <h1 id="header-title" class="text-xl font-extrabold tracking-tight">Словарь</h1>
+            <div class="flex items-center gap-3">
+                <button id="theme-toggle" class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                    <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path></svg>
+                </button>
+                <button id="add-btn" class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all text-lg font-medium">+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-scroll" class="pt-24 pb-40 max-w-2xl mx-auto px-3 w-full overflow-y-auto">
+        
+        <section id="view-dict" class="pt-4 pb-10">
+            <div class="mb-4">
+                <div class="relative group">
+                    <input type="text" id="search-input" placeholder="Поиск (нем / рус)..." autocomplete="off" class="w-full bg-white dark:bg-gray-900 border-none rounded-xl py-2.5 pl-9 shadow-sm outline-none focus:ring-2 ring-blue-500 transition-all dark:text-white text-sm">
+                    <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+            
+            <div class="flex bg-gray-200/50 dark:bg-gray-800/80 p-1 rounded-xl mb-4">
+                <button id="dict-tab-active" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all">В процессе</button>
+                <button id="dict-tab-mastered" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 dark:text-gray-400 transition-all flex items-center justify-center gap-1">Архив 🏆</button>
+            </div>
+
+            <div id="dict-list">
+                <div class="text-center py-20"><p class="text-gray-400 font-bold text-sm animate-pulse">Загрузка...</p></div>
+            </div>
+        </section>
+
+        <section id="view-train" class="hidden relative pt-4 pb-10">
+            <div id="train-setup-block" class="w-full animate-in fade-in slide-in-from-bottom-4 duration-300 sm:mt-16">
+                <div class="flex bg-gray-200/50 dark:bg-gray-800/80 p-1 rounded-xl mb-4 mt-2 gap-1">
+                    <button id="dir-auto" onclick="setDirection('auto')" class="flex-1 py-2 text-[10px] font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm text-blue-500 border border-blue-500 transition-all">🧠 Микс</button>
+                    <button id="dir-ru-de" onclick="setDirection('ru-de')" class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 dark:text-gray-400 border border-transparent transition-all">🇷🇺 ➔ 🇩🇪</button>
+                    <button id="dir-de-ru" onclick="setDirection('de-ru')" class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 dark:text-gray-400 border border-transparent transition-all">🇩🇪 ➔ 🇷🇺</button>
+                </div>
+                <div id="train-topics-container" class="space-y-3"></div>
+            </div>
+
+            <div id="train-card-block" class="hidden w-full bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-xl text-center relative flex flex-col transition-all border border-gray-100 dark:border-gray-800 mt-2 sm:mt-24">
+                <button id="btn-stop-training" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold z-10">×</button>
+                
+                <div class="mb-3"><span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-blue-100 text-blue-600">LEVEL 1</span></div>
+                
+                <div class="mb-5 w-full px-1">
+                    <div class="flex justify-between text-[9px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                        <span id="train-card-progress-text">Очки: 0/6</span>
+                        <span id="train-total-cards">Слов: 0</span>
+                    </div>
+                    <div class="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden relative">
+                        <div class="absolute left-[66.6%] top-0 bottom-0 w-0.5 bg-white dark:bg-gray-900 z-10 opacity-60"></div>
+                        <div id="train-card-progress-fill" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="relative w-full flex justify-center items-center min-h-[40px] mb-2 px-10">
+                    <h2 id="train-question" class="text-xl sm:text-2xl font-black dark:text-white leading-tight tracking-tight m-0 text-center break-words">Загрузка...</h2>
+                    <div class="absolute right-0 top-1/2 -translate-y-1/2">
+                        <button id="btn-speak-question" class="hidden bg-gray-50 dark:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all shadow-sm text-base">🔊</button>
+                    </div>
+                </div>
+                
+                <p id="train-example-q" class="text-[11px] text-gray-400 italic mb-5 hidden px-2 leading-relaxed"></p>
+                
+                <button id="btn-show-answer" class="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl active:scale-95 transition-all mt-2 text-sm">Показать ответ</button>
+                
+                <div id="train-answer-block" class="hidden w-full mt-3">
+                    <div class="flex flex-col justify-center items-center mb-5">
+                        <div class="relative w-full flex justify-center items-center min-h-[40px] px-10">
+                            <p id="train-de-word" class="text-lg sm:text-xl font-bold dark:text-white leading-tight tracking-tight m-0 text-center"></p>
+                            <div class="absolute right-0 top-1/2 -translate-y-1/2">
+                                <button id="btn-speak-answer" class="bg-blue-50 dark:bg-blue-900/30 w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:scale-110 transition-transform shadow-sm text-base">🔊</button>
+                            </div>
+                        </div>
+                        <p id="train-de-plural" class="text-[11px] font-bold text-gray-500 mt-1 hidden"></p>
+                        <p id="train-answer-example" class="text-[11px] text-blue-500/80 dark:text-blue-400 italic font-medium mt-3 hidden px-2 leading-relaxed"></p>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button id="btn-forgot" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-500 font-bold py-2.5 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-sm">Забыл (Сброс)</button>
+                        <button id="btn-remembered" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-2.5 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-sm">Помню</button>
+                    </div>
+                </div>
+
+                <div id="train-manual-block" class="hidden w-full mt-3">
+                    <div class="flex gap-2 mb-2 w-full">
+                        <input type="text" id="manual-article" placeholder="der" autocomplete="off" class="w-[60px] bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-1 text-center outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-sm" style="text-align-last: center;">
+                        <input type="text" id="manual-main" placeholder="Слово..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-sm">
+                    </div>
+                    
+                    <div class="flex gap-2 mb-2 w-full hidden" id="manual-plural-container">
+                        <div class="bg-gray-100 dark:bg-gray-800/50 rounded-lg py-2.5 px-1 text-center outline-none font-bold text-gray-400 dark:text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die</div>
+                        <input type="text" id="manual-plural" placeholder="Мн. число..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 dark:text-white font-bold transition-all shadow-inner disabled:opacity-50 min-w-0 text-sm">
+                    </div>
+
+                    <div id="manual-feedback" class="hidden w-full text-center py-2.5 rounded-lg font-bold text-sm mb-2 transition-all animate-in fade-in zoom-in duration-200"></div>
+
+                    <div id="train-umlauts" class="flex justify-center gap-1.5 mb-3">
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-sm dark:text-white shadow-sm hover:bg-gray-200 active:scale-90">ä</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-sm dark:text-white shadow-sm hover:bg-gray-200 active:scale-90">ö</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-sm dark:text-white shadow-sm hover:bg-gray-200 active:scale-90">ü</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-sm dark:text-white shadow-sm hover:bg-gray-200 active:scale-90">ß</button>
+                    </div>
+                    <button id="btn-check-manual" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 active:scale-95 transition-all disabled:opacity-50 text-sm">Проверить</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-stats" class="hidden pb-10 space-y-3 pt-4 sm:mt-8"></section>
+    </main>
+
+    <div id="backup-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center animate-in zoom-in-95 duration-200 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-black dark:text-white">Данные</h2>
+                <button onclick="document.getElementById('backup-modal').classList.add('hidden')" class="text-gray-400 bg-gray-100 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold">×</button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-5 text-left leading-relaxed">Здесь можно сохранить весь прогресс или перенести его на другое устройство.</p>
+            <button onclick="window.location.href='/export_csv'" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 mb-4 hover:scale-105 active:scale-95 transition-all flex justify-center items-center gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Скачать бэкап
+            </button>
+            <div class="relative mb-4">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-100 dark:border-gray-800"></div></div>
+                <div class="relative flex justify-center text-xs"><span class="px-2 bg-white dark:bg-gray-900 text-gray-400">или</span></div>
+            </div>
+            <button id="btn-trigger-restore" class="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3 rounded-xl hover:scale-105 active:scale-95 transition-all flex justify-center items-center gap-2 border border-gray-200 dark:border-gray-700 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Восстановить базу
+            </button>
+            <input type="file" id="file-restore" accept=".csv" class="hidden">
+        </div>
+    </div>
+
+    <div id="add-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-3 sm:p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] overflow-y-auto relative">
+            
+            <div class="flex justify-between items-center mb-3 sticky top-0 bg-white dark:bg-gray-900 z-10 py-1">
+                <h2 id="modal-title" class="text-xl font-black dark:text-white tracking-tight">Новое слово</h2>
+                <button id="close-modal" class="text-gray-400 bg-gray-100 dark:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">×</button>
+            </div>
+            
+            <div id="modal-tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg mb-3">
+                <button id="tab-single" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all">Одно слово</button>
+                <button id="tab-bulk" class="flex-1 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 transition-all">Пачка (CSV)</button>
+            </div>
+            
+            <div id="form-single">
+                <div class="flex bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
+                    <button id="type-noun" class="flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-md bg-white dark:bg-gray-600 shadow-sm dark:text-white transition-all">СУЩЕСТВИТЕЛЬНОЕ</button>
+                    <button id="type-verb" class="flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all">ГЛАГОЛ / ИНОЕ</button>
+                </div>
+                <form id="add-form" class="space-y-2.5">
+                    
+                    <div id="article-selector" class="flex gap-1 w-full mb-1">
+                        <button type="button" id="btn-art-der" onclick="selectArticle('der')" class="flex-1 py-1.5 rounded-lg border-2 border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold transition-all shadow-sm transform scale-[1.02] text-sm">der</button>
+                        <button type="button" id="btn-art-die" onclick="selectArticle('die')" class="flex-1 py-1.5 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-bold transition-all shadow-sm text-sm">die</button>
+                        <button type="button" id="btn-art-das" onclick="selectArticle('das')" class="flex-1 py-1.5 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-bold transition-all shadow-sm text-sm">das</button>
+                    </div>
+
+                    <div class="flex w-full items-center">
+                        <input type="text" id="word-de" placeholder="Слово (напр. Tisch)..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all text-sm">
+                    </div>
+                    
+                    <div class="flex gap-2 w-full" id="plural-input-group">
+                        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 text-center outline-none font-bold text-gray-400 dark:text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die</div>
+                        <input type="text" id="word-plural" placeholder="Мн. число (Plural)..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 font-bold dark:text-white transition-all min-w-0 text-sm">
+                    </div>
+
+                    <div id="add-umlauts" class="flex justify-center gap-1.5 mt-1 mb-1">
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ä</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ö</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ü</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-100 dark:bg-gray-800 w-9 h-9 rounded-lg font-bold text-base dark:text-white shadow-sm hover:bg-gray-200">ß</button>
+                    </div>
+                    <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none focus:ring-2 ring-blue-500 dark:text-white transition-all text-sm">
+                    <input type="text" id="word-example" placeholder="Пример (необязательно)..." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none italic text-xs dark:text-gray-300 focus:ring-2 ring-blue-500 transition-all">
+                    
+                    <div class="flex w-full gap-2">
+                        <div class="flex-[2] min-w-0">
+                            <input type="text" id="word-folder" list="folder-list" placeholder="Курс" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500">
+                        </div>
+                        <div class="flex-[1] min-w-0">
+                            <input type="text" id="word-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500 text-center uppercase">
+                        </div>
+                        <div class="flex-[2] min-w-0">
+                            <input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none text-xs font-semibold dark:text-white focus:ring-2 ring-blue-500">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 mt-1 active:scale-95 transition-all text-sm">Сохранить</button>
+                </form>
+            </div>
+            
+            <div class="hidden space-y-3" id="form-bulk">
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 text-center mb-2">Добавляет новые слова к текущим.</p>
+                <div class="flex w-full gap-2">
+                    <div class="flex-[2] min-w-0">
+                        <input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none font-bold dark:text-white text-xs">
+                    </div>
+                    <div class="flex-[1] min-w-0">
+                        <input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-1 outline-none font-bold dark:text-white text-xs text-center uppercase">
+                    </div>
+                    <div class="flex-[2] min-w-0">
+                        <input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none font-bold dark:text-white text-xs">
+                    </div>
+                </div>
+                <div class="mt-2 p-5 border-2 border-dashed border-blue-200 dark:border-gray-700 bg-blue-50/50 dark:bg-gray-800/50 rounded-xl text-center">
+                    <input type="file" id="bulk-file" accept=".csv" class="hidden">
+                    <label for="bulk-file" class="cursor-pointer flex flex-col items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <span class="text-blue-600 dark:text-blue-400 font-bold text-xs">Выбрать CSV файл</span>
+                    </label>
+                </div>
+                <button id="btn-upload-csv" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg mt-2 active:scale-95 transition-all text-sm">Загрузить</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 w-full glass border-t border-gray-200 dark:border-gray-800 z-30 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-4">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <button id="nav-dict" class="flex flex-col items-center gap-1 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                <span class="text-[9px] font-black uppercase tracking-widest">Словарь</span>
+            </button>
+            <button id="nav-train" class="flex flex-col items-center gap-1 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-[9px] font-black uppercase tracking-widest">Учить</span>
+            </button>
+            <button id="nav-stats" class="flex flex-col items-center gap-1 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span class="text-[9px] font-black uppercase tracking-widest">Прогресс</span>
+            </button>
+        </div>
+    </nav>
+
+    <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
+
+    <script>
+        const API_URL = '/words';
+        let currentType = 'noun';
+        let editId = null;
+        let globalWords = [];
+        
+        let sessionStartMs = 0;
+        const DAILY_GOAL_MINUTES = 15;
+        const MAX_SCORE = 6; 
+        
+        let dictTabFilter = 'active'; 
+        let trainDirection = 'auto'; 
+        let currentIsGermanQuestion = false;
+        
+        let currentArticle = 'der';
+
+        const getLevelColor = (level) => {
+            if (!level) return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+            const l = level.toUpperCase().replace(/А/g, 'A').replace(/В/g, 'B').replace(/С/g, 'C');
+            if (l.includes('A1')) return 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400';
+            if (l.includes('A2')) return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
+            if (l.includes('B1')) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400';
+            if (l.includes('B2')) return 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400';
+            if (l.includes('C1')) return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
+            if (l.includes('C2')) return 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400';
+            return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400';
+        };
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        const updateIcons = () => {
+            if (document.documentElement.classList.contains('dark')) {
+                darkIcon.classList.add('hidden'); lightIcon.classList.remove('hidden');
+            } else {
+                lightIcon.classList.add('hidden'); darkIcon.classList.remove('hidden');
+            }
+        };
+        updateIcons();
+
+        themeToggleBtn.onclick = () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            updateIcons();
+        };
+
+        window.speakWord = (text, event) => {
+            if (event) event.stopPropagation();
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text); u.lang = 'de-DE'; u.rate = 0.85;
+            window.speechSynthesis.speak(u);
+        };
+
+        window.activeInput = null;
+        document.addEventListener('focusin', e => { if(e.target.tagName === 'INPUT') window.activeInput = e.target; });
+
+        window.insertChar = (char, event) => {
+            event.preventDefault(); 
+            if (!window.activeInput) return;
+            const start = window.activeInput.selectionStart;
+            const end = window.activeInput.selectionEnd;
+            const val = window.activeInput.value;
+            window.activeInput.value = val.slice(0, start) + char + val.slice(end);
+            window.activeInput.selectionStart = window.activeInput.selectionEnd = start + 1;
+            window.activeInput.dispatchEvent(new Event('input'));
+        };
+
+        const handleEnter = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const btnCheck = document.getElementById('btn-check-manual');
+                const btnNext = document.getElementById('btn-show-answer');
+                
+                if (!btnCheck.disabled && !document.getElementById('train-manual-block').classList.contains('hidden')) {
+                    btnCheck.click();
+                } else if (!btnNext.classList.contains('hidden')) {
+                    btnNext.click();
+                }
+            }
+        };
+        document.addEventListener('keydown', handleEnter);
+
+        function saveSessionTime() {
+            if (sessionStartMs > 0) {
+                const elapsedMs = Date.now() - sessionStartMs;
+                const today = new Date().toDateString();
+                let stats = JSON.parse(localStorage.getItem('dailyStudy')) || { date: today, ms: 0 };
+                if (stats.date !== today) stats = { date: today, ms: 0 };
+                stats.ms += elapsedMs;
+                localStorage.setItem('dailyStudy', JSON.stringify(stats));
+                sessionStartMs = 0;
+            }
+        }
+
+        const views = { dict: document.getElementById('view-dict'), train: document.getElementById('view-train'), stats: document.getElementById('view-stats') };
+        const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), stats: document.getElementById('nav-stats') };
+
+        async function fetchWords() {
+            try {
+                const res = await fetch(API_URL); 
+                globalWords = await res.json();
+                document.getElementById('folder-list').innerHTML = [...new Set(globalWords.map(w => w.folder))].map(f => `<option value="${f}">`).join('');
+                document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(l=>l))].map(l => `<option value="${l}">`).join('');
+                document.getElementById('subfolder-list').innerHTML = [...new Set(globalWords.map(w => w.subfolder))].map(s => `<option value="${s}">`).join('');
+            } catch (e) { console.error("Ошибка:", e); globalWords = []; }
+        }
+
+        async function switchView(target) {
+            if (target !== 'train') saveSessionTime();
+
+            Object.keys(views).forEach(v => {
+                const isActive = (v === target);
+                views[v].classList.toggle('hidden', !isActive);
+                
+                if (isActive) {
+                    navBtns[v].classList.add('text-blue-500', '-translate-y-0.5');
+                    navBtns[v].classList.remove('text-gray-400', 'dark:text-gray-500', 'hover:text-gray-600');
+                } else {
+                    navBtns[v].classList.remove('text-blue-500', '-translate-y-0.5');
+                    navBtns[v].classList.add('text-gray-400', 'dark:text-gray-500', 'hover:text-gray-600');
+                }
+            });
+            document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', stats:'Прогресс'}[target];
+            document.getElementById('add-btn').classList.toggle('hidden', target !== 'dict');
+            
+            await fetchWords();
+            
+            if (target === 'dict') renderDict();
+            if (target === 'train') setupTrainMenu();
+            if (target === 'stats') loadStats();
+            
+            window.scrollTo(0, 0);
+        }
+
+        navBtns.dict.onclick = () => switchView('dict');
+        navBtns.train.onclick = () => switchView('train');
+        navBtns.stats.onclick = () => switchView('stats');
+
+        window.selectArticle = (art) => {
+            currentArticle = art;
+            const btns = {
+                der: document.getElementById('btn-art-der'),
+                die: document.getElementById('btn-art-die'),
+                das: document.getElementById('btn-art-das')
+            };
+            
+            Object.values(btns).forEach(b => {
+                b.className = "flex-1 py-1.5 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-bold transition-all shadow-sm text-sm";
+            });
+            
+            if (art === 'der') {
+                btns.der.className = "flex-1 py-1.5 rounded-lg border-2 border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold transition-all shadow-sm transform scale-[1.02] text-sm";
+            } else if (art === 'die') {
+                btns.die.className = "flex-1 py-1.5 rounded-lg border-2 border-red-500 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 font-bold transition-all shadow-sm transform scale-[1.02] text-sm";
+            } else if (art === 'das') {
+                btns.das.className = "flex-1 py-1.5 rounded-lg border-2 border-green-500 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 font-bold transition-all shadow-sm transform scale-[1.02] text-sm";
+            }
+        };
+
+        const wordInp = document.getElementById('word-de');
+        wordInp.oninput = () => {
+            if (currentType !== 'noun') return;
+            const w = wordInp.value.trim().toLowerCase();
+            let g = null;
+            if (w.match(/(ung|heit|keit|schaft|tion|tät|ik|ur|enz|anz|ie|e)$/)) g = 'die';
+            else if (w.match(/(chen|lein|ment|um|ma|nis|o)$/)) g = 'das';
+            else if (w.match(/(ismus|ling|ig|or|ist|ant|ent|er)$/)) g = 'der';
+            if (g && currentArticle !== g) { 
+                selectArticle(g);
+            }
+        };
+
+        document.getElementById('dict-tab-active').onclick = () => {
+            dictTabFilter = 'active';
+            document.getElementById('dict-tab-active').className = "flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all";
+            document.getElementById('dict-tab-mastered').className = "flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg text-gray-500 dark:text-gray-400 transition-all flex items-center justify-center gap-1";
+            renderDict();
+        };
+
+        document.getElementById('dict-tab-mastered').onclick = () => {
+            dictTabFilter = 'mastered';
+            document.getElementById('dict-tab-mastered').className = "flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all flex items-center justify-center gap-1";
+            document.getElementById('dict-tab-active').className = "flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg text-gray-500 dark:text-gray-400 transition-all";
+            renderDict();
+        };
+
+        const searchInp = document.getElementById('search-input');
+        searchInp.oninput = () => renderDict(searchInp.value.toLowerCase());
+
+        function renderDict(query = searchInp.value.toLowerCase()) {
+            const container = document.getElementById('dict-list');
+            
+            let filtered = globalWords.filter(w => (w.word_de || "").toLowerCase().includes(query) || (w.word_ru || "").toLowerCase().includes(query));
+            if (dictTabFilter === 'active') {
+                filtered = filtered.filter(w => w.score < MAX_SCORE);
+            } else {
+                filtered = filtered.filter(w => w.score >= MAX_SCORE);
+            }
+
+            const colors = { der: 'text-der', die: 'text-die', das: 'text-das' };
+            const grouped = {};
+            filtered.forEach(w => { 
+                const f = w.folder || 'Без курса';
+                const l = w.level || 'Общее';
+                const s = w.subfolder || 'Без темы';
+                if (!grouped[f]) grouped[f] = {}; 
+                if (!grouped[f][l]) grouped[f][l] = {}; 
+                if (!grouped[f][l][s]) grouped[f][l][s] = []; 
+                grouped[f][l][s].push(w); 
+            });
+
+            let html = '';
+            for (const f in grouped) {
+                html += `<h2 class="text-xl font-extrabold mt-5 mb-1 dark:text-white tracking-tight pl-1 border-b border-gray-200 dark:border-gray-800 pb-1">${f}</h2>`;
+                for (const l in grouped[f]) {
+                    for (const s in grouped[f][l]) {
+                        html += `
+                        <div class="flex justify-between items-center mt-3 mb-1.5 px-1">
+                            <div class="flex items-center gap-2 min-w-0">
+                                ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
+                                <h3 class="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest truncate">${s}</h3>
+                            </div>
+                            <div class="flex gap-2 items-center flex-shrink-0 ml-2">
+                                <button onclick="fastAdd('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}')" class="text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-md text-[9px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all">+ БЫСТРО</button>
+                                <button onclick="deleteFolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}')" class="text-red-500 bg-red-50 dark:bg-red-900/30 p-1.5 rounded-md hover:scale-105 active:scale-95 transition-all" title="Удалить тему">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </div>`;
+                        grouped[f][l][s].forEach(w => {
+                            html += `
+                            <div onclick="openEdit(${w.id})" class="bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-2 flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer group hover:border-blue-200 dark:hover:border-blue-900/50">
+                                <div class="flex-1 pr-3 min-w-0">
+                                    <p class="text-base font-bold dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${w.plural ? `(pl. ${w.plural})` : ''}</span></p>
+                                    <p class="text-gray-400 text-xs font-medium mt-0.5 truncate">${w.word_ru}</p>
+                                    ${w.example ? `<p class="text-[11px] text-blue-500/80 dark:text-blue-400 mt-1 italic font-medium leading-tight truncate">"${w.example}"</p>` : ''}
+                                </div>
+                                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                                    <div class="flex gap-1 mb-1">
+                                        <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+w.word_de}', event)" class="p-2 bg-gray-50 dark:bg-gray-800 rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
+                                        <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-gray-50 dark:bg-gray-800 rounded-full text-gray-400 hover:text-red-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                    </div>
+                                    <span class="text-[9px] font-black ${w.score>=MAX_SCORE?'text-das':(w.score>=4?'text-orange-500':'text-gray-300')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+                                </div>
+                            </div>`;
+                        });
+                    }
+                }
+            }
+            container.innerHTML = html || `<div class="text-center py-10"><p class="text-gray-400 font-bold text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все слова выучены 🎉'}</p></div>`;
+        }
+
+        const modal = document.getElementById('add-modal');
+        const setType = (t) => {
+            currentType = t;
+            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-md bg-white dark:bg-gray-600 shadow-sm dark:text-white transition-all" : "flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all";
+            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-md bg-white dark:bg-gray-600 shadow-sm dark:text-white transition-all" : "flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all";
+            
+            document.getElementById('article-selector').classList.toggle('hidden', t === 'verb');
+            document.getElementById('add-umlauts').classList.toggle('hidden', t === 'verb'); 
+            document.getElementById('plural-input-group').classList.toggle('hidden', t === 'verb');
+        };
+
+        document.getElementById('type-noun').onclick = () => setType('noun');
+        document.getElementById('type-verb').onclick = () => setType('verb');
+
+        const showSingleTab = () => {
+            document.getElementById('form-single').classList.remove('hidden'); document.getElementById('form-bulk').classList.add('hidden');
+            document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all";
+            document.getElementById('tab-bulk').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 transition-all";
+        };
+        const showBulkTab = () => {
+            document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
+            document.getElementById('tab-bulk').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all";
+            document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 transition-all";
+        };
+
+        document.getElementById('tab-single').onclick = showSingleTab;
+        document.getElementById('tab-bulk').onclick = showBulkTab;
+
+        document.getElementById('add-btn').onclick = () => { 
+            editId = null; document.getElementById('modal-title').innerText = "Новое слово"; 
+            document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der'); modal.classList.remove('hidden'); 
+        };
+        document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+        
+        window.openEdit = (id) => {
+            const w = globalWords.find(x => x.id === id); if(!w) return;
+            editId = w.id; document.getElementById('modal-title').innerText = "Редактировать"; showSingleTab();
+            setType(w.word_type); 
+            if(w.word_type === 'noun') selectArticle(w.article || 'der');
+            
+            document.getElementById('word-de').value = w.word_de; document.getElementById('word-ru').value = w.word_ru;
+            document.getElementById('word-plural').value = w.plural || "";
+            document.getElementById('word-example').value = w.example || "";
+            document.getElementById('word-folder').value = w.folder; document.getElementById('word-level').value = w.level || ""; document.getElementById('word-subfolder').value = w.subfolder;
+            modal.classList.remove('hidden');
+        };
+
+        window.fastAdd = (folder, level, subfolder) => {
+            editId = null; document.getElementById('modal-title').innerText = "Быстрое добавление";
+            document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der');
+            document.getElementById('word-folder').value = folder; 
+            document.getElementById('word-level').value = level === 'Общее' ? '' : level; 
+            document.getElementById('word-subfolder').value = subfolder;
+            modal.classList.remove('hidden'); setTimeout(() => document.getElementById('word-de').focus(), 150);
+        };
+
+        window.deleteWord = async (id, event) => { 
+            if (event) event.stopPropagation(); 
+            if (confirm('Точно удалить слово?')) { 
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); 
+                await fetchWords(); 
+                renderDict();
+            } 
+        };
+
+        // --- НОВАЯ ЛОГИКА УДАЛЕНИЯ ПАПКИ ---
+        window.deleteFolder = async (f, l, s) => {
+            if (confirm(`⚠️ ВНИМАНИЕ! Вы точно хотите удалить всю тему "${s}" со всеми словами? Это действие необратимо!`)) {
+                await fetch('/words/delete_folder', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({folder: f, level: l, subfolder: s}) 
+                });
+                await fetchWords();
+                renderDict();
+            }
+        };
+
+        document.getElementById('add-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                word_type: currentType, 
+                article: currentType==='noun' ? currentArticle : '',
+                word_de: document.getElementById('word-de').value.trim(), 
+                plural: currentType==='noun' ? document.getElementById('word-plural').value.trim() : '',
+                word_ru: document.getElementById('word-ru').value.trim(),
+                example: document.getElementById('word-example').value.trim(),
+                folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim()
+            };
+            const url = editId ? `${API_URL}/${editId}/full` : API_URL;
+            await fetch(url, { method: editId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            modal.classList.add('hidden'); searchInp.value = ''; 
+            await fetchWords(); 
+            renderDict();
+        };
+
+        document.getElementById('btn-upload-csv').onclick = async () => {
+            const f = new FormData(); 
+            const folder = document.getElementById('bulk-folder').value.trim(); const level = document.getElementById('bulk-level').value.trim(); const subfolder = document.getElementById('bulk-subfolder').value.trim(); const fileInput = document.getElementById('bulk-file');
+            if (!folder || !subfolder || !fileInput.files[0]) return alert("Заполни курс, тему и выбери файл!");
+            f.append('folder', folder); f.append('level', level); f.append('subfolder', subfolder); f.append('file', fileInput.files[0]);
+            
+            const btn = document.getElementById('btn-upload-csv');
+            btn.innerHTML = '⏳ Загрузка...';
+            btn.disabled = true;
+            
+            try {
+                await fetch('/upload_csv', { method: 'POST', body: f }); 
+                modal.classList.add('hidden'); 
+                await fetchWords(); 
+                renderDict();
+            } catch(e) { alert("Ошибка загрузки!"); }
+            finally {
+                btn.innerHTML = 'Загрузить';
+                btn.disabled = false;
+            }
+        };
+
+        document.getElementById('bulk-file').onchange = function() {
+            const label = this.nextElementSibling.querySelector('span');
+            if(this.files[0]) label.innerText = this.files[0].name; else label.innerText = 'Выбрать CSV файл';
+        };
+
+        // --- ЛОГИКА ТРЕНИРОВКИ ---
+        let trainList = []; let curIdx = 0;
+
+        window.setDirection = (dir) => {
+            trainDirection = dir;
+            const activeCls = "flex-1 py-2 text-[11px] font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm text-blue-500 border border-blue-500 transition-all";
+            const inactiveCls = "flex-1 py-2 text-[11px] font-bold rounded-lg text-gray-500 dark:text-gray-400 border border-transparent transition-all";
+            
+            document.getElementById('dir-auto').className = dir === 'auto' ? activeCls : inactiveCls;
+            document.getElementById('dir-ru-de').className = dir === 'ru-de' ? activeCls : inactiveCls;
+            document.getElementById('dir-de-ru').className = dir === 'de-ru' ? activeCls : inactiveCls;
+        };
+        
+        function setupTrainMenu() {
+            const container = document.getElementById('train-topics-container');
+            container.innerHTML = '';
+            
+            const newWordsCount = globalWords.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review)).length;
+            const masteredCount = globalWords.filter(w => w.score >= MAX_SCORE).length;
+            const waitingCount = globalWords.filter(w => w.score === 5 && Date.now() < w.next_review).length;
+            const weakWordsCount = globalWords.filter(w => w.score < 4).length;
+
+            let html = `
+                <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-blue-500 to-blue-600 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-blue-500/30 flex justify-between items-center group mb-2">
+                    <div>
+                        <h3 class="text-white text-lg font-bold">📚 Новые и в процессе</h3>
+                        <p class="text-blue-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Учить: ${newWordsCount} ${waitingCount>0?`| Ждут 24ч: ${waitingCount}`:''}</p>
+                    </div>
+                    <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                </button>
+            `;
+
+            if (weakWordsCount > 0) {
+                html += `
+                    <button onclick="startTraining('weak')" class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-orange-500/30 flex justify-between items-center group mb-2">
+                        <div>
+                            <h3 class="text-white text-lg font-bold">⚠️ Level 1 (Узнавание)</h3>
+                            <p class="text-orange-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Флеш-карточки (${weakWordsCount})</p>
+                        </div>
+                        <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                    </button>
+                `;
+            }
+
+            if (masteredCount > 0) {
+                html += `
+                    <button onclick="startTraining('mastered')" class="w-full text-left bg-gradient-to-br from-yellow-400 to-yellow-600 hover:scale-[0.98] transition-all p-4 rounded-3xl shadow-md shadow-yellow-500/30 flex justify-between items-center group mb-3">
+                        <div>
+                            <h3 class="text-white text-lg font-bold">🏆 Золотой запас</h3>
+                            <p class="text-yellow-100 text-[9px] font-black uppercase tracking-widest mt-0.5">Повторить архив (${masteredCount})</p>
+                        </div>
+                        <div class="bg-white/20 w-7 h-7 rounded-full flex items-center justify-center text-white backdrop-blur-md"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                    </button>
+                `;
+            }
+
+            const groupedTopics = {};
+            globalWords.forEach(w => {
+                const f = w.folder || 'Без курса';
+                const key = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`;
+                if (!groupedTopics[f]) groupedTopics[f] = new Set();
+                groupedTopics[f].add(key);
+            });
+
+            const activeTopicsHTML = [];
+            const masteredTopicsHTML = [];
+
+            for (const folder in groupedTopics) {
+                let folderActiveHTML = `<h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder}</h3>`;
+                let folderMasteredHTML = `<h3 class="text-[10px] font-black text-gray-400/50 uppercase tracking-widest mt-5 mb-1.5 ml-2">${folder} (Архив)</h3>`;
+                
+                let hasActive = false;
+                let hasMastered = false;
+
+                groupedTopics[folder].forEach(t => {
+                    const [f, l, s] = t.split('|');
+                    const allInTopic = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
+                    
+                    const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review)).length;
+                    const waitingCount = allInTopic.filter(w => w.score === 5 && Date.now() < w.next_review).length;
+                    const archivedCount = allInTopic.filter(w => w.score >= MAX_SCORE).length;
+                    
+                    if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
+                        hasMastered = true;
+                        folderMasteredHTML += `
+                            <button onclick="startTraining('${t}', true)" class="w-full text-left bg-gray-50 dark:bg-gray-800/40 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-none border border-gray-100 dark:border-gray-800 flex justify-between items-center mb-1.5 opacity-60 grayscale">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-gray-200 text-gray-500">ВЫУЧЕНО</span>
+                                        <h3 class="text-base font-bold dark:text-gray-400 line-through">${s}</h3>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 font-medium">В архиве: ${archivedCount}</p>
+                                </div>
+                                <div class="bg-gray-200 dark:bg-gray-700 w-7 h-7 rounded-full flex items-center justify-center text-green-500">✓</div>
+                            </button>
+                        `;
+                    } else {
+                        hasActive = true;
+                        folderActiveHTML += `
+                            <button onclick="startTraining('${t}')" class="w-full text-left bg-white dark:bg-gray-800 hover:scale-[0.98] transition-all p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center mb-1.5">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        ${l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${getLevelColor(l)}">${l}</span>` : ''}
+                                        <h3 class="text-base font-bold dark:text-white">${s}</h3>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 font-medium">Учить: ${wordsCount} <span class="opacity-50">${waitingCount>0?`| Ждут 24ч: ${waitingCount}`:''}</span></p>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-700 w-7 h-7 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-300"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                            </button>
+                        `;
+                    }
+                });
+
+                if (hasActive) activeTopicsHTML.push(folderActiveHTML);
+                if (hasMastered) masteredTopicsHTML.push(folderMasteredHTML);
+            }
+
+            container.innerHTML = html + activeTopicsHTML.join('') + (masteredTopicsHTML.length > 0 ? '<div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-3"></div><h2 class="text-sm font-bold text-center text-gray-400 mb-3">✅ Завершенные темы</h2>' + masteredTopicsHTML.join('') : '');
+            
+            document.getElementById('train-setup-block').classList.remove('hidden'); 
+            document.getElementById('train-card-block').classList.add('hidden');
+        }
+
+        window.startTraining = (sel, forceArchive = false) => {
+            let availableWords = globalWords.filter(w => w.score < MAX_SCORE && !(w.score === 5 && Date.now() < w.next_review));
+
+            if (sel === 'all') { trainList = availableWords; } 
+            else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 4); }
+            else if (sel === 'mastered' || forceArchive) { 
+                if (forceArchive) {
+                    const [f, l, s] = sel.split('|');
+                    trainList = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
+                } else {
+                    trainList = globalWords.filter(w => w.score >= MAX_SCORE); 
+                }
+            }
+            else {
+                const [f, l, s] = sel.split('|');
+                trainList = availableWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
+            }
+            
+            if (!trainList.length) {
+                if (sel !== 'mastered' && !forceArchive) return alert('🎉 На сегодня новые слова закончились! (Некоторые ждут 24 часа для проверки)');
+                return alert('Архив пуст.');
+            }
+            
+            trainList.sort(() => 0.5 - Math.random()); 
+            curIdx = 0;
+            sessionStartMs = Date.now();
+            
+            document.getElementById('train-setup-block').classList.add('hidden'); 
+            document.getElementById('train-card-block').classList.remove('hidden'); 
+            renderCard();
+        };
+
+        document.getElementById('btn-stop-training').onclick = () => {
+            saveSessionTime();
+            setupTrainMenu();
+        };
+
+        function renderCard() {
+            if (curIdx >= trainList.length) { 
+                alert('Сессия окончена!'); 
+                saveSessionTime();
+                document.getElementById('main-scroll').scrollTo(0, 0);
+                setupTrainMenu(); 
+                return; 
+            }
+            
+            const w = trainList[curIdx]; 
+            const qEl = document.getElementById('train-question'); 
+            const exQ = document.getElementById('train-example-q'); 
+            const badge = document.getElementById('train-level-badge');
+            
+            const totalCardsEl = document.getElementById('train-total-cards');
+            if(totalCardsEl) totalCardsEl.innerText = `Прогресс: ${curIdx + 1}/${trainList.length}`;
+            
+            const progressFill = document.getElementById('train-card-progress-fill');
+            const progressText = document.getElementById('train-card-progress-text');
+            if(progressText) progressText.innerText = `Очки слова: ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
+            if(progressFill) progressFill.style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
+            
+            document.getElementById('train-answer-block').classList.add('hidden'); 
+            document.getElementById('train-manual-block').classList.add('hidden'); 
+            document.getElementById('btn-show-answer').classList.add('hidden');
+            document.getElementById('manual-feedback').classList.add('hidden');
+            document.getElementById('train-de-plural').classList.add('hidden');
+            if(exQ) exQ.classList.add('hidden');
+
+            const manArt = document.getElementById('manual-article'); 
+            const manMain = document.getElementById('manual-main'); 
+            const manPluralContainer = document.getElementById('manual-plural-container');
+            const manPlural = document.getElementById('manual-plural');
+            const btnCheck = document.getElementById('btn-check-manual');
+            const umlautBar = document.getElementById('train-umlauts');
+            const btnSpeakQ = document.getElementById('btn-speak-question');
+
+            if(manArt) manArt.disabled = false;
+            if(manMain) manMain.disabled = false;
+            if(manPlural) manPlural.disabled = false;
+            if(btnCheck) btnCheck.disabled = false;
+
+            const fullGerman = (w.word_type==='noun' ? (w.article||'') + ' ' : '') + (w.word_de||'');
+            
+            let state = w.score < 4 ? 'L1' : w.score < 6 ? 'L2' : 'Archive';
+
+            if (trainDirection === 'de-ru') { currentIsGermanQuestion = true; } 
+            else if (trainDirection === 'ru-de') { currentIsGermanQuestion = false; } 
+            else { 
+                currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
+            } 
+
+            document.getElementById('btn-speak-answer').onclick = (e) => speakWord(fullGerman, e);
+            if (currentIsGermanQuestion) {
+                if(btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
+            } else {
+                if(btnSpeakQ) btnSpeakQ.classList.add('hidden');
+            }
+
+            const ansEx = document.getElementById('train-answer-example');
+            if (w.example && ansEx) {
+                ansEx.innerText = '"' + w.example + '"';
+                ansEx.classList.remove('hidden');
+            } else if (ansEx) {
+                ansEx.classList.add('hidden');
+            }
+
+            document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru||'') : fullGerman;
+            
+            if (w.word_type === 'noun' && w.plural) {
+                document.getElementById('train-de-plural').innerText = `Plural: die ${w.plural}`;
+            }
+
+            if (state === 'L1' || state === 'Archive') {
+                if(badge) { 
+                    if (state === 'Archive') {
+                        badge.innerText = "АРХИВ 🏆"; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400";
+                    } else {
+                        badge.innerText = `LEVEL 1: УЗНАВАНИЕ (${w.score}/4)`; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"; 
+                    }
+                }
+                if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||''); 
+                document.getElementById('btn-show-answer').classList.remove('hidden');
+
+            } else if (state === 'L2') {
+                if(badge) { badge.innerText = `LEVEL 2: ПИСЬМО (${w.score === 4 ? '1/2' : 'ФИНАЛ'})`; badge.className = "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"; }
+                if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
+                
+                if(!currentIsGermanQuestion && w.example && exQ) { 
+                    try {
+                        const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        exQ.innerHTML = w.example.replace(new RegExp(safeWord, 'ig'), '_____'); 
+                    } catch(e) { exQ.innerHTML = w.example; }
+                    exQ.classList.remove('hidden'); 
+                }
+                
+                document.getElementById('train-manual-block').classList.remove('hidden');
+                
+                if (currentIsGermanQuestion) {
+                    if(manArt) manArt.classList.add('hidden'); 
+                    if(manMain) { manMain.value = ''; manMain.placeholder = "Перевод на русский..."; }
+                    if(manPluralContainer) manPluralContainer.classList.add('hidden');
+                    if(umlautBar) umlautBar.classList.add('hidden'); 
+                    setTimeout(() => { if(manMain) manMain.focus() }, 150);
+                } else {
+                    if(manArt) { manArt.classList.remove('hidden'); manArt.classList.toggle('hidden', w.word_type==='verb'); manArt.value = ''; }
+                    if(manMain) { manMain.value = ''; manMain.placeholder = "Слово на немецком..."; }
+                    
+                    if (w.word_type === 'noun' && w.plural) {
+                        if(manPluralContainer) manPluralContainer.classList.remove('hidden');
+                        if(manPlural) manPlural.value = '';
+                    } else {
+                        if(manPluralContainer) manPluralContainer.classList.add('hidden');
+                    }
+
+                    if(umlautBar) umlautBar.classList.remove('hidden'); 
+                    setTimeout(() => { 
+                        const target = w.word_type==='noun' ? document.getElementById('manual-article') : document.getElementById('manual-main');
+                        if (target) target.focus();
+                    }, 150);
+                }
+            }
+        }
+
+        async function updateScore(newScore, nextReviewMs) {
+            await fetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})});
+            const gwItem = globalWords.find(gw => gw.id === trainList[curIdx].id);
+            if(gwItem) { gwItem.score = newScore; gwItem.next_review = nextReviewMs; }
+            trainList[curIdx].score = newScore; 
+            curIdx++; renderCard();
+        }
+
+        document.getElementById('btn-show-answer').onclick = () => { 
+            document.getElementById('btn-show-answer').classList.add('hidden'); 
+            document.getElementById('train-answer-block').classList.remove('hidden'); 
+            
+            const w = trainList[curIdx];
+            if (w.word_type === 'noun' && w.plural) {
+                document.getElementById('train-de-plural').classList.remove('hidden');
+            }
+        };
+        
+        document.getElementById('btn-forgot').onclick = () => updateScore(0, 0); 
+        document.getElementById('btn-remembered').onclick = () => {
+            const w = trainList[curIdx];
+            if (w.score < 4) updateScore(w.score + 1, 0);
+            else updateScore(w.score, 0); 
+        };
+        
+        document.getElementById('btn-check-manual').onclick = () => {
+            const w = trainList[curIdx]; 
+            
+            const artRaw = document.getElementById('manual-article').value;
+            const mainRaw = document.getElementById('manual-main').value;
+            const pluralRaw = document.getElementById('manual-plural').value;
+
+            const art = (artRaw ? artRaw.trim().toLowerCase() : ""); 
+            const main = (mainRaw ? mainRaw.trim() : "");
+            const typedPlural = (pluralRaw ? pluralRaw.trim().toLowerCase() : "");
+            
+            const feedback = document.getElementById('manual-feedback');
+            const btnCheck = document.getElementById('btn-check-manual');
+            
+            let isCorrect = false;
+            let correctAnswer = "";
+
+            if (!currentIsGermanQuestion) {
+                const expectedArt = (w.article ? w.article.toLowerCase() : "");
+                const expectedWord = (w.word_de ? w.word_de.toLowerCase() : "");
+                const expectedPlural = (w.plural ? w.plural.toLowerCase() : "");
+                
+                if (w.word_type === 'noun') {
+                    if (w.plural) {
+                        isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord) && (typedPlural === expectedPlural);
+                        correctAnswer = `${w.article} ${w.word_de} (die ${w.plural})`;
+                    } else {
+                        isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord);
+                        correctAnswer = `${w.article} ${w.word_de}`;
+                    }
+                } else {
+                    isCorrect = main.toLowerCase() === expectedWord;
+                    correctAnswer = w.word_de;
+                }
+            } else {
+                const expectedWord = (w.word_ru ? w.word_ru.toLowerCase() : "");
+                isCorrect = main.toLowerCase() === expectedWord;
+                correctAnswer = w.word_ru;
+            }
+
+            document.getElementById('manual-article').disabled = true;
+            document.getElementById('manual-main').disabled = true;
+            document.getElementById('manual-plural').disabled = true;
+            btnCheck.disabled = true;
+
+            feedback.className = "w-full text-center py-2.5 rounded-lg font-bold text-sm mb-2 transition-all animate-in fade-in zoom-in duration-200 shadow-sm";
+
+            if (isCorrect) {
+                feedback.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900/40', 'dark:text-green-400');
+                feedback.innerText = "🎉 Отлично!";
+                feedback.classList.remove('hidden');
+                
+                if (w.score === 4) {
+                    setTimeout(() => updateScore(5, Date.now() + (24 * 60 * 60 * 1000)), 1000); 
+                } else if (w.score === 5) {
+                    setTimeout(() => updateScore(6, 0), 1000); 
+                } else {
+                    setTimeout(() => updateScore(w.score + 1, 0), 1000);
+                }
+
+            } else {
+                feedback.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900/40', 'dark:text-red-400');
+                feedback.innerText = `❌ Ошибка! Правильно: ${correctAnswer}`;
+                feedback.classList.remove('hidden');
+                setTimeout(() => updateScore(0, 0), 2500);
+            }
+        };
+
+        // --- БЭКАП ЛОГИКА ---
+        document.getElementById('btn-trigger-restore').onclick = () => document.getElementById('file-restore').click();
+        
+        document.getElementById('file-restore').onchange = async function() {
+            if(!this.files[0]) return;
+            if(!confirm("⚠️ ВНИМАНИЕ! Это действие полностью удалит текущие слова и заменит их данными из бэкапа. Вы уверены?")) {
+                this.value = '';
+                return;
+            }
+            
+            const f = new FormData();
+            f.append('file', this.files[0]);
+            
+            const btn = document.getElementById('btn-trigger-restore');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Восстановление...';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch('/restore_backup', { method: 'POST', body: f });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    document.getElementById('backup-modal').classList.add('hidden');
+                    alert(`✅ База успешно восстановлена! Загружено слов: ${result.restored}`);
+                    await fetchWords();
+                    loadStats();
+                } else {
+                    alert("Ошибка сервера при восстановлении!");
+                }
+            } catch(e) { alert("Ошибка при восстановлении базы! Проверьте файл бэкапа."); }
+            finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                this.value = '';
+            }
+        };
+
+        window.resetFolderStats = async (f, l, s) => {
+            if(confirm(`Обнулить прогресс для темы "${s}"?`)){
+                await fetch('/words/reset_folder', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder:f, level:l, subfolder:s})});
+                await fetchWords(); 
+                loadStats();
+            }
+        };
+
+        function loadStats() {
+            const stats = document.getElementById('view-stats');
+            const total = globalWords.length; const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
+            const folders = {};
+            globalWords.forEach(w => { 
+                const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
+                if(!folders[k]) folders[k] = {f:w.folder, l:w.level||'Общее', s:w.subfolder, total:0, done:0}; 
+                folders[k].total++; if(w.score>=MAX_SCORE) folders[k].done++; 
+            });
+
+            const today = new Date().toDateString();
+            let dailyStats = JSON.parse(localStorage.getItem('dailyStudy')) || { date: today, ms: 0 };
+            if (dailyStats.date !== today) dailyStats = { date: today, ms: 0 };
+            
+            const minutesToday = Math.floor(dailyStats.ms / 60000);
+            const timeProgressPct = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
+
+            stats.innerHTML = `
+                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-3xl text-white shadow-xl shadow-purple-500/30">
+                    <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Цель на сегодня</p>
+                    <div class="flex items-end gap-2 mt-0.5">
+                        <h2 class="text-4xl font-black tracking-tighter">${minutesToday}</h2>
+                        <span class="text-sm font-bold opacity-80 mb-1">/ ${DAILY_GOAL_MINUTES} мин</span>
+                    </div>
+                    <div class="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mt-3 relative">
+                        <div class="bg-white h-full transition-all duration-1000" style="width: ${timeProgressPct}%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-5 rounded-3xl text-white shadow-xl shadow-blue-500/30">
+                    <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Уровень Mastery</p>
+                    <h2 class="text-4xl font-black mt-0.5 tracking-tighter">${Math.round((mastered/total||0)*100)}%</h2>
+                    <p class="mt-2 text-xs font-medium">Закреплено ${mastered} из ${total} слов.</p>
+                </div>
+                
+                <h3 class="font-bold text-base mt-6 mb-1 dark:text-white px-1">Темы</h3>
+                <div class="space-y-2.5">
+                    ${Object.keys(folders).map(k => {
+                        const dat = folders[k];
+                        return `
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 relative">
+                            <button onclick="resetFolderStats('${dat.f.replace(/'/g,"\\'")}', '${dat.l.replace(/'/g,"\\'")}', '${dat.s.replace(/'/g,"\\'")}')" class="absolute top-3 right-3 text-gray-300 hover:text-orange-500 transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            </button>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">${dat.f}</p>
+                            <div class="flex items-center gap-2 mb-2 pr-6">
+                                ${dat.l !== 'Общее' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${getLevelColor(dat.l)}">${dat.l}</span>` : ''}
+                                <h4 class="font-bold text-sm dark:text-white">${dat.s}</h4>
+                            </div>
+                            <div class="flex justify-end mb-1"><span class="text-[10px] font-bold text-blue-500">${dat.done}/${dat.total}</span></div>
+                            <div class="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full transition-all duration-1000" style="width: ${(dat.done/dat.total)*100}%"></div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+                
+                <button onclick="document.getElementById('backup-modal').classList.remove('hidden')" class="w-full mt-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold py-3.5 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all flex justify-center items-center gap-2 shadow-sm text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> 
+                    Управление данными (Бэкап)
+                </button>
+            `;
+        }
+
+        switchView('dict');
+    </script>
+</body>
+</html>
