@@ -13,7 +13,6 @@
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } } };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
         
-        // Инициализация Service Worker для офлайна
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').catch(() => console.log('SW не найден, но готов к работе'));
@@ -442,7 +441,6 @@
             });
             document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', stats:'Прогресс'}[target];
             
-            // Если мы переходим куда-либо кроме вкладки "Словарь", кнопка добавления должна исчезнуть.
             document.getElementById('add-btn').classList.toggle('hidden', target !== 'dict');
             
             await fetchWords();
@@ -543,7 +541,20 @@
 
             let html = '';
             for (const f in grouped) {
-                html += `<h2 class="text-xl font-extrabold mt-6 mb-2 dark:text-white tracking-tight pl-1 border-b border-gray-200 dark:border-[#252b36] pb-2 flex items-center gap-2"><svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>${f}</h2>`;
+                // НОВАЯ ШАПКА КУРСА С КНОПКАМИ
+                html += `
+                <div class="flex justify-between items-center mt-6 mb-2 border-b border-gray-200 dark:border-[#252b36] pb-2 pl-1">
+                    <h2 class="text-xl font-extrabold dark:text-white tracking-tight flex items-center gap-2 flex-1 min-w-0">
+                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                        <span class="truncate">${f}</span>
+                    </h2>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button onclick="renameFolder('${f.replace(/'/g,"\\'")}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать курс">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button onclick="fastAddCourse('${f.replace(/'/g,"\\'")}')" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ В КУРС</button>
+                    </div>
+                </div>`;
                 
                 for (const l in grouped[f]) {
                     for (const s in grouped[f][l]) {
@@ -567,6 +578,9 @@
                                     <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">${s} <span class="text-gray-400 font-normal">(${wordsInTopic.length})</span></h3>
                                 </div>
                                 <div class="flex items-center gap-1 pl-2">
+                                    <button onclick="renameSubfolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="p-1.5 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать тему">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
                                     <button onclick="fastAdd('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-blue-500 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-sm">+ СЛОВО</button>
                                     <button onclick="deleteFolder('${f.replace(/'/g,"\\'")}', '${l.replace(/'/g,"\\'")}', '${s.replace(/'/g,"\\'")}'); event.stopPropagation();" class="text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all" title="Удалить тему">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -606,6 +620,49 @@
             container.innerHTML = html || `<div class="text-center py-10"><p class="text-gray-400 font-bold text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все слова выучены 🎉'}</p></div>`;
         }
 
+        // НОВЫЕ ФУНКЦИИ ДЛЯ ПЕРЕИМЕНОВАНИЯ ПАПОК И ТЕМ
+        window.renameFolder = async (oldFolder) => {
+            const newFolder = prompt(`Введите новое название для курса "${oldFolder}":`, oldFolder);
+            if (newFolder && newFolder.trim() !== '' && newFolder.trim() !== oldFolder) {
+                try {
+                    await apiFetch('/words/rename_folder', {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({old_folder: oldFolder, new_folder: newFolder.trim()})
+                    });
+                    await fetchWords();
+                    renderDict();
+                } catch(e) {
+                    alert('Ошибка сети! Изменения не сохранены.');
+                }
+            }
+        };
+
+        window.renameSubfolder = async (f, l, oldS) => {
+            const newS = prompt(`Введите новое название для темы "${oldS}":`, oldS);
+            if (newS && newS.trim() !== '' && newS.trim() !== oldS) {
+                try {
+                    await apiFetch('/words/rename_subfolder', {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({folder: f, level: l, old_subfolder: oldS, new_subfolder: newS.trim()})
+                    });
+                    
+                    const oldKey = `${f}|${l}|${oldS}`;
+                    const newKey = `${f}|${l}|${newS.trim()}`;
+                    if (collapsedDictTopics[oldKey] !== undefined) {
+                        collapsedDictTopics[newKey] = collapsedDictTopics[oldKey];
+                        delete collapsedDictTopics[oldKey];
+                    }
+                    
+                    await fetchWords();
+                    renderDict();
+                } catch(e) {
+                    alert('Ошибка сети! Изменения не сохранены.');
+                }
+            }
+        };
+
         const modal = document.getElementById('add-modal');
         const setType = (t) => {
             currentType = t;
@@ -636,7 +693,6 @@
         document.getElementById('tab-single').onclick = showSingleTab;
         document.getElementById('tab-bulk').onclick = showBulkTab;
 
-        // ИСПРАВЛЕННАЯ КНОПКА ДОБАВЛЕНИЯ (очищает все старые данные)
         document.getElementById('add-btn').onclick = () => { 
             editId = null; document.getElementById('modal-title').innerText = "Новое слово"; 
             document.getElementById('add-form').reset(); 
@@ -669,24 +725,41 @@
             modal.classList.remove('hidden');
         };
 
-        // ИСПРАВЛЕННОЕ БЫСТРОЕ ДОБАВЛЕНИЕ (заполняет обе формы: одиночную и CSV)
         window.fastAdd = (folder, level, subfolder) => {
             editId = null; document.getElementById('modal-title').innerText = "Быстрое добавление";
             document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der');
             
             const lvl = level === 'Общее' ? '' : level;
             
-            // Заполняем форму для одиночного добавления
             document.getElementById('word-folder').value = folder; 
             document.getElementById('word-level').value = lvl; 
             document.getElementById('word-subfolder').value = subfolder;
             
-            // Заполняем форму для массовой загрузки (CSV)
             document.getElementById('bulk-folder').value = folder; 
             document.getElementById('bulk-level').value = lvl; 
             document.getElementById('bulk-subfolder').value = subfolder;
             
             modal.classList.remove('hidden'); setTimeout(() => document.getElementById('word-de').focus(), 150);
+        };
+
+        // НОВАЯ ФУНКЦИЯ ДЛЯ ДОБАВЛЕНИЯ ПРЯМО В КУРС
+        window.fastAddCourse = (folder) => {
+            editId = null; 
+            document.getElementById('modal-title').innerText = "Новая тема / слова";
+            document.getElementById('add-form').reset(); 
+            setType('noun'); showSingleTab(); selectArticle('der');
+            
+            // Заполняем только курс, остальное пустое, чтобы ты вписал тему
+            document.getElementById('word-folder').value = folder; 
+            document.getElementById('word-level').value = ''; 
+            document.getElementById('word-subfolder').value = ''; 
+            
+            document.getElementById('bulk-folder').value = folder; 
+            document.getElementById('bulk-level').value = ''; 
+            document.getElementById('bulk-subfolder').value = ''; 
+            
+            modal.classList.remove('hidden'); 
+            setTimeout(() => document.getElementById('word-subfolder').focus(), 150);
         };
 
         window.deleteWord = async (id, event) => { 

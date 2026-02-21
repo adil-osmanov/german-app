@@ -76,6 +76,16 @@ class FolderReset(BaseModel):
     level: str
     subfolder: str
 
+class FolderRename(BaseModel):
+    old_folder: str
+    new_folder: str
+
+class SubfolderRename(BaseModel):
+    folder: str
+    level: str
+    old_subfolder: str
+    new_subfolder: str
+
 @app.get("/words")
 def get_words():
     conn = get_db_connection()
@@ -111,6 +121,27 @@ def edit_word(word_id: int, word: WordCreate):
     conn.close()
     return {"status": "success"}
 
+@app.put("/words/rename_folder")
+def rename_folder(data: FolderRename):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE words SET folder = %s WHERE folder = %s", (data.new_folder, data.old_folder))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success"}
+
+@app.put("/words/rename_subfolder")
+def rename_subfolder(data: SubfolderRename):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE words SET subfolder = %s WHERE folder = %s AND level = %s AND subfolder = %s", 
+                (data.new_subfolder, data.folder, data.level, data.old_subfolder))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success"}
+
 @app.post("/upload_csv")
 async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), file: UploadFile = File(...)):
     content = await file.read()
@@ -127,7 +158,6 @@ async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder:
         if len(row) < 3: continue
         if row[0].lower() == 'word_type': continue 
         
-        # Защита от пустых колонок в конце
         while len(row) < 8:
             row.append("")
             
