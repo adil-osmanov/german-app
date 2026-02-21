@@ -249,14 +249,14 @@
                         <input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-2.5 px-3 outline-none font-bold dark:text-white text-xs">
                     </div>
                 </div>
-                <div class="mt-2 p-5 border-2 border-dashed border-blue-200 dark:border-gray-700 bg-blue-50/50 dark:bg-gray-800/50 rounded-xl text-center">
+                <div class="mt-2 p-5 border-2 border-dashed border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 rounded-xl text-center transition-all group hover:bg-green-50 dark:hover:bg-green-900/20">
                     <input type="file" id="bulk-file" accept=".csv" class="hidden">
                     <label for="bulk-file" class="cursor-pointer flex flex-col items-center gap-2">
-                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        <span class="text-blue-600 dark:text-blue-400 font-bold text-xs">Выбрать CSV файл</span>
+                        <svg class="w-6 h-6 text-green-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <span class="text-green-600 dark:text-green-400 font-bold text-xs">Выбрать CSV файл</span>
                     </label>
                 </div>
-                <button id="btn-upload-csv" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg mt-2 active:scale-95 transition-all text-sm">Загрузить</button>
+                <button id="btn-upload-csv" class="w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/40 mt-2 active:scale-95 transition-all text-sm">Загрузить пачку</button>
             </div>
         </div>
     </div>
@@ -377,14 +377,20 @@
         };
         document.addEventListener('keydown', handleEnter);
 
+        // ИНТЕЛЛЕКТУАЛЬНОЕ СОХРАНЕНИЕ ВРЕМЕНИ ДЛЯ ГРАФИКОВ
         function saveSessionTime() {
             if (sessionStartMs > 0) {
                 const elapsedMs = Date.now() - sessionStartMs;
-                const today = new Date().toDateString();
-                let stats = JSON.parse(localStorage.getItem('dailyStudy')) || { date: today, ms: 0 };
-                if (stats.date !== today) stats = { date: today, ms: 0 };
-                stats.ms += elapsedMs;
-                localStorage.setItem('dailyStudy', JSON.stringify(stats));
+                
+                // Получаем сегодняшнюю дату в формате YYYY-MM-DD локально
+                const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
+                
+                let history = JSON.parse(localStorage.getItem('studyHistory')) || {};
+                if (!history[localISOTime]) history[localISOTime] = 0;
+                history[localISOTime] += elapsedMs;
+                
+                localStorage.setItem('studyHistory', JSON.stringify(history));
                 sessionStartMs = 0;
             }
         }
@@ -527,7 +533,6 @@
                             </div>
                         </div>`;
                         grouped[f][l][s].forEach(w => {
-                            // ОТОБРАЖЕНИЕ ФОРМ ГЛАГОЛОВ В СЛОВАРЕ
                             let extraInfo = '';
                             if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
                             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
@@ -563,7 +568,6 @@
             document.getElementById('article-selector').classList.toggle('hidden', t === 'verb');
             document.getElementById('plural-input-group').classList.toggle('hidden', t === 'verb');
             
-            // ПОКАЗАТЬ ПОЛЯ ГЛАГОЛОВ
             const verbGroup = document.getElementById('verb-forms-group');
             if(verbGroup) verbGroup.classList.toggle('hidden', t !== 'verb');
         };
@@ -571,6 +575,7 @@
         document.getElementById('type-noun').onclick = () => setType('noun');
         document.getElementById('type-verb').onclick = () => setType('verb');
 
+        // ЛОГИКА ЦВЕТА КНОПОК ВКЛАДОК ДОБАВЛЕНИЯ
         const showSingleTab = () => {
             document.getElementById('form-single').classList.remove('hidden'); document.getElementById('form-bulk').classList.add('hidden');
             document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all";
@@ -578,7 +583,8 @@
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
-            document.getElementById('tab-bulk').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-gray-700 shadow-sm dark:text-white transition-all";
+            // АКЦЕНТНЫЙ ЗЕЛЕНЫЙ ЦВЕТ ДЛЯ ПАЧКИ
+            document.getElementById('tab-bulk').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-green-500 shadow-md shadow-green-500/40 text-white transition-all transform scale-[1.02]";
             document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-gray-500 dark:text-gray-400 transition-all";
         };
 
@@ -673,7 +679,7 @@
                 renderDict();
             } catch(e) { alert("Ошибка загрузки!"); }
             finally {
-                btn.innerHTML = 'Загрузить';
+                btn.innerHTML = 'Загрузить пачку';
                 btn.disabled = false;
             }
         };
@@ -965,7 +971,6 @@
 
             document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru||'') : fullGerman;
             
-            // ВЫВОД ФОРМ В ОТВЕТЕ
             if (w.word_type === 'noun' && w.plural) {
                 document.getElementById('train-de-plural').innerText = `Plural: die ${w.plural}`;
             } else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
@@ -1015,7 +1020,6 @@
                         if(manPluralContainer) manPluralContainer.classList.add('hidden');
                     }
 
-                    // ПОКАЗ ПОЛЕЙ ГЛАГОЛА В ТРЕНИРОВКЕ
                     if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
                         if(manVerbContainer) manVerbContainer.classList.remove('hidden');
                         if(manPraet) manPraet.value = '';
@@ -1097,7 +1101,6 @@
                         correctAnswer = `${w.article} ${w.word_de}`;
                     }
                 } else if (w.word_type === 'verb') {
-                    // ПРОВЕРКА ФОРМ ГЛАГОЛА
                     let baseCorrect = (main.toLowerCase() === expectedWord);
                     let formsCorrect = true;
                     if (w.praeteritum || w.partizip) {
@@ -1147,53 +1150,62 @@
             }
         };
 
-        document.getElementById('btn-trigger-restore').onclick = () => document.getElementById('file-restore').click();
-        
-        document.getElementById('file-restore').onchange = async function() {
-            if(!this.files[0]) return;
-            if(!confirm("⚠️ ВНИМАНИЕ! Это действие полностью удалит текущие слова и заменит их данными из бэкапа. Вы уверены?")) {
-                this.value = '';
-                return;
-            }
-            
-            const f = new FormData();
-            f.append('file', this.files[0]);
-            
-            const btn = document.getElementById('btn-trigger-restore');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ Восстановление...';
-            btn.disabled = true;
-            
-            try {
-                const res = await apiFetch('/restore_backup', { method: 'POST', body: f });
-                const result = await res.json();
-                if(result.status === 'success') {
-                    document.getElementById('backup-modal').classList.add('hidden');
-                    alert(`✅ База успешно восстановлена! Загружено слов: ${result.restored}`);
-                    await fetchWords();
-                    loadStats();
-                } else {
-                    alert("Ошибка сервера при восстановлении!");
-                }
-            } catch(e) { alert("Ошибка при восстановлении базы! Проверьте файл бэкапа."); }
-            finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                this.value = '';
-            }
-        };
-
-        window.resetFolderStats = async (f, l, s) => {
-            if(confirm(`Обнулить прогресс для темы "${s}"?`)){
-                await apiFetch('/words/reset_folder', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder:f, level:l, subfolder:s})});
-                await fetchWords(); 
-                loadStats();
-            }
-        };
-
+        // --- ЛОГИКА ГРАФИКОВ И СТАТИСТИКИ ---
         function loadStats() {
             const stats = document.getElementById('view-stats');
-            const total = globalWords.length; const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
+            const total = globalWords.length; 
+            const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
+            
+            // Получение истории тренировок
+            const history = JSON.parse(localStorage.getItem('studyHistory')) || {};
+            
+            // Расчет стрика (дней подряд)
+            const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+            let currentTempDate = new Date(Date.now() - tzoffset);
+            let streak = 0;
+            let checkDateStr = currentTempDate.toISOString().slice(0, 10);
+            
+            // Если сегодня еще не занимался, проверяем со вчерашнего дня
+            if (!history[checkDateStr] || history[checkDateStr] < 60000) {
+                currentTempDate.setDate(currentTempDate.getDate() - 1);
+                checkDateStr = currentTempDate.toISOString().slice(0, 10);
+            }
+
+            while (history[checkDateStr] && history[checkDateStr] >= 60000) { // Минимум 1 минута для засчитывания дня
+                streak++;
+                currentTempDate.setDate(currentTempDate.getDate() - 1);
+                checkDateStr = currentTempDate.toISOString().slice(0, 10);
+            }
+
+            // Подготовка данных для графика за последние 7 дней
+            const chartData = [];
+            let maxMinutes = 0;
+            for(let i=6; i>=0; i--) {
+                const d = new Date(Date.now() - tzoffset);
+                d.setDate(d.getDate() - i);
+                const ds = d.toISOString().slice(0, 10);
+                const dayName = d.toLocaleDateString('ru-RU', {weekday: 'short'}).toUpperCase();
+                const ms = history[ds] || 0;
+                const mins = Math.floor(ms / 60000);
+                if (mins > maxMinutes) maxMinutes = mins;
+                chartData.push({ day: dayName, mins: mins });
+            }
+            
+            const chartScale = Math.max(maxMinutes, DAILY_GOAL_MINUTES); // Чтобы столбцы не вылетали за потолок
+
+            let chartHTML = chartData.map(item => {
+                const heightPct = Math.min(100, (item.mins / chartScale) * 100);
+                const isGoalMet = item.mins >= DAILY_GOAL_MINUTES;
+                const barColor = isGoalMet ? 'bg-green-400' : 'bg-blue-400';
+                return `
+                <div class="flex flex-col items-center gap-1 flex-1">
+                    <div class="w-full h-24 bg-white/10 rounded-md relative flex items-end overflow-hidden">
+                        <div class="w-full rounded-md transition-all duration-1000 ${barColor}" style="height: ${heightPct}%"></div>
+                    </div>
+                    <span class="text-[9px] font-black opacity-60">${item.day}</span>
+                </div>`;
+            }).join('');
+
             const folders = {};
             globalWords.forEach(w => { 
                 const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
@@ -1201,29 +1213,34 @@
                 folders[k].total++; if(w.score>=MAX_SCORE) folders[k].done++; 
             });
 
-            const today = new Date().toDateString();
-            let dailyStats = JSON.parse(localStorage.getItem('dailyStudy')) || { date: today, ms: 0 };
-            if (dailyStats.date !== today) dailyStats = { date: today, ms: 0 };
-            
-            const minutesToday = Math.floor(dailyStats.ms / 60000);
-            const timeProgressPct = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
-
             stats.innerHTML = `
-                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-3xl text-white shadow-xl shadow-purple-500/30">
-                    <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Цель на сегодня</p>
-                    <div class="flex items-end gap-2 mt-0.5">
-                        <h2 class="text-4xl font-black tracking-tighter">${minutesToday}</h2>
-                        <span class="text-sm font-bold opacity-80 mb-1">/ ${DAILY_GOAL_MINUTES} мин</span>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="bg-gradient-to-br from-orange-400 to-red-500 p-4 rounded-3xl text-white shadow-lg shadow-orange-500/30 flex flex-col justify-center relative overflow-hidden">
+                        <svg class="absolute -right-4 -bottom-4 w-24 h-24 opacity-20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"></path></svg>
+                        <p class="text-[10px] font-black opacity-80 uppercase tracking-widest relative z-10">В ударе</p>
+                        <div class="flex items-end gap-1 mt-1 relative z-10">
+                            <h2 class="text-3xl font-black tracking-tighter">${streak}</h2>
+                            <span class="text-xs font-bold opacity-80 mb-1">дней</span>
+                        </div>
                     </div>
-                    <div class="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mt-3 relative">
-                        <div class="bg-white h-full transition-all duration-1000" style="width: ${timeProgressPct}%"></div>
+                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-3xl text-white shadow-lg shadow-blue-500/30 flex flex-col justify-center">
+                        <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Mastery</p>
+                        <div class="flex items-end gap-1 mt-1">
+                            <h2 class="text-3xl font-black tracking-tighter">${mastered}</h2>
+                            <span class="text-xs font-bold opacity-80 mb-1">слов</span>
+                        </div>
+                        <p class="text-[10px] opacity-80 mt-1">Это ${Math.round((mastered/total||0)*100)}% от базы</p>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-5 rounded-3xl text-white shadow-xl shadow-blue-500/30">
-                    <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Уровень Mastery</p>
-                    <h2 class="text-4xl font-black mt-0.5 tracking-tighter">${Math.round((mastered/total||0)*100)}%</h2>
-                    <p class="mt-2 text-xs font-medium">Закреплено ${mastered} из ${total} слов.</p>
+                <div class="bg-gray-800 p-5 rounded-3xl text-white shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-[10px] font-black opacity-80 uppercase tracking-widest">Активность (7 дней)</p>
+                        <p class="text-[10px] font-bold text-blue-400 bg-blue-900/30 px-2 py-1 rounded-md">Цель: ${DAILY_GOAL_MINUTES} мин</p>
+                    </div>
+                    <div class="flex gap-2 justify-between items-end h-32">
+                        ${chartHTML}
+                    </div>
                 </div>
                 
                 <h3 class="font-bold text-base mt-6 mb-1 dark:text-white px-1">Темы</h3>
