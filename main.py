@@ -37,7 +37,6 @@ def init_db():
     """)
     conn.commit()
     
-    # Безопасное добавление новых колонок для глаголов (если их еще нет)
     try:
         cur.execute("ALTER TABLE words ADD COLUMN praeteritum TEXT DEFAULT ''")
         conn.commit()
@@ -116,7 +115,7 @@ def edit_word(word_id: int, word: WordCreate):
 async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), file: UploadFile = File(...)):
     content = await file.read()
     try: text_data = content.decode("utf-8-sig")
-    except: text_data = content.decode("cp1251", errors="replace")
+    except UnicodeDecodeError: text_data = content.decode("cp1251", errors="replace")
         
     csv_reader = csv.reader(io.StringIO(text_data), delimiter=';')
     words_added = 0
@@ -125,14 +124,25 @@ async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder:
     cur = conn.cursor()
     
     for row in csv_reader:
-        if len(row) < 4: continue
+        if len(row) < 3: continue
         if row[0].lower() == 'word_type': continue 
-        w_type, article, word_de, word_ru = row[0].strip(), row[1].strip(), row[2].strip(), row[3].strip()
-        ex = row[4].strip() if len(row) > 4 else ""
+        
+        # Защита от пустых колонок в конце
+        while len(row) < 8:
+            row.append("")
+            
+        w_type = row[0].strip()
+        article = row[1].strip()
+        word_de = row[2].strip()
+        plural = row[3].strip()
+        praeteritum = row[4].strip()
+        partizip = row[5].strip()
+        word_ru = row[6].strip()
+        ex = row[7].strip()
         
         cur.execute(
-            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip) VALUES (%s, %s, %s, '', %s, %s, %s, %s, 0, %s, 0, '', '')", 
-            (w_type, article, word_de, word_ru, folder, level, subfolder, ex)
+            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s)", 
+            (w_type, article, word_de, plural, word_ru, folder, level, subfolder, ex, praeteritum, partizip)
         )
         words_added += 1
         
