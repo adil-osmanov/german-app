@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" class="scroll-smooth dark"> <head>
+<html lang="ru" class="scroll-smooth">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Neural Deutsch Terminal</title>
+    <title>Wörterbuch Pro</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,68 +12,57 @@
     <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
     <script>
-        // Настройка Tech-палитры
         tailwind.config = { 
             darkMode: 'class', 
             theme: { 
                 extend: { 
                     colors: { 
-                        obsidian: '#0a0a0f', // Глубокий черный фон
-                        'dark-panel': '#12121a', // Фон панелей
-                        'neon-blue': '#00f3ff', // Основной акцент (электрик)
-                        'neon-green': '#00ff9f', // Акцент успеха (кибер-зеленый)
-                        'neon-red': '#ff0055', // Акцент ошибки
-                        der: '#3b82f6', die: '#ef4444', das: '#10b981' // Оставляем цвета родов для удобства
-                    },
-                    fontFamily: {
-                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace']
+                        der: '#3b82f6', die: '#ef4444', das: '#10b981'
                     }
                 } 
             } 
         };
         
-        // Базовая инициализация
-        if (localStorage.theme === 'light') document.documentElement.classList.remove('dark');
-        else document.documentElement.classList.add('dark'); // По умолчанию темная тема
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
         }
     </script>
     <style>
-        /* Базовые стили и шрифты для Tech-вида */
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; height: 100dvh; background-color: #0a0a0f; }
-        .font-tech { font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", monospace; letter-spacing: -0.02em; }
-        
-        /* Эффекты стекла и неона */
-        .glass-tech { background: rgba(18, 18, 26, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(0, 243, 255, 0.1); }
-        .neon-border { box-shadow: 0 0 5px rgba(0, 243, 255, 0.2), inset 0 0 1px rgba(0, 243, 255, 0.1); border: 1px solid rgba(0, 243, 255, 0.3); }
-        .neon-text-blue { text-shadow: 0 0 8px rgba(0, 243, 255, 0.6); }
-        .neon-text-green { text-shadow: 0 0 8px rgba(0, 255, 159, 0.6); }
-
-        .active-tab-tech { color: #00f3ff; text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; height: 100dvh; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .dark .glass { background: rgba(17, 24, 39, 0.85); border-color: rgba(255,255,255,0.05); }
+        .active-tab { color: #3b82f6; transform: translateY(-2px); }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .drag-handle-folder, .drag-handle-topic { touch-action: none; }
-        .sortable-ghost { opacity: 0.3; transform: scale(0.98); border: 1px dashed #00f3ff; }
+        
+        /* Стили для перетаскивания */
+        .drag-handle-folder, .drag-handle-topic { touch-action: none; cursor: grab; }
+        .drag-handle-folder:active, .drag-handle-topic:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.4; transform: scale(0.98); background: #f3f4f6; border-radius: 12px; }
+        .dark .sortable-ghost { background: #1f2937; }
 
-        /* Анимация "сворачивания в лог" при повторении */
-        @keyframes foldUpLog {
-            0% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
-            100% { opacity: 0; transform: translateY(-20px) scale(0.95); filter: brightness(1.5); }
+        /* Плавное сворачивание карточки при ответе */
+        @keyframes foldUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-15px) scale(0.97); }
         }
-        .animate-fold-up { animation: foldUpLog 0.3s ease-out forwards; }
+        .animate-fold-up { animation: foldUp 0.25s ease-out forwards; }
     </style>
 </head>
-<body class="bg-obsidian text-gray-100 transition-colors duration-300 min-h-screen flex flex-col overflow-hidden">
+<body class="bg-[#f2f2f7] dark:bg-black text-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen flex flex-col overflow-hidden">
 
-    <header class="fixed top-0 left-0 right-0 pt-12 pb-3 px-4 glass-tech z-40 transition-all border-b border-neon-blue/20">
+    <div class="hidden bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 line-through grayscale opacity-60 bg-emerald-500 text-emerald-50 text-teal-500"></div>
+
+    <header class="fixed top-0 left-0 right-0 pt-12 pb-3 px-4 glass z-40 transition-all border-b border-gray-200 dark:border-gray-800">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
-            <h1 id="header-title" class="text-lg font-bold tracking-wider font-tech uppercase text-neon-blue neon-text-blue">SYSTEM TERMINAL</h1>
+            <h1 id="header-title" class="text-xl font-extrabold tracking-tight">Словарь</h1>
             <div class="flex items-center gap-3">
-                 <button id="theme-toggle" class="p-1.5 rounded-full hover:bg-dark-panel transition-all border border-neon-blue/30 text-neon-blue/70">
-                    <svg id="theme-toggle-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                 <button id="theme-toggle" class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-gray-500 dark:text-gray-400">
+                    <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path></svg>
                 </button>
-                <button id="add-btn" class="bg-neon-blue/10 text-neon-blue border border-neon-blue/50 w-8 h-8 rounded-md flex items-center justify-center hover:bg-neon-blue/20 active:scale-95 transition-all text-lg font-mono shadow-[0_0_10px_rgba(0,243,255,0.2)]">+</button>
+                <button id="add-btn" class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-blue-600 active:scale-95 transition-all text-lg font-medium shadow-md shadow-blue-500/30">+</button>
             </div>
         </div>
     </header>
@@ -82,102 +72,102 @@
         <section id="view-dict" class="pt-4 pb-6">
             <div class="mb-5 mt-2">
                 <div class="relative group">
-                    <input type="text" id="search-input" placeholder="> Поиск данных..." autocomplete="off" class="w-full bg-dark-panel border border-neon-blue/30 rounded-md py-3 pl-10 shadow-sm outline-none focus:border-neon-blue focus:shadow-[0_0_5px_rgba(0,243,255,0.3)] transition-all text-white text-sm font-mono">
-                    <svg class="w-4 h-4 absolute left-4 top-3.5 text-neon-blue/50 group-focus-within:text-neon-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="search-input" placeholder="Поиск слов..." autocomplete="off" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl py-3 pl-10 shadow-sm outline-none focus:ring-2 ring-blue-500/50 transition-all text-gray-900 dark:text-white text-sm">
+                    <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
             
-            <div class="flex bg-dark-panel p-1 rounded-md mb-4 border border-neon-blue/20">
-                <button id="dict-tab-active" class="flex-1 py-1.5 text-xs font-bold rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all font-mono uppercase tracking-wider border-b-2 border-neon-blue">Active Data</button>
-                <button id="dict-tab-mastered" class="flex-1 py-1.5 text-xs font-bold rounded-sm text-gray-500 transition-all flex items-center justify-center gap-1 font-mono uppercase tracking-wider hover:text-neon-blue/70">Archive [OK]</button>
+            <div class="flex bg-gray-200/60 dark:bg-gray-800/80 p-1 rounded-xl mb-4 border border-gray-100 dark:border-gray-800">
+                <button id="dict-tab-active" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">В процессе</button>
+                <button id="dict-tab-mastered" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-300">Архив 🏆</button>
             </div>
 
             <div id="dict-list">
-                <div class="text-center py-20"><p class="text-neon-blue/50 font-mono text-sm animate-pulse">> Initializing database...</p></div>
+                <div class="text-center py-20"><p class="text-gray-400 text-sm animate-pulse">Загрузка данных...</p></div>
             </div>
         </section>
 
         <section id="view-train" class="hidden relative pt-2 pb-6">
             <div id="train-setup-block" class="w-full animate-in fade-in slide-in-from-bottom-4 duration-300 sm:mt-4">
-                <div class="flex bg-dark-panel p-1 rounded-md mb-4 mt-1 gap-1 border border-neon-blue/20">
-                    <button id="dir-auto" onclick="setDirection('auto')" class="flex-1 py-2 text-[10px] font-bold rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm border-b-2 border-neon-blue transition-all font-mono uppercase">MIXED MODE</button>
-                    <button id="dir-ru-de" onclick="setDirection('ru-de')" class="flex-1 py-2 text-[10px] font-bold rounded-sm text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70">RU > DE</button>
-                    <button id="dir-de-ru" onclick="setDirection('de-ru')" class="flex-1 py-2 text-[10px] font-bold rounded-sm text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70">DE > RU</button>
+                <div class="flex bg-gray-200/60 dark:bg-gray-800/80 p-1 rounded-xl mb-4 mt-1 gap-1 border border-gray-100 dark:border-gray-800">
+                    <button id="dir-auto" onclick="setDirection('auto')" class="flex-1 py-2 text-[10px] font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-500 shadow-sm transition-all uppercase">Микс</button>
+                    <button id="dir-ru-de" onclick="setDirection('ru-de')" class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300">РУС > НЕМ</button>
+                    <button id="dir-de-ru" onclick="setDirection('de-ru')" class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300">НЕМ > РУС</button>
                 </div>
                 <div id="train-topics-container" class="space-y-3"></div>
             </div>
 
-            <div id="train-card-block" class="hidden w-full bg-dark-panel p-5 rounded-lg shadow-[0_0_15px_rgba(0,0,0,0.5)] text-center relative flex flex-col transition-all border border-neon-blue/30 mt-2 sm:mt-6">
-                <button id="btn-stop-training" class="absolute top-3 right-3 text-neon-blue/40 hover:text-neon-red bg-obsidian w-7 h-7 rounded-sm flex items-center justify-center font-bold z-10 border border-neon-blue/20">×</button>
+            <div id="train-card-block" class="hidden w-full bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg text-center relative flex flex-col transition-all border border-gray-100 dark:border-gray-800 mt-2 sm:mt-6">
+                <button id="btn-stop-training" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold z-10 transition-colors">×</button>
                 
-                <div class="mb-3"><span id="train-level-badge" class="px-2 py-1 rounded-sm text-[9px] font-mono uppercase tracking-widest bg-neon-blue/10 text-neon-blue border border-neon-blue/30">STATUS: L1 (RECOGNITION)</span></div>
+                <div class="mb-3"><span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">Уровень 1</span></div>
                 
                 <div class="mb-5 w-full px-1">
-                    <div class="flex justify-between text-[9px] font-mono font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
-                        <span id="train-card-progress-text">MASTERY SCORE: 0/6</span>
-                        <span id="train-total-cards">QUEUE: 0</span>
+                    <div class="flex justify-between text-[10px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
+                        <span id="train-card-progress-text">Прогресс: 0/6</span>
+                        <span id="train-total-cards">Осталось: 0</span>
                     </div>
-                    <div class="w-full bg-obsidian h-1.5 rounded-full overflow-hidden relative border border-neon-blue/20">
-                        <div id="train-card-progress-fill" class="bg-neon-blue h-full transition-all duration-500 shadow-[0_0_5px_rgba(0,243,255,0.5)]" style="width: 0%"></div>
-                    </div>
-                </div>
-                
-                <div class="relative w-full flex justify-center items-center min-h-[60px] mb-4 px-10 py-4 bg-obsidian/50 rounded-md border border-neon-blue/10">
-                    <h2 id="train-question" class="text-xl sm:text-2xl font-bold text-white leading-tight tracking-tight m-0 text-center break-words font-tech">Loading data...</h2>
-                    <div class="absolute right-2 top-1/2 -translate-y-1/2">
-                        <button id="btn-speak-question" class="hidden bg-dark-panel w-8 h-8 rounded-sm flex items-center justify-center text-neon-blue/50 hover:text-neon-blue hover:bg-neon-blue/10 transition-all border border-neon-blue/20">🔊</button>
+                    <div class="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden relative">
+                        <div id="train-card-progress-fill" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
                     </div>
                 </div>
                 
-                <p id="train-example-q" class="text-xs text-neon-blue/70 italic mb-5 hidden px-2 leading-relaxed block font-mono bg-neon-blue/5 p-2 rounded border-l-2 border-neon-blue"></p>
+                <div class="relative w-full flex justify-center items-center min-h-[60px] mb-4 px-10">
+                    <h2 id="train-question" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight m-0 text-center break-words">Загрузка...</h2>
+                    <div class="absolute right-0 top-1/2 -translate-y-1/2">
+                        <button id="btn-speak-question" class="hidden bg-gray-50 dark:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-500 transition-all border border-gray-100 dark:border-gray-700">🔊</button>
+                    </div>
+                </div>
                 
-                <button id="btn-show-answer" class="w-full bg-neon-blue/10 text-neon-blue font-bold py-3 rounded-md active:scale-95 transition-all mt-2 text-sm font-mono border border-neon-blue/50 hover:bg-neon-blue/20">> DECRYPT ANSWER</button>
+                <p id="train-example-q" class="text-sm text-gray-500 dark:text-gray-400 italic mb-5 hidden px-2 leading-relaxed block"></p>
+                
+                <button id="btn-show-answer" class="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">Показать ответ</button>
                 
                 <div id="train-answer-block" class="hidden w-full mt-3">
-                    <div class="flex flex-col justify-center items-center mb-5 bg-obsidian/50 p-4 rounded-md border border-neon-green/20">
+                    <div class="flex flex-col justify-center items-center mb-6 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                         <div class="relative w-full flex justify-center items-center min-h-[40px] px-10">
-                            <p id="train-de-word" class="text-lg sm:text-xl font-bold text-white leading-tight tracking-tight m-0 text-center font-tech"></p>
+                            <p id="train-de-word" class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight m-0 text-center"></p>
                             <div class="absolute right-0 top-1/2 -translate-y-1/2">
-                                <button id="btn-speak-answer" class="hidden bg-neon-green/10 w-8 h-8 rounded-sm flex items-center justify-center text-neon-green hover:scale-110 transition-transform border border-neon-green/30">🔊</button>
+                                <button id="btn-speak-answer" class="hidden bg-blue-50 dark:bg-blue-900/30 w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:scale-110 transition-transform">🔊</button>
                             </div>
                         </div>
-                        <p id="train-de-plural" class="text-[10px] font-mono font-bold text-gray-400 mt-2 hidden"></p>
-                        <p id="train-answer-example" class="text-xs text-neon-green/70 italic font-medium mt-3 hidden px-2 leading-relaxed font-mono bg-neon-green/5 p-2 rounded w-full text-left border-l-2 border-neon-green"></p>
+                        <p id="train-de-plural" class="text-xs font-medium text-gray-500 mt-2 hidden"></p>
+                        <p id="train-answer-example" class="text-sm text-blue-600 dark:text-blue-400 italic font-medium mt-3 hidden px-2 leading-relaxed text-center"></p>
                     </div>
 
                     <div class="flex gap-2">
-                        <button id="btn-forgot" class="flex-1 bg-neon-red/10 text-neon-red font-bold py-3 rounded-md border border-neon-red/30 active:scale-95 transition-all text-xs font-mono uppercase hover:bg-neon-red/20">CRITICAL FAILURE [RESET]</button>
-                        <button id="btn-remembered" class="flex-1 bg-neon-green/10 text-neon-green font-bold py-3 rounded-md border border-neon-green/30 active:scale-95 transition-all text-xs font-mono uppercase hover:bg-neon-green/20">DATA CONFIRMED [OK]</button>
+                        <button id="btn-forgot" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-3.5 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-sm hover:bg-red-100 dark:hover:bg-red-900/40">Не помню</button>
+                        <button id="btn-remembered" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-3.5 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-sm hover:bg-green-100 dark:hover:bg-green-900/40">Помню</button>
                     </div>
                 </div>
 
                 <div id="train-manual-block" class="hidden w-full mt-3">
-                     <div class="flex gap-2 mb-2 w-full">
-                        <input type="text" id="manual-article" placeholder="art" autocomplete="off" class="w-[50px] bg-obsidian rounded-sm py-2.5 px-1 text-center outline-none focus:border-neon-blue border border-neon-blue/30 text-white font-bold transition-all disabled:opacity-50 min-w-0 text-xs font-mono" style="text-align-last: center;">
+                    <div class="flex gap-2 mb-2 w-full">
+                        <input type="text" id="manual-article" placeholder="der" autocomplete="off" class="w-[60px] bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-1 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm" style="text-align-last: center;">
                         <div class="flex-1 relative flex items-center min-w-0">
-                            <input type="text" id="manual-main" placeholder="Enter value..." autocomplete="off" class="w-full bg-obsidian rounded-sm py-2.5 pl-3 pr-10 outline-none focus:border-neon-blue border border-neon-blue/30 text-white font-bold transition-all disabled:opacity-50 min-w-0 text-sm font-mono">
-                            <button id="btn-mic" type="button" class="absolute right-1 p-2 text-neon-blue/50 hover:text-neon-blue transition-colors rounded-sm active:scale-90" title="Voice Input">
+                            <input type="text" id="manual-main" placeholder="Впишите слово..." autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-lg py-3 pl-3 pr-10 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
+                            <button id="btn-mic" type="button" class="absolute right-1 p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-md active:scale-90" title="Голосовой ввод">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
                             </button>
                         </div>
                     </div>
                      <div class="flex gap-2 mb-2 w-full hidden" id="manual-plural-container">
-                        <div class="bg-dark-panel rounded-sm py-2.5 px-1 text-center outline-none font-bold text-gray-500 w-[50px] min-w-0 flex items-center justify-center text-xs font-mono border border-neon-blue/10">pl.</div>
-                        <input type="text" id="manual-plural" placeholder="Plural form..." autocomplete="off" class="flex-1 bg-obsidian rounded-sm py-2.5 px-3 outline-none focus:border-neon-blue border border-neon-blue/30 text-white font-bold transition-all disabled:opacity-50 min-w-0 text-sm font-mono">
+                        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg py-3 px-1 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die (pl)</div>
+                        <input type="text" id="manual-plural" placeholder="Форма мн. числа..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-3 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
                     </div>
                     <div class="flex gap-2 mb-2 w-full hidden" id="manual-verb-forms-container">
-                        <input type="text" id="manual-praeteritum" placeholder="Präteritum" autocomplete="off" class="flex-1 bg-obsidian rounded-sm py-2.5 px-2 text-center outline-none focus:border-neon-blue border border-neon-blue/30 text-white font-bold transition-all disabled:opacity-50 min-w-0 text-xs font-mono">
-                        <input type="text" id="manual-partizip" placeholder="Partizip II" autocomplete="off" class="flex-1 bg-obsidian rounded-sm py-2.5 px-2 text-center outline-none focus:border-neon-blue border border-neon-blue/30 text-white font-bold transition-all disabled:opacity-50 min-w-0 text-xs font-mono">
+                        <input type="text" id="manual-praeteritum" placeholder="Präteritum (machte)" autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
+                        <input type="text" id="manual-partizip" placeholder="Partizip II (gemacht)" autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
                     </div>
-                    <div id="manual-feedback" class="hidden w-full text-center py-2.5 rounded-sm font-bold text-sm mb-2 transition-all font-mono border"></div>
+                    <div id="manual-feedback" class="hidden w-full text-center py-3 rounded-lg font-medium text-sm mb-3 transition-all"></div>
 
-                    <div id="train-umlauts" class="flex justify-center gap-1.5 mb-3">
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-dark-panel w-9 h-9 rounded-sm font-bold text-sm text-white border border-neon-blue/20 hover:bg-neon-blue/10 active:scale-90 font-mono">ä</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-dark-panel w-9 h-9 rounded-sm font-bold text-sm text-white border border-neon-blue/20 hover:bg-neon-blue/10 active:scale-90 font-mono">ö</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-dark-panel w-9 h-9 rounded-sm font-bold text-sm text-white border border-neon-blue/20 hover:bg-neon-blue/10 active:scale-90 font-mono">ü</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-dark-panel w-9 h-9 rounded-sm font-bold text-sm text-white border border-neon-blue/20 hover:bg-neon-blue/10 active:scale-90 font-mono">ß</button>
+                    <div id="train-umlauts" class="flex justify-center gap-2 mb-4">
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ä</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ö</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ü</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ß</button>
                     </div>
-                    <button id="btn-check-manual" class="w-full bg-neon-blue/10 text-neon-blue font-bold py-3 rounded-md active:scale-95 transition-all disabled:opacity-50 text-sm font-mono border border-neon-blue/50 hover:bg-neon-blue/20">> VALIDATE INPUT</button>
+                    <button id="btn-check-manual" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl active:scale-95 transition-all disabled:opacity-50 text-sm shadow-md shadow-blue-500/20 hover:bg-blue-600">Проверить</button>
                 </div>
             </div>
         </section>
@@ -186,110 +176,110 @@
             </section>
     </main>
 
-    <div id="backup-modal" class="fixed inset-0 bg-obsidian/80 backdrop-blur-md z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-dark-panel w-full max-w-sm rounded-lg p-5 shadow-[0_0_20px_rgba(0,243,255,0.2)] transition-all border border-neon-blue/30 text-center animate-in zoom-in-95 duration-200 relative">
-            <div class="flex justify-between items-center mb-4 border-b border-neon-blue/20 pb-2">
-                <h2 class="text-lg font-bold text-white font-mono uppercase tracking-wider text-neon-blue">DATA MANAGEMENT</h2>
-                <button onclick="document.getElementById('backup-modal').classList.add('hidden')" class="text-neon-blue/50 hover:text-neon-red bg-obsidian w-7 h-7 rounded-sm flex items-center justify-center font-bold border border-neon-blue/20">×</button>
+    <div id="backup-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center animate-in zoom-in-95 duration-200 relative">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Настройки данных</h2>
+                <button onclick="document.getElementById('backup-modal').classList.add('hidden')" class="text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
             </div>
-            <p class="text-xs text-gray-400 mb-5 text-left leading-relaxed font-mono">> Select operation type...</p>
-            <button onclick="exportData()" class="w-full bg-neon-blue/10 text-neon-blue font-bold py-3 rounded-md border border-neon-blue/50 mb-4 hover:bg-neon-blue/20 active:scale-95 transition-all flex justify-center items-center gap-2 text-sm font-mono uppercase">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> > EXPORT DATABASE (.csv)
+            <p class="text-sm text-gray-500 mb-6 text-left leading-relaxed">Сохраните свой прогресс в файл или загрузите слова на другое устройство.</p>
+            <button onclick="exportData()" class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl shadow-md shadow-blue-500/20 mb-4 hover:bg-blue-600 active:scale-95 transition-all flex justify-center items-center gap-2 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Скачать резервную копию
             </button>
              <div class="relative mb-4">
-                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-neon-blue/20"></div></div>
-                <div class="relative flex justify-center text-xs font-mono"><span class="px-2 bg-dark-panel text-gray-500">OR</span></div>
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200 dark:border-gray-800"></div></div>
+                <div class="relative flex justify-center text-xs font-medium"><span class="px-2 bg-white dark:bg-gray-900 text-gray-400">или</span></div>
             </div>
-            <button id="btn-trigger-restore" class="w-full bg-obsidian text-gray-300 font-bold py-3 rounded-md hover:text-neon-blue hover:border-neon-blue/50 active:scale-95 transition-all flex justify-center items-center gap-2 border border-neon-blue/20 text-sm font-mono uppercase">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> > RESTORE FROM FILE
+            <button id="btn-trigger-restore" class="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium py-3.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all flex justify-center items-center gap-2 border border-gray-200 dark:border-gray-700 text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Восстановить из файла
             </button>
             <input type="file" id="file-restore" accept=".csv" class="hidden">
         </div>
     </div>
 
-    <div id="add-modal" class="fixed inset-0 bg-obsidian/80 backdrop-blur-md z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-dark-panel w-full max-w-lg rounded-lg p-5 shadow-[0_0_20px_rgba(0,243,255,0.2)] transition-all border border-neon-blue/30 max-h-[90dvh] flex flex-col relative" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-3 flex-shrink-0 border-b border-neon-blue/20 pb-2">
-                <h2 id="modal-title" class="text-lg font-bold text-white tracking-wider font-mono uppercase text-neon-blue">NEW DATA ENTRY</h2>
-                <button id="close-modal" class="text-neon-blue/50 hover:text-neon-red bg-obsidian w-8 h-8 rounded-sm flex items-center justify-center font-bold text-lg transition-colors border border-neon-blue/20">×</button>
+    <div id="add-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] flex flex-col relative" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 id="modal-title" class="text-xl font-bold text-gray-900 dark:text-white">Новое слово</h2>
+                <button id="close-modal" class="text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-colors">×</button>
             </div>
             <div class="overflow-y-auto pr-1 -mr-1 pb-1">
-                <div id="modal-tabs" class="flex bg-obsidian p-1 rounded-sm mb-3 border border-neon-blue/20">
-                    <button id="tab-single" class="flex-1 py-1.5 text-xs font-bold rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all font-mono uppercase border-b-2 border-neon-blue">SINGLE ENTRY</button>
-                    <button id="tab-bulk" class="flex-1 py-1.5 text-xs font-bold rounded-sm text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70">BATCH UPLOAD (CSV)</button>
+                <div id="modal-tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-4">
+                    <button id="tab-single" class="flex-1 py-2 text-xs font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Одно слово</button>
+                    <button id="tab-bulk" class="flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком (CSV)</button>
                 </div>
                 
                 <div id="form-single">
-                    <div class="flex bg-obsidian p-1 rounded-sm mb-3 border border-neon-blue/20">
-                        <button id="type-noun" class="flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all font-mono uppercase border-b-2 border-neon-blue">NOUN (OBJECT)</button>
-                        <button id="type-verb" class="flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70">VERB / OTHER (ACTION)</button>
+                    <div class="flex bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
+                        <button id="type-noun" class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Существительное</button>
+                        <button id="type-verb" class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Глагол / Другое</button>
                     </div>
-                    <form id="add-form" class="space-y-2.5 font-mono">
+                    <form id="add-form" class="space-y-3">
                         <div id="article-selector" class="flex gap-1 w-full mb-1">
-                            <button type="button" id="btn-art-der" onclick="selectArticle('der')" class="flex-1 py-1.5 rounded-sm border-2 border-blue-500 bg-blue-900/40 text-blue-400 font-bold transition-all shadow-sm scale-[1.02] text-sm">der</button>
-                            <button type="button" id="btn-art-die" onclick="selectArticle('die')" class="flex-1 py-1.5 rounded-sm border-2 border-transparent bg-obsidian text-gray-500 font-bold transition-all shadow-sm text-sm">die</button>
-                            <button type="button" id="btn-art-das" onclick="selectArticle('das')" class="flex-1 py-1.5 rounded-sm border-2 border-transparent bg-obsidian text-gray-500 font-bold transition-all shadow-sm text-sm">das</button>
+                            <button type="button" id="btn-art-der" onclick="selectArticle('der')" class="flex-1 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium transition-all shadow-sm text-sm">der</button>
+                            <button type="button" id="btn-art-die" onclick="selectArticle('die')" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700">die</button>
+                            <button type="button" id="btn-art-das" onclick="selectArticle('das')" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700">das</button>
                         </div>
                         <div class="flex w-full items-center">
-                            <input type="text" id="word-de" placeholder="German Data (e.g. Tisch)..." required autocomplete="off" class="w-full bg-obsidian rounded-sm py-2.5 px-3 outline-none focus:border-neon-blue border border-neon-blue/30 font-bold text-white transition-all text-sm">
+                            <input type="text" id="word-de" placeholder="Слово на немецком..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all text-sm">
                         </div>
                         <div class="flex gap-2 w-full" id="plural-input-group">
-                            <div class="bg-dark-panel rounded-sm py-2.5 px-1 text-center outline-none font-bold text-gray-500 w-[50px] min-w-0 flex items-center justify-center text-xs border border-neon-blue/10">pl.</div>
-                            <input type="text" id="word-plural" placeholder="Plural Form..." autocomplete="off" class="flex-1 bg-obsidian rounded-sm py-2.5 px-3 outline-none focus:border-neon-blue border border-neon-blue/30 font-bold text-white transition-all min-w-0 text-sm">
+                            <div class="bg-gray-100 dark:bg-gray-800 rounded-xl py-3 px-2 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die (pl)</div>
+                            <input type="text" id="word-plural" placeholder="Множественное число..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
                         </div>
                         <div class="flex gap-2 w-full hidden" id="verb-forms-group">
-                            <input type="text" id="word-praeteritum" placeholder="Präteritum..." autocomplete="off" class="flex-1 bg-obsidian rounded-sm py-2.5 px-3 outline-none focus:border-neon-blue border border-neon-blue/30 font-bold text-white transition-all min-w-0 text-sm">
-                            <input type="text" id="word-partizip" placeholder="Partizip II..." autocomplete="off" class="flex-1 bg-obsidian rounded-sm py-2.5 px-3 outline-none focus:border-neon-blue border border-neon-blue/30 font-bold text-white transition-all min-w-0 text-sm">
+                            <input type="text" id="word-praeteritum" placeholder="Präteritum..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
+                            <input type="text" id="word-partizip" placeholder="Partizip II..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
                         </div>
-                         <div id="add-umlauts" class="flex justify-center gap-1.5 mt-1 mb-1">
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-obsidian w-9 h-9 rounded-sm font-bold text-base text-white border border-neon-blue/20 shadow-sm hover:bg-neon-blue/10">ä</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-obsidian w-9 h-9 rounded-sm font-bold text-base text-white border border-neon-blue/20 shadow-sm hover:bg-neon-blue/10">ö</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-obsidian w-9 h-9 rounded-sm font-bold text-base text-white border border-neon-blue/20 shadow-sm hover:bg-neon-blue/10">ü</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-obsidian w-9 h-9 rounded-sm font-bold text-base text-white border border-neon-blue/20 shadow-sm hover:bg-neon-blue/10">ß</button>
+                         <div id="add-umlauts" class="flex justify-center gap-2 mt-2 mb-2">
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ä</button>
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ö</button>
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ü</button>
+                            <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ß</button>
                         </div>
-                        <input type="text" id="word-ru" placeholder="Translation Data..." required autocomplete="off" class="w-full bg-obsidian rounded-sm py-2.5 px-3 outline-none focus:border-neon-blue border border-neon-blue/30 text-white transition-all text-sm">
-                        <input type="text" id="word-example" placeholder="Context Example (Optional)..." class="w-full bg-obsidian rounded-sm py-2.5 px-3 outline-none italic text-xs text-gray-400 focus:border-neon-blue border border-neon-blue/30 transition-all">
+                        <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition-all text-sm">
+                        <input type="text" id="word-example" placeholder="Пример использования (необязательно)..." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white transition-all">
                         <div class="flex w-full gap-2">
-                            <div class="flex-[2] min-w-0"><input type="text" id="word-folder" list="folder-list" placeholder="Course Unit" required class="w-full bg-obsidian rounded-sm py-2.5 px-3 outline-none text-xs font-semibold text-white focus:border-neon-blue border border-neon-blue/30"></div>
-                            <div class="flex-[1] min-w-0"><input type="text" id="word-level" list="level-list" placeholder="Lvl" class="w-full bg-obsidian rounded-sm py-2.5 px-1 outline-none text-xs font-semibold text-white focus:border-neon-blue border border-neon-blue/30 text-center uppercase"></div>
-                            <div class="flex-[2] min-w-0"><input type="text" id="word-subfolder" list="subfolder-list" placeholder="Topic Module" required class="w-full bg-obsidian rounded-sm py-2.5 px-3 outline-none text-xs font-semibold text-white focus:border-neon-blue border border-neon-blue/30"></div>
+                            <div class="flex-[2] min-w-0"><input type="text" id="word-folder" list="folder-list" placeholder="Курс (напр. Учебник)" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
+                            <div class="flex-[1] min-w-0"><input type="text" id="word-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-center uppercase"></div>
+                            <div class="flex-[2] min-w-0"><input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема (напр. Урок 1)" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
                         </div>
-                        <button type="submit" class="w-full bg-neon-blue/10 text-neon-blue font-bold py-3.5 rounded-sm mt-1 active:scale-95 transition-all text-sm border border-neon-blue/50 hover:bg-neon-blue/20">> COMMIT DATA</button>
+                        <button type="submit" class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-blue-500/20">Сохранить</button>
                     </form>
                 </div>
-                 <div class="hidden space-y-3 font-mono" id="form-bulk">
-                    <p class="text-[10px] text-gray-400 text-center mb-2">> Mass data ingestion mode initialized.</p>
+                 <div class="hidden space-y-3" id="form-bulk">
+                    <p class="text-xs text-gray-500 text-center mb-3">Загрузка списка слов в формате .csv</p>
                     <div class="flex w-full gap-2">
-                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list" placeholder="Course Unit" class="w-full bg-obsidian rounded-sm py-2.5 px-3 outline-none font-bold text-white text-xs border border-neon-blue/30 focus:border-neon-blue"></div>
-                        <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list" placeholder="Lvl" class="w-full bg-obsidian rounded-sm py-2.5 px-1 outline-none font-bold text-white text-xs text-center uppercase border border-neon-blue/30 focus:border-neon-blue"></div>
-                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Topic Module" class="w-full bg-obsidian rounded-sm py-2.5 px-3 outline-none font-bold text-white text-xs border border-neon-blue/30 focus:border-neon-blue"></div>
+                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 ring-blue-500/50"></div>
+                        <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none font-medium text-gray-900 dark:text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 ring-blue-500/50"></div>
+                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 ring-blue-500/50"></div>
                     </div>
-                    <div class="mt-2 p-5 border-2 border-dashed border-neon-green/30 bg-neon-green/5 rounded-sm text-center transition-all group hover:bg-neon-green/10">
+                    <div class="mt-2 p-6 border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-xl text-center transition-all group hover:bg-gray-100 dark:hover:bg-gray-800">
                         <input type="file" id="bulk-file" accept=".csv" class="hidden">
                         <label for="bulk-file" class="cursor-pointer flex flex-col items-center gap-2">
-                            <svg class="w-6 h-6 text-neon-green group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <span class="text-neon-green font-bold text-xs">> SELECT .CSV SOURCE</span>
+                            <svg class="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <span class="text-blue-600 dark:text-blue-400 font-medium text-sm">Выбрать CSV файл</span>
                         </label>
                     </div>
-                    <button id="btn-upload-csv" class="w-full bg-neon-green/10 text-neon-green font-bold py-3.5 rounded-sm mt-2 active:scale-95 transition-all text-sm border border-neon-green/50 hover:bg-neon-green/20">> INGEST BATCH</button>
+                    <button id="btn-upload-csv" class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-blue-500/20">Загрузить слова</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 w-full glass-tech border-t border-neon-blue/20 z-30 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-4">
-        <div class="flex justify-around items-center max-w-md mx-auto font-mono uppercase tracking-widest">
-            <button id="nav-dict" class="flex flex-col items-center gap-1 transition-all text-neon-blue/50 hover:text-neon-blue group">
-                <svg class="w-5 h-5 group-[.active-tab-tech]:text-neon-blue group-[.active-tab-tech]:drop-shadow-[0_0_5px_rgba(0,243,255,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
-                <span class="text-[9px] font-black group-[.active-tab-tech]:text-neon-blue">DATABASE</span>
+    <nav class="fixed bottom-0 left-0 right-0 w-full glass border-t border-gray-200 dark:border-gray-800 z-30 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-4">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <button id="nav-dict" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group">
+                <svg class="w-6 h-6 group-[.active-tab-tech]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                <span class="text-[10px] font-medium group-[.active-tab-tech]:text-blue-500">Словарь</span>
             </button>
-            <button id="nav-train" class="flex flex-col items-center gap-1 transition-all text-neon-blue/50 hover:text-neon-blue group">
-                 <svg class="w-5 h-5 group-[.active-tab-tech]:text-neon-blue group-[.active-tab-tech]:drop-shadow-[0_0_5px_rgba(0,243,255,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
-                <span class="text-[9px] font-black group-[.active-tab-tech]:text-neon-blue">TRAINING</span>
+            <button id="nav-train" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group">
+                 <svg class="w-6 h-6 group-[.active-tab-tech]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span class="text-[10px] font-medium group-[.active-tab-tech]:text-blue-500">Тренировка</span>
             </button>
-            <button id="nav-stats" class="flex flex-col items-center gap-1 transition-all text-neon-blue/50 hover:text-neon-blue group">
-                <svg class="w-5 h-5 group-[.active-tab-tech]:text-neon-blue group-[.active-tab-tech]:drop-shadow-[0_0_5px_rgba(0,243,255,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span class="text-[9px] font-black group-[.active-tab-tech]:text-neon-blue">STATUS</span>
+            <button id="nav-stats" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group">
+                <svg class="w-6 h-6 group-[.active-tab-tech]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span class="text-[10px] font-medium group-[.active-tab-tech]:text-blue-500">Прогресс</span>
             </button>
         </div>
     </nav>
@@ -297,43 +287,45 @@
     <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
 
     <script>
-        // --- НОВЫЙ БЛОК: ГРАММАТИЧЕСКИЕ МОДУЛИ (Статические данные) ---
+        // Справочник грамматики для вкладки прогресса
         const GRAMMAR_MODULES = {
             syntax_core: {
-                title: "SYNTAX_CORE v1.0 (Порядок слов)",
+                title: "Порядок слов (Синтаксис)",
                 content: `
-                    <div class="space-y-2 text-xs font-mono text-gray-300 leading-relaxed">
-                        <p><span class="text-neon-blue">> Прямой порядок:</span><br> Subject + Verb + Object.<br> <span class="italic text-gray-500">Ich lerne Deutsch.</span></p>
-                        <div class="h-px bg-neon-blue/20 my-2"></div>
-                        <p><span class="text-neon-blue">> Обратный порядок (Инверсия):</span><br> Если предложение начинается НЕ с подлежащего, глагол ВСЕГДА на 2-м месте.<br> <span class="italic text-gray-500">Heute <strong class="text-white">lerne</strong> ich Deutsch.</span></p>
-                         <div class="h-px bg-neon-blue/20 my-2"></div>
-                        <p><span class="text-neon-blue">> Рамочная конструкция:</span><br> Второй глагол (инфинитив/Partizip II) уходит в самый конец.<br> <span class="italic text-gray-500">Ich <strong class="text-white">will</strong> heute Deutsch <strong class="text-white">lernen</strong>.</span></p>
+                    <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                        <p><strong class="text-gray-900 dark:text-white">Прямой порядок:</strong><br> Подлежащее + Глагол + Объекты.<br> <span class="italic">Ich lerne Deutsch.</span></p>
+                        <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
+                        <p><strong class="text-gray-900 dark:text-white">Обратный порядок:</strong><br> Если начинаем не с подлежащего, глагол ВСЕГДА на втором месте.<br> <span class="italic">Heute <strong class="text-blue-500">lerne</strong> ich Deutsch.</span></p>
+                         <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
+                        <p><strong class="text-gray-900 dark:text-white">Рамочная конструкция:</strong><br> Второй глагол (инфинитив или причастие) уходит в самый конец.<br> <span class="italic">Ich <strong class="text-blue-500">will</strong> heute Deutsch <strong class="text-blue-500">lernen</strong>.</span></p>
                     </div>`
             },
             articles_cases: {
-                title: "ARTICLES & CASES (Типы данных)",
+                title: "Падежи и Артикли",
                 content: `
-                    <table class="w-full text-[10px] font-mono text-left border-collapse">
+                    <table class="w-full text-sm text-left border-collapse mb-2">
                         <thead>
-                            <tr class="text-neon-blue/70 border-b border-neon-blue/20"><th>Case</th><th>Mas (der)</th><th>Fem (die)</th><th>Neu (das)</th><th>Pl (die)</th></tr>
+                            <tr class="text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                <th class="pb-2 font-medium">Падеж</th><th class="pb-2 font-medium">Муж</th><th class="pb-2 font-medium">Жен</th><th class="pb-2 font-medium">Ср</th><th class="pb-2 font-medium">Мн.ч</th>
+                            </tr>
                         </thead>
-                        <tbody class="text-gray-300">
-                            <tr class="border-b border-neon-blue/10"><td class="text-neon-blue py-1">Nom.</td><td class="text-der font-bold">der</td><td class="text-die font-bold">die</td><td class="text-das font-bold">das</td><td class="text-gray-400 font-bold">die</td></tr>
-                            <tr class="border-b border-neon-blue/10"><td class="text-neon-blue py-1">Akk.</td><td class="text-der font-bold underline">den</td><td class="text-die font-bold">die</td><td class="text-das font-bold">das</td><td class="text-gray-400 font-bold">die</td></tr>
-                            <tr><td class="text-neon-blue py-1">Dat.</td><td class="text-der font-bold underline">dem</td><td class="text-die font-bold underline">der</td><td class="text-das font-bold underline">dem</td><td class="text-gray-400 font-bold underline">den+n</td></tr>
+                        <tbody class="text-gray-700 dark:text-gray-200">
+                            <tr class="border-b border-gray-100 dark:border-gray-800"><td class="py-2 text-gray-400">Nom</td><td class="font-medium text-blue-500">der</td><td class="font-medium text-red-500">die</td><td class="font-medium text-green-500">das</td><td class="font-medium text-gray-500">die</td></tr>
+                            <tr class="border-b border-gray-100 dark:border-gray-800"><td class="py-2 text-gray-400">Akk</td><td class="font-bold underline text-blue-500">den</td><td class="font-medium text-red-500">die</td><td class="font-medium text-green-500">das</td><td class="font-medium text-gray-500">die</td></tr>
+                            <tr><td class="py-2 text-gray-400">Dat</td><td class="font-bold underline text-blue-500">dem</td><td class="font-bold underline text-red-500">der</td><td class="font-bold underline text-green-500">dem</td><td class="font-bold underline text-gray-500">den+n</td></tr>
                         </tbody>
                     </table>
-                    <p class="text-[10px] text-gray-500 mt-2 font-mono italic">> Используй Akk для прямого объекта (кого? что?) и Dat для косвенного (кому? где?).</p>`
+                    <p class="text-xs text-gray-500 italic mt-2">Akkusativ — для прямого объекта (вижу кого? что?). Dativ — для косвенного (даю кому? где?).</p>`
             },
             verb_forms: {
-                 title: "VERB_FORMS (Логика действий)",
+                 title: "Времена глаголов",
                  content: `
-                    <div class="space-y-2 text-xs font-mono text-gray-300 leading-relaxed">
-                        <p><span class="text-neon-blue">> Präsens (Настоящее):</span><br> Базовая форма.<br> <span class="italic text-gray-500">Er macht.</span></p>
-                         <div class="h-px bg-neon-blue/20 my-2"></div>
-                        <p><span class="text-neon-blue">> Präteritum (Прошедшее книжное):</span><br> Обычно +te.<br> <span class="italic text-gray-500">Er machte.</span> (Сильные глаголы учить отдельно!)</p>
-                         <div class="h-px bg-neon-blue/20 my-2"></div>
-                        <p><span class="text-neon-blue">> Perfekt (Прошедшее разговорное):</span><br> haben/sein + Partizip II (в конце).<br> <span class="italic text-gray-500">Er hat ... gemacht.</span></p>
+                    <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                        <p><strong class="text-gray-900 dark:text-white">Präsens (Настоящее):</strong><br> Базовая форма общения.<br> <span class="italic">Er macht es.</span></p>
+                         <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
+                        <p><strong class="text-gray-900 dark:text-white">Präteritum (Прошедшее письменное):</strong><br> Используется в книгах и новостях. Слабые глаголы получают суффикс <span class="font-medium">-te-</span>.<br> <span class="italic">Er mach<strong class="text-blue-500">te</strong> es.</span></p>
+                         <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
+                        <p><strong class="text-gray-900 dark:text-white">Perfekt (Прошедшее разговорное):</strong><br> haben/sein (на 2 месте) + Partizip II (в самом конце).<br> <span class="italic">Er <strong class="text-blue-500">hat</strong> es <strong class="text-blue-500">gemacht</strong>.</span></p>
                     </div>`
             }
         };
@@ -341,10 +333,8 @@
 
         window.toggleGrammarModule = (moduleKey) => {
             collapsedGrammarModules[moduleKey] = !collapsedGrammarModules[moduleKey];
-            loadStats(); // Перерисовываем статистику для обновления модулей
+            loadStats();
         };
-        // --------------------------------------------------
-
 
         const escapeStr = (str) => (str||'').replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
         const API_URL = '/words';
@@ -360,7 +350,6 @@
         let trainDirection = 'auto'; 
         let currentIsGermanQuestion = false;
         let currentArticle = 'der';
-
         let collapsedDictTopics = {};
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -377,22 +366,34 @@
             return res;
         }
 
-        // Tech-стиль для уровней
         const getLevelColor = (level) => {
-            if (!level) return 'bg-dark-panel text-gray-400 border-gray-700';
+            if (!level) return 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
             const l = level.toUpperCase().replace(/А/g, 'A').replace(/В/g, 'B').replace(/С/g, 'C');
-            if (l.includes('A1')) return 'bg-teal-900/40 text-teal-400 border-teal-500/50';
-            if (l.includes('A2')) return 'bg-green-900/40 text-green-400 border-green-500/50';
-            if (l.includes('B1')) return 'bg-yellow-900/40 text-yellow-400 border-yellow-500/50';
-            if (l.includes('B2')) return 'bg-orange-900/40 text-orange-400 border-orange-500/50';
-            if (l.includes('C1')) return 'bg-red-900/40 text-red-400 border-red-500/50';
-            return 'bg-blue-900/40 text-blue-400 border-blue-500/50';
+            if (l.includes('A1')) return 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400';
+            if (l.includes('A2')) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+            if (l.includes('B1')) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+            if (l.includes('B2')) return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+            if (l.includes('C1')) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+            return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
         };
 
         const themeToggleBtn = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        const updateIcons = () => {
+            if (document.documentElement.classList.contains('dark')) {
+                darkIcon.classList.add('hidden'); lightIcon.classList.remove('hidden');
+            } else {
+                lightIcon.classList.add('hidden'); darkIcon.classList.remove('hidden');
+            }
+        };
+        updateIcons();
+
         themeToggleBtn.onclick = () => {
-            // В Tech-версии тема всегда темная, кнопка просто для вида или можно убрать
-             alert("Theme locked to DARK_MODE for optimal system performance.");
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            updateIcons();
         };
 
         window.speakWord = (text, event) => {
@@ -437,7 +438,6 @@
                 const elapsedMs = Date.now() - sessionStartMs;
                 const tzoffset = (new Date()).getTimezoneOffset() * 60000;
                 const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
-                
                 try {
                     let history = JSON.parse(localStorage.getItem('studyHistory')) || {};
                     if (!history[localISOTime]) history[localISOTime] = 0;
@@ -450,7 +450,6 @@
 
         const views = { dict: document.getElementById('view-dict'), train: document.getElementById('view-train'), stats: document.getElementById('view-stats') };
         const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), stats: document.getElementById('nav-stats') };
-
         const isWordDue = (w) => Date.now() >= (w.next_review || 0);
 
         async function fetchWords() {
@@ -462,18 +461,17 @@
                     localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
                 }
             } catch (e) { 
-                console.warn("Offline mode initiated. Loading cached data.");
+                console.warn("Офлайн режим. Данные загружены из памяти.");
                 try {
                     const saved = localStorage.getItem('offline_words_db');
                     if (saved) {
                         const parsed = JSON.parse(saved);
                         if (Array.isArray(parsed)) globalWords = parsed;
                     }
-                } catch(err) { console.error("Cache corrupted", err); }
+                } catch(err) {}
             }
             
             if (!Array.isArray(globalWords)) globalWords = [];
-            
             try {
                 document.getElementById('folder-list').innerHTML = [...new Set(globalWords.map(w => w.folder))].filter(Boolean).map(f => `<option value="${escapeStr(f)}">`).join('');
                 document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(Boolean))].map(l => `<option value="${escapeStr(l)}">`).join('');
@@ -489,18 +487,17 @@
                 views[v].classList.toggle('hidden', !isActive);
                 navBtns[v].classList.toggle('active-tab-tech', isActive);
             });
-            document.getElementById('header-title').innerText = "> CONNECTING...";
+            document.getElementById('header-title').innerText = "Обновление...";
             document.getElementById('add-btn').classList.toggle('hidden', target !== 'dict');
             
             await fetchWords();
-            
-            document.getElementById('header-title').innerText = {dict:'> SYSTEM TERMINAL', train:'> TRAINING SIMULATION', stats:'> SYSTEM STATUS'}[target];
+            document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', stats:'Прогресс'}[target];
             
             try {
                 if (target === 'dict') renderDict();
                 if (target === 'train') setupTrainMenu();
                 if (target === 'stats') loadStats();
-            } catch(e) { console.error("Render error:", e); }
+            } catch(e) { console.error(e); }
             
             window.scrollTo(0, 0);
         }
@@ -511,23 +508,13 @@
 
         window.selectArticle = (art) => {
             currentArticle = art;
-            const btns = {
-                der: document.getElementById('btn-art-der'),
-                die: document.getElementById('btn-art-die'),
-                das: document.getElementById('btn-art-das')
-            };
-            
+            const btns = { der: document.getElementById('btn-art-der'), die: document.getElementById('btn-art-die'), das: document.getElementById('btn-art-das') };
             Object.values(btns).forEach(b => {
-                b.className = "flex-1 py-1.5 rounded-sm border-2 border-transparent bg-obsidian text-gray-500 font-bold transition-all shadow-sm text-sm";
+                b.className = "flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700";
             });
-            
-            if (art === 'der') {
-                btns.der.className = "flex-1 py-1.5 rounded-sm border-2 border-blue-500 bg-blue-900/40 text-blue-400 font-bold transition-all shadow-sm scale-[1.02] text-sm";
-            } else if (art === 'die') {
-                btns.die.className = "flex-1 py-1.5 rounded-sm border-2 border-red-500 bg-red-900/40 text-red-400 font-bold transition-all shadow-sm scale-[1.02] text-sm";
-            } else if (art === 'das') {
-                btns.das.className = "flex-1 py-1.5 rounded-sm border-2 border-green-500 bg-green-900/40 text-green-400 font-bold transition-all shadow-sm scale-[1.02] text-sm";
-            }
+            if (art === 'der') btns.der.className = "flex-1 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium transition-all shadow-sm text-sm";
+            else if (art === 'die') btns.die.className = "flex-1 py-2 rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium transition-all shadow-sm text-sm";
+            else if (art === 'das') btns.das.className = "flex-1 py-2 rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium transition-all shadow-sm text-sm";
         };
 
         const wordInp = document.getElementById('word-de');
@@ -538,30 +525,26 @@
             if (w.match(/(ung|heit|keit|schaft|tion|tät|ik|ur|enz|anz|ie|e)$/)) g = 'die';
             else if (w.match(/(chen|lein|ment|um|ma|nis|o)$/)) g = 'das';
             else if (w.match(/(ismus|ling|ig|or|ist|ant|ent|er)$/)) g = 'der';
-            if (g && currentArticle !== g) { 
-                selectArticle(g);
-            }
+            if (g && currentArticle !== g) selectArticle(g);
         };
 
         document.getElementById('dict-tab-active').onclick = () => {
             dictTabFilter = 'active';
-            document.getElementById('dict-tab-active').className = "flex-1 py-1.5 text-xs font-bold rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all font-mono uppercase tracking-wider border-b-2 border-neon-blue";
-            document.getElementById('dict-tab-mastered').className = "flex-1 py-1.5 text-xs font-bold rounded-sm text-gray-500 transition-all flex items-center justify-center gap-1 font-mono uppercase tracking-wider hover:text-neon-blue/70";
+            document.getElementById('dict-tab-active').className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white";
+            document.getElementById('dict-tab-mastered').className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-300";
             renderDict();
         };
 
         document.getElementById('dict-tab-mastered').onclick = () => {
             dictTabFilter = 'mastered';
-            document.getElementById('dict-tab-mastered').className = "flex-1 py-1.5 text-xs font-bold rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all flex items-center justify-center gap-1 font-mono uppercase tracking-wider border-b-2 border-neon-blue";
-            document.getElementById('dict-tab-active').className = "flex-1 py-1.5 text-xs font-bold rounded-sm text-gray-500 transition-all font-mono uppercase tracking-wider hover:text-neon-blue/70";
+            document.getElementById('dict-tab-mastered').className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all flex items-center justify-center gap-1 text-gray-900 dark:text-white";
+            document.getElementById('dict-tab-active').className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
             renderDict();
         };
 
         const searchInp = document.getElementById('search-input');
         searchInp.oninput = () => {
-            if (searchInp.value.trim().length > 0) {
-                collapsedDictTopics = {};
-            }
+            if (searchInp.value.trim().length > 0) collapsedDictTopics = {};
             renderDict(searchInp.value.toLowerCase());
         };
 
@@ -572,26 +555,22 @@
 
         function renderDict(query = searchInp.value.toLowerCase()) {
             const container = document.getElementById('dict-list');
-            
             try {
                 let filtered = globalWords.filter(w => (w.word_de || "").toLowerCase().includes(query) || (w.word_ru || "").toLowerCase().includes(query));
-                if (dictTabFilter === 'active') {
-                    filtered = filtered.filter(w => w.score < MAX_SCORE);
-                } else {
-                    filtered = filtered.filter(w => w.score >= MAX_SCORE);
-                }
+                if (dictTabFilter === 'active') filtered = filtered.filter(w => w.score < MAX_SCORE);
+                else filtered = filtered.filter(w => w.score >= MAX_SCORE);
 
                 if (filtered.length === 0) {
-                    container.innerHTML = `<div class="text-center py-20"><p class="text-neon-blue/50 font-mono text-sm">${dictTabFilter==='mastered'?'> ARCHIVE EMPTY.':'> ALL DATA PROCESSED. SYSTEM READY.'}</p></div>`;
+                    container.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 font-medium text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все текущие слова выучены 🎉'}</p></div>`;
                     return;
                 }
 
                 const colors = { der: 'text-der', die: 'text-die', das: 'text-das' };
                 const grouped = {};
                 filtered.forEach(w => { 
-                    const f = w.folder || 'Uncategorized';
-                    const l = w.level || 'General';
-                    const s = w.subfolder || 'Misc';
+                    const f = w.folder || 'Без курса';
+                    const l = w.level || 'Общее';
+                    const s = w.subfolder || 'Без темы';
                     if (!grouped[f]) grouped[f] = {}; 
                     if (!grouped[f][l]) grouped[f][l] = {}; 
                     if (!grouped[f][l][s]) grouped[f][l][s] = []; 
@@ -604,33 +583,28 @@
                 try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch(e){}
 
                 const folderNames = Object.keys(grouped).sort((a, b) => {
-                    let idxA = savedFolderOrder.indexOf(a);
-                    let idxB = savedFolderOrder.indexOf(b);
-                    if (idxA === -1) idxA = 9999; 
-                    if (idxB === -1) idxB = 9999;
+                    let idxA = savedFolderOrder.indexOf(a); let idxB = savedFolderOrder.indexOf(b);
+                    if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999;
                     return idxA - idxB;
                 });
 
                 let html = '<div id="dict-folders-container">';
-                
                 folderNames.forEach(f => {
                     const safeF = escapeStr(f);
                     html += `
-                    <div class="dict-folder mb-4 border border-neon-blue/10 rounded-md overflow-hidden bg-dark-panel/50" data-folder="${safeF}">
-                        <div class="flex justify-between items-center bg-dark-panel p-2 border-b border-neon-blue/20 pl-1">
-                            <div class="flex items-center gap-2 flex-1 min-w-0">
-                                <div class="cursor-move drag-handle-folder text-neon-blue/50 hover:text-neon-blue p-1 -ml-1">
+                    <div class="dict-folder mb-6 bg-white dark:bg-gray-900 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden" data-folder="${safeF}">
+                        <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 border-b border-gray-100 dark:border-gray-800">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class="cursor-move drag-handle-folder text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                                 </div>
-                                <h2 class="text-sm font-bold text-white tracking-wider font-mono uppercase flex items-center gap-2 truncate">
-                                    <span class="truncate text-neon-blue">${f}</span>
-                                </h2>
+                                <h2 class="text-base font-bold text-gray-900 dark:text-white truncate">${f}</h2>
                             </div>
                             <div class="flex items-center gap-1 flex-shrink-0">
-                                <button onclick="renameFolder('${safeF}')" class="p-1.5 text-neon-blue/50 hover:text-neon-blue transition-colors" title="Rename Unit">
+                                <button onclick="renameFolder('${safeF}')" class="p-2 text-gray-400 hover:text-blue-500 transition-colors" title="Переименовать курс">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                 </button>
-                                <button onclick="fastAddCourse('${safeF}')" class="text-neon-blue bg-neon-blue/10 px-2 py-1 rounded-sm text-[9px] font-bold tracking-widest hover:bg-neon-blue/20 active:scale-95 transition-all border border-neon-blue/30 font-mono">+ ADD DATA</button>
+                                <button onclick="fastAddCourse('${safeF}')" class="text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-100 active:scale-95 transition-all">Добавить</button>
                             </div>
                         </div>
                         <div class="dict-topics-container p-2 space-y-2" data-folder="${safeF}">
@@ -645,55 +619,43 @@
 
                     topics.sort((a, b) => {
                         let orderArr = savedTopicOrder[f] || [];
-                        let idxA = orderArr.indexOf(a.key);
-                        let idxB = orderArr.indexOf(b.key);
-                        if (idxA === -1) idxA = 9999;
-                        if (idxB === -1) idxB = 9999;
+                        let idxA = orderArr.indexOf(a.key); let idxB = orderArr.indexOf(b.key);
+                        if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999;
                         return idxA - idxB;
                     });
 
                     topics.forEach(t => {
-                        const l = t.l;
-                        const s = t.s;
-                        const wordsInTopic = t.words;
-                        const topicKey = t.key;
-                        const safeL = escapeStr(l);
-                        const safeS = escapeStr(s);
-                        const safeTopicKey = escapeStr(topicKey);
-                        
-                        if (collapsedDictTopics[topicKey] === undefined) {
-                            collapsedDictTopics[topicKey] = true; 
-                        }
-                        
+                        const l = t.l; const s = t.s; const wordsInTopic = t.words; const topicKey = t.key;
+                        const safeL = escapeStr(l); const safeS = escapeStr(s); const safeTopicKey = escapeStr(topicKey);
+                        if (collapsedDictTopics[topicKey] === undefined) collapsedDictTopics[topicKey] = true; 
                         const isCollapsed = collapsedDictTopics[topicKey];
                         const chevronClass = isCollapsed ? '' : 'rotate-180';
 
                         html += `
-                        <div class="dict-topic bg-obsidian rounded-md shadow-sm border border-neon-blue/10 overflow-hidden transition-all" data-topic="${safeTopicKey}">
-                            
-                            <div class="flex justify-between items-center bg-dark-panel p-2 pr-2 transition-colors">
+                        <div class="dict-topic bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden transition-all" data-topic="${safeTopicKey}">
+                            <div class="flex justify-between items-center p-3 pr-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
-                                    <div class="cursor-move drag-handle-topic text-neon-blue/50 hover:text-neon-blue p-1 -ml-1">
+                                    <div class="cursor-move drag-handle-topic text-gray-400 hover:text-gray-600 p-1 -ml-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                                     </div>
                                     <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${safeTopicKey}')">
-                                        <svg class="w-4 h-4 text-neon-blue/50 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                        ${l !== 'General' ? `<span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm flex-shrink-0 font-mono border ${getLevelColor(l)}">${l}</span>` : ''}
-                                        <h3 class="text-xs font-bold text-gray-300 truncate font-mono">${s} <span class="text-neon-blue/50 font-normal">(${wordsInTopic.length})</span></h3>
+                                        <svg class="w-4 h-4 text-gray-400 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
+                                        <h3 class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">${s} <span class="text-gray-400 font-normal">(${wordsInTopic.length})</span></h3>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-1 pl-2">
-                                    <button onclick="renameSubfolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 text-neon-blue/50 hover:text-neon-blue transition-colors" title="Rename Module">
+                                    <button onclick="renameSubfolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 text-gray-400 hover:text-blue-500 transition-colors" title="Изменить тему">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     </button>
-                                    <button onclick="fastAdd('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="text-neon-blue bg-neon-blue/10 px-2 py-1 rounded-sm text-[9px] font-bold tracking-widest hover:bg-neon-blue/20 active:scale-95 transition-all border border-neon-blue/30 font-mono">+ ENTRY</button>
-                                    <button onclick="deleteFolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="text-neon-red/70 p-1.5 rounded-sm hover:bg-neon-red/10 transition-all" title="Purge Module">
+                                    <button onclick="fastAdd('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-100 active:scale-95 transition-all">+ Слово</button>
+                                    <button onclick="deleteFolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="text-red-400 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all" title="Удалить тему">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-obsidian border-t border-neon-blue/10'}">
+                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800'}">
                         `;
                         
                         wordsInTopic.forEach(w => {
@@ -703,22 +665,21 @@
                             const safeWordDe = escapeStr(w.word_de);
 
                             html += `
-                            <div onclick="openEdit(${w.id})" class="bg-dark-panel p-3 rounded-md border border-neon-blue/10 flex justify-between items-center active:scale-[0.99] transition-all cursor-pointer group hover:border-neon-blue/40">
+                            <div onclick="openEdit(${w.id})" class="bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 flex justify-between items-center active:scale-[0.99] transition-all cursor-pointer hover:border-blue-200">
                                 <div class="flex-1 pr-3 min-w-0">
-                                    <p class="text-sm font-bold text-white leading-tight truncate font-tech">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-500 text-xs font-normal ml-1 font-mono">${extraInfo}</span></p>
-                                    <p class="text-gray-400 text-xs font-medium mt-0.5 truncate font-mono">${w.word_ru}</p>
-                                    ${w.example ? `<p class="text-[10px] text-neon-blue/70 mt-1 italic font-medium leading-tight truncate font-mono">"${escapeStr(w.example)}"</p>` : ''}
+                                    <p class="text-base font-bold text-gray-900 dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
+                                    <p class="text-gray-500 text-sm font-medium mt-0.5 truncate">${w.word_ru}</p>
+                                    ${w.example ? `<p class="text-[11px] text-gray-400 mt-1 italic leading-tight truncate">"${escapeStr(w.example)}"</p>` : ''}
                                 </div>
                                 <div class="flex flex-col items-end gap-1 flex-shrink-0">
                                     <div class="flex gap-1 mb-1">
-                                        <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+safeWordDe}', event)" class="p-1.5 bg-obsidian rounded-sm text-neon-blue/50 hover:text-neon-blue transition-colors border border-neon-blue/10">🔊</button>
-                                        <button onclick="deleteWord(${w.id}, event)" class="p-1.5 bg-obsidian rounded-sm text-neon-red/50 hover:text-neon-red transition-colors border border-neon-red/10"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                        <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+safeWordDe}', event)" class="p-2 bg-gray-50 dark:bg-gray-700 rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
+                                        <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-gray-50 dark:bg-gray-700 rounded-full text-gray-400 hover:text-red-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                     </div>
-                                    <span class="text-[9px] font-black font-mono ${w.score>=MAX_SCORE?'text-neon-green':(w.score>=4?'text-yellow-500':'text-gray-500')}">[${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}]</span>
+                                    <span class="text-xs font-bold ${w.score>=MAX_SCORE?'text-green-500':(w.score>=4?'text-orange-500':'text-gray-400')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
                                 </div>
                             </div>`;
                         });
-                        
                         html += `</div></div>`;
                     });
                     html += `</div></div>`; 
@@ -727,104 +688,64 @@
                 
                 container.innerHTML = html;
                 setTimeout(initSortable, 100);
-            } catch(err) {
-                console.error(err);
-                container.innerHTML = `<div class="text-center py-20 text-neon-red font-bold font-mono">> CRITICAL RENDER ERROR. <br>CLEAR CACHE.</div>`;
-            }
+            } catch(err) { container.innerHTML = `<div class="text-center py-20 text-red-500">Ошибка рендера. Очистите кэш.</div>`; }
         }
 
         function initSortable() {
-            if (typeof Sortable === 'undefined') {
-                setTimeout(initSortable, 500);
-                return;
-            }
-            
+            if (typeof Sortable === 'undefined') { setTimeout(initSortable, 500); return; }
             const folderContainer = document.getElementById('dict-folders-container');
             if (folderContainer) {
                 new Sortable(folderContainer, {
-                    handle: '.drag-handle-folder',
-                    animation: 250,
-                    delay: 150, 
-                    delayOnTouchOnly: true,
-                    ghostClass: 'sortable-ghost',
+                    handle: '.drag-handle-folder', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
                     onEnd: function () {
                         const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.dataset.folder);
                         localStorage.setItem('folderOrder', JSON.stringify(order));
                     }
                 });
             }
-
             document.querySelectorAll('.dict-topics-container').forEach(topicContainer => {
                 new Sortable(topicContainer, {
-                    handle: '.drag-handle-topic',
-                    animation: 250,
-                    delay: 150,
-                    delayOnTouchOnly: true,
-                    ghostClass: 'sortable-ghost',
+                    handle: '.drag-handle-topic', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
                     onEnd: function (evt) {
                         const f = evt.item.closest('.dict-folder').dataset.folder;
                         const order = Array.from(topicContainer.querySelectorAll('.dict-topic')).map(el => el.dataset.topic);
-                        
                         let savedTopicOrder = {};
                         try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch(e){}
-                        savedTopicOrder[f] = order;
-                        localStorage.setItem('topicOrder', JSON.stringify(savedTopicOrder));
+                        savedTopicOrder[f] = order; localStorage.setItem('topicOrder', JSON.stringify(savedTopicOrder));
                     }
                 });
             });
         }
 
         window.renameFolder = async (oldFolder) => {
-            const newFolder = prompt(`New Unit ID for "${oldFolder}":`, oldFolder);
+            const newFolder = prompt(`Введите новое название для курса "${oldFolder}":`, oldFolder);
             if (newFolder && newFolder.trim() !== '' && newFolder.trim() !== oldFolder) {
                 try {
-                    await apiFetch('/words/rename_folder', {
-                        method: 'PUT',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({old_folder: oldFolder, new_folder: newFolder.trim()})
-                    });
-                    await fetchWords();
-                    renderDict();
-                } catch(e) {
-                    alert('Network Error. No changes committed.');
-                }
+                    await apiFetch('/words/rename_folder', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_folder: oldFolder, new_folder: newFolder.trim()}) });
+                    await fetchWords(); renderDict();
+                } catch(e) { alert('Ошибка сети!'); }
             }
         };
 
         window.renameSubfolder = async (f, l, oldS) => {
-            const newS = prompt(`New Module ID for "${oldS}":`, oldS);
+            const newS = prompt(`Введите новое название для темы "${oldS}":`, oldS);
             if (newS && newS.trim() !== '' && newS.trim() !== oldS) {
                 try {
-                    await apiFetch('/words/rename_subfolder', {
-                        method: 'PUT',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({folder: f, level: l, old_subfolder: oldS, new_subfolder: newS.trim()})
-                    });
-                    
-                    const oldKey = `${f}|${l}|${oldS}`;
-                    const newKey = `${f}|${l}|${newS.trim()}`;
-                    if (collapsedDictTopics[oldKey] !== undefined) {
-                        collapsedDictTopics[newKey] = collapsedDictTopics[oldKey];
-                        delete collapsedDictTopics[oldKey];
-                    }
-                    
-                    await fetchWords();
-                    renderDict();
-                } catch(e) {
-                    alert('Network Error. No changes committed.');
-                }
+                    await apiFetch('/words/rename_subfolder', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({folder: f, level: l, old_subfolder: oldS, new_subfolder: newS.trim()}) });
+                    const oldKey = `${f}|${l}|${oldS}`; const newKey = `${f}|${l}|${newS.trim()}`;
+                    if (collapsedDictTopics[oldKey] !== undefined) { collapsedDictTopics[newKey] = collapsedDictTopics[oldKey]; delete collapsedDictTopics[oldKey]; }
+                    await fetchWords(); renderDict();
+                } catch(e) { alert('Ошибка сети!'); }
             }
         };
 
         const modal = document.getElementById('add-modal');
         const setType = (t) => {
             currentType = t;
-            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all font-mono uppercase border-b-2 border-neon-blue" : "flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70";
-            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-1.5 text-[9px] font-black tracking-widest rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all font-mono uppercase border-b-2 border-neon-blue" : "flex-1 py-1.5 text-[9px] font-black tracking-widest text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70";
-            
+            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
             document.getElementById('article-selector').classList.toggle('hidden', t === 'verb');
             document.getElementById('plural-input-group').classList.toggle('hidden', t === 'verb');
-            
             const verbGroup = document.getElementById('verb-forms-group');
             if(verbGroup) verbGroup.classList.toggle('hidden', t !== 'verb');
         };
@@ -834,171 +755,112 @@
 
         const showSingleTab = () => {
             document.getElementById('form-single').classList.remove('hidden'); document.getElementById('form-bulk').classList.add('hidden');
-            document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm transition-all font-mono uppercase border-b-2 border-neon-blue";
-            document.getElementById('tab-bulk').className = "flex-1 py-1.5 text-xs font-bold rounded-sm text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70";
+            document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white";
+            document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
-            document.getElementById('tab-bulk').className = "flex-1 py-1.5 text-xs font-bold rounded-sm bg-neon-green/10 text-neon-green shadow-sm transition-all scale-[1.02] font-mono uppercase border-b-2 border-neon-green";
-            document.getElementById('tab-single').className = "flex-1 py-1.5 text-xs font-bold rounded-sm text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70";
+            document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white";
+            document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
         };
 
         document.getElementById('tab-single').onclick = showSingleTab;
         document.getElementById('tab-bulk').onclick = showBulkTab;
 
         document.getElementById('add-btn').onclick = () => { 
-            editId = null; document.getElementById('modal-title').innerText = "NEW DATA ENTRY"; 
+            editId = null; document.getElementById('modal-title').innerText = "Новое слово"; 
             document.getElementById('add-form').reset(); 
-            
-            document.getElementById('bulk-folder').value = ''; 
-            document.getElementById('bulk-level').value = ''; 
-            document.getElementById('bulk-subfolder').value = ''; 
-            const bulkFile = document.getElementById('bulk-file');
-            if(bulkFile) bulkFile.value = '';
-            const bulkLabel = document.querySelector('label[for="bulk-file"] span');
-            if(bulkLabel) bulkLabel.innerText = '> SELECT .CSV SOURCE';
-
+            document.getElementById('bulk-folder').value = ''; document.getElementById('bulk-level').value = ''; document.getElementById('bulk-subfolder').value = ''; 
+            const bulkFile = document.getElementById('bulk-file'); if(bulkFile) bulkFile.value = '';
+            const bulkLabel = document.querySelector('label[for="bulk-file"] span'); if(bulkLabel) bulkLabel.innerText = 'Выбрать CSV файл';
             setType('noun'); showSingleTab(); selectArticle('der'); modal.classList.remove('hidden'); 
         };
         document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
         
         window.openEdit = (id) => {
             const w = globalWords.find(x => x.id === id); if(!w) return;
-            editId = w.id; document.getElementById('modal-title').innerText = "EDIT DATA ENTRY"; showSingleTab();
-            setType(w.word_type); 
-            if(w.word_type === 'noun') selectArticle(w.article || 'der');
-            
+            editId = w.id; document.getElementById('modal-title').innerText = "Редактировать"; showSingleTab();
+            setType(w.word_type); if(w.word_type === 'noun') selectArticle(w.article || 'der');
             document.getElementById('word-de').value = w.word_de; document.getElementById('word-ru').value = w.word_ru;
-            document.getElementById('word-plural').value = w.plural || "";
-            document.getElementById('word-praeteritum').value = w.praeteritum || "";
-            document.getElementById('word-partizip').value = w.partizip || "";
-            document.getElementById('word-example').value = w.example || "";
+            document.getElementById('word-plural').value = w.plural || ""; document.getElementById('word-praeteritum').value = w.praeteritum || "";
+            document.getElementById('word-partizip').value = w.partizip || ""; document.getElementById('word-example').value = w.example || "";
             document.getElementById('word-folder').value = w.folder; document.getElementById('word-level').value = w.level || ""; document.getElementById('word-subfolder').value = w.subfolder;
             modal.classList.remove('hidden');
         };
 
         window.fastAdd = (folder, level, subfolder) => {
-            editId = null; document.getElementById('modal-title').innerText = "QUICK ADD";
+            editId = null; document.getElementById('modal-title').innerText = "Быстрое добавление";
             document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der');
-            
-            const lvl = level === 'General' ? '' : level;
-            
-            document.getElementById('word-folder').value = folder; 
-            document.getElementById('word-level').value = lvl; 
-            document.getElementById('word-subfolder').value = subfolder;
-            
-            document.getElementById('bulk-folder').value = folder; 
-            document.getElementById('bulk-level').value = lvl; 
-            document.getElementById('bulk-subfolder').value = subfolder;
-            
+            const lvl = level === 'Общее' ? '' : level;
+            document.getElementById('word-folder').value = folder; document.getElementById('word-level').value = lvl; document.getElementById('word-subfolder').value = subfolder;
+            document.getElementById('bulk-folder').value = folder; document.getElementById('bulk-level').value = lvl; document.getElementById('bulk-subfolder').value = subfolder;
             modal.classList.remove('hidden'); setTimeout(() => document.getElementById('word-de').focus(), 150);
         };
 
         window.fastAddCourse = (folder) => {
-            editId = null; 
-            document.getElementById('modal-title').innerText = "NEW MODULE/DATA";
-            document.getElementById('add-form').reset(); 
-            setType('noun'); showSingleTab(); selectArticle('der');
-            
-            document.getElementById('word-folder').value = folder; 
-            document.getElementById('word-level').value = ''; 
-            document.getElementById('word-subfolder').value = ''; 
-            
-            document.getElementById('bulk-folder').value = folder; 
-            document.getElementById('bulk-level').value = ''; 
-            document.getElementById('bulk-subfolder').value = ''; 
-            
-            modal.classList.remove('hidden'); 
-            setTimeout(() => document.getElementById('word-subfolder').focus(), 150);
+            editId = null; document.getElementById('modal-title').innerText = "Добавить тему / слова";
+            document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der');
+            document.getElementById('word-folder').value = folder; document.getElementById('word-level').value = ''; document.getElementById('word-subfolder').value = ''; 
+            document.getElementById('bulk-folder').value = folder; document.getElementById('bulk-level').value = ''; document.getElementById('bulk-subfolder').value = ''; 
+            modal.classList.remove('hidden'); setTimeout(() => document.getElementById('word-subfolder').focus(), 150);
         };
 
         window.deleteWord = async (id, event) => { 
             if (event) event.stopPropagation(); 
-            if (confirm('> CONFIRM DELETION? Action irreversible.')) { 
-                await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); 
-                await fetchWords(); 
-                renderDict();
-            } 
+            if (confirm('Удалить слово навсегда?')) { await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); await fetchWords(); renderDict(); } 
         };
 
         window.deleteFolder = async (f, l, s) => {
-            if (confirm(`> WARNING: Purge entire module "${s}"? All associated data will be lost.`)) {
-                await apiFetch('/words/delete_folder', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({folder: f, level: l, subfolder: s}) 
-                });
-                await fetchWords();
-                renderDict();
+            if (confirm(`Удалить тему "${s}" со всеми словами внутри?`)) {
+                await apiFetch('/words/delete_folder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({folder: f, level: l, subfolder: s}) });
+                await fetchWords(); renderDict();
             }
         };
 
         document.getElementById('add-form').onsubmit = async (e) => {
             e.preventDefault();
             const payload = {
-                word_type: currentType, 
-                article: currentType==='noun' ? currentArticle : '',
-                word_de: document.getElementById('word-de').value.trim(), 
-                plural: currentType==='noun' ? document.getElementById('word-plural').value.trim() : '',
-                praeteritum: currentType==='verb' ? document.getElementById('word-praeteritum').value.trim() : '',
-                partizip: currentType==='verb' ? document.getElementById('word-partizip').value.trim() : '',
-                word_ru: document.getElementById('word-ru').value.trim(),
-                example: document.getElementById('word-example').value.trim(),
+                word_type: currentType, article: currentType==='noun' ? currentArticle : '',
+                word_de: document.getElementById('word-de').value.trim(), plural: currentType==='noun' ? document.getElementById('word-plural').value.trim() : '',
+                praeteritum: currentType==='verb' ? document.getElementById('word-praeteritum').value.trim() : '', partizip: currentType==='verb' ? document.getElementById('word-partizip').value.trim() : '',
+                word_ru: document.getElementById('word-ru').value.trim(), example: document.getElementById('word-example').value.trim(),
                 folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim()
             };
             const url = editId ? `${API_URL}/${editId}/full` : API_URL;
             await apiFetch(url, { method: editId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
             modal.classList.add('hidden'); searchInp.value = ''; 
-            
-            const newTopicKey = `${payload.folder}|${payload.level || 'General'}|${payload.subfolder}`;
-            collapsedDictTopics[newTopicKey] = false;
-
-            await fetchWords(); 
-            renderDict();
+            const newTopicKey = `${payload.folder}|${payload.level || 'Общее'}|${payload.subfolder}`; collapsedDictTopics[newTopicKey] = false;
+            await fetchWords(); renderDict();
         };
 
         document.getElementById('btn-upload-csv').onclick = async () => {
             const f = new FormData(); 
             const folder = document.getElementById('bulk-folder').value.trim(); const level = document.getElementById('bulk-level').value.trim(); const subfolder = document.getElementById('bulk-subfolder').value.trim(); const fileInput = document.getElementById('bulk-file');
-            if (!folder || !subfolder || !fileInput.files[0]) return alert("ERROR: Missing target definition or source file.");
+            if (!folder || !subfolder || !fileInput.files[0]) return alert("Заполните курс, тему и выберите файл!");
             f.append('folder', folder); f.append('level', level); f.append('subfolder', subfolder); f.append('file', fileInput.files[0]);
             
-            const btn = document.getElementById('btn-upload-csv');
-            btn.innerHTML = '> PROCESSING...';
-            btn.disabled = true;
-            
+            const btn = document.getElementById('btn-upload-csv'); btn.innerHTML = 'Загрузка...'; btn.disabled = true;
             try {
-                await apiFetch('/upload_csv', { method: 'POST', body: f }); 
-                modal.classList.add('hidden'); 
-                
-                const newTopicKey = `${folder}|${level || 'General'}|${subfolder}`;
-                collapsedDictTopics[newTopicKey] = false;
-
-                await fetchWords(); 
-                renderDict();
-            } catch(e) { alert("Ingestion Failed!"); }
-            finally {
-                btn.innerHTML = '> INGEST BATCH';
-                btn.disabled = false;
-            }
+                await apiFetch('/upload_csv', { method: 'POST', body: f }); modal.classList.add('hidden'); 
+                const newTopicKey = `${folder}|${level || 'Общее'}|${subfolder}`; collapsedDictTopics[newTopicKey] = false;
+                await fetchWords(); renderDict();
+            } catch(e) { alert("Ошибка загрузки!"); }
+            finally { btn.innerHTML = 'Загрузить слова'; btn.disabled = false; }
         };
 
         document.getElementById('bulk-file').onchange = function() {
             const label = this.nextElementSibling.querySelector('span');
-            if(this.files[0]) label.innerText = '> ' + this.files[0].name; else label.innerText = '> SELECT .CSV SOURCE';
+            if(this.files[0]) label.innerText = this.files[0].name; else label.innerText = 'Выбрать CSV файл';
         };
 
-        window.exportData = () => {
-            window.location.href = `/export_csv`;
-        };
+        window.exportData = () => { window.location.href = `/export_csv`; };
 
         let trainList = []; let curIdx = 0;
 
         window.setDirection = (dir) => {
             trainDirection = dir;
-            const activeCls = "flex-1 py-2 text-[10px] font-bold rounded-sm bg-neon-blue/10 text-neon-blue shadow-sm border-b-2 border-neon-blue transition-all font-mono uppercase";
-            const inactiveCls = "flex-1 py-2 text-[10px] font-bold rounded-sm text-gray-500 transition-all font-mono uppercase hover:text-neon-blue/70";
-            
+            const activeCls = "flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-500 shadow-sm transition-all uppercase";
+            const inactiveCls = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300";
             document.getElementById('dir-auto').className = dir === 'auto' ? activeCls : inactiveCls;
             document.getElementById('dir-ru-de').className = dir === 'ru-de' ? activeCls : inactiveCls;
             document.getElementById('dir-de-ru').className = dir === 'de-ru' ? activeCls : inactiveCls;
@@ -1008,86 +870,66 @@
             const container = document.getElementById('train-topics-container');
             try {
                 container.innerHTML = '';
-                
                 const newWordsCount = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
                 const masteredCount = globalWords.filter(w => w.score >= MAX_SCORE).length;
                 const waitingCount = globalWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
                 const weakWordsCount = globalWords.filter(w => w.score < 4 && isWordDue(w)).length;
 
                 let html = `
-                    <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-neon-blue/20 to-neon-blue/5 hover:scale-[0.99] transition-all p-4 rounded-lg shadow-[0_0_10px_rgba(0,243,255,0.1)] border border-neon-blue/30 flex justify-between items-center group mb-3">
+                    <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-2xl shadow-md text-white flex justify-between items-center group mb-3">
                         <div>
-                            <h3 class="text-white text-lg font-bold font-tech">> AVAILABLE DATA</h3>
-                            <p class="text-neon-blue text-[9px] font-black uppercase tracking-widest mt-0.5 font-mono">Items: ${newWordsCount} ${waitingCount>0?`| PENDING: ${waitingCount}`:''}</p>
+                            <h3 class="text-lg font-bold">Слова на сегодня</h3>
+                            <p class="text-blue-100 text-[11px] font-medium mt-1">Доступно: ${newWordsCount} ${waitingCount>0?`| Ожидают: ${waitingCount}`:''}</p>
                         </div>
-                        <div class="bg-neon-blue/20 w-8 h-8 rounded-sm flex items-center justify-center text-neon-blue backdrop-blur-md border border-neon-blue/50"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+                        <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                     </button>
                 `;
 
                 if (weakWordsCount > 0) {
                     html += `
-                        <button onclick="startTraining('weak')" class="w-full text-left bg-gradient-to-br from-neon-red/20 to-neon-red/5 hover:scale-[0.99] transition-all p-4 rounded-lg shadow-[0_0_10px_rgba(255,0,85,0.1)] border border-neon-red/30 flex justify-between items-center group mb-3">
+                        <button onclick="startTraining('weak')" class="w-full text-left bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 hover:scale-[0.98] transition-all p-4 rounded-xl flex justify-between items-center group mb-3">
                             <div>
-                                <h3 class="text-white text-lg font-bold font-tech">⚠️ PRIORITY: WEAK POINTS</h3>
-                                <p class="text-neon-red text-[9px] font-black uppercase tracking-widest mt-0.5 font-mono">Critical Items (${weakWordsCount})</p>
+                                <h3 class="text-orange-700 dark:text-orange-400 text-sm font-bold">Слабые места</h3>
+                                <p class="text-orange-600/70 dark:text-orange-500/70 text-[10px] font-medium mt-0.5">Требуют внимания: ${weakWordsCount}</p>
                             </div>
-                            <div class="bg-neon-red/20 w-8 h-8 rounded-sm flex items-center justify-center text-neon-red backdrop-blur-md border border-neon-red/50"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
-                        </button>
-                    `;
-                }
-
-                if (masteredCount > 0) {
-                    html += `
-                        <button onclick="startTraining('mastered')" class="w-full text-left bg-gradient-to-br from-neon-green/20 to-neon-green/5 hover:scale-[0.99] transition-all p-4 rounded-lg shadow-[0_0_10px_rgba(0,255,159,0.1)] border border-neon-green/30 flex justify-between items-center group mb-3">
-                            <div>
-                                <h3 class="text-white text-lg font-bold font-tech">🏆 ARCHIVE REVIEW</h3>
-                                <p class="text-neon-green text-[9px] font-black uppercase tracking-widest mt-0.5 font-mono">Mastered (${masteredCount})</p>
-                            </div>
-                            <div class="bg-neon-green/20 w-8 h-8 rounded-sm flex items-center justify-center text-neon-green backdrop-blur-md border border-neon-green/50"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                            <div class="text-orange-400"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
                         </button>
                     `;
                 }
 
                 const groupedTopics = {};
                 globalWords.forEach(w => {
-                    const f = w.folder || 'Uncategorized';
-                    const key = `${w.folder}|${w.level||'General'}|${w.subfolder}`;
-                    if (!groupedTopics[f]) groupedTopics[f] = new Set();
-                    groupedTopics[f].add(key);
+                    const f = w.folder || 'Без курса'; const key = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`;
+                    if (!groupedTopics[f]) groupedTopics[f] = new Set(); groupedTopics[f].add(key);
                 });
 
-                const activeTopicsHTML = [];
-                const masteredTopicsHTML = [];
+                const activeTopicsHTML = []; const masteredTopicsHTML = [];
 
                 for (const folder in groupedTopics) {
-                    const courseWords = globalWords.filter(w => (w.folder || 'Uncategorized') === folder);
+                    const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
                     const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
-                    const cWaitingCount = courseWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
                     
                     let folderActiveHTML = '';
                     if (cWordsCount > 0) {
                         folderActiveHTML += `
-                            <button onclick="startTraining('course|${escapeStr(folder)}')" class="w-full text-left bg-dark-panel hover:scale-[0.99] transition-all p-4 rounded-lg shadow-sm text-white mb-2 mt-4 flex justify-between items-center group border border-neon-blue/20">
+                            <button onclick="startTraining('course|${escapeStr(folder)}')" class="w-full text-left bg-white dark:bg-gray-800 hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-2 mt-4 flex justify-between items-center group">
                                 <div>
-                                    <h3 class="text-base font-bold font-tech">UNIT: ${folder}</h3>
-                                    <p class="text-[10px] font-medium opacity-80 mt-0.5 font-mono text-neon-blue">Available: ${cWordsCount} ${cWaitingCount>0?`| PENDING: ${cWaitingCount}`:''}</p>
+                                    <h3 class="text-sm font-bold text-gray-900 dark:text-white">${folder} (Весь курс)</h3>
+                                    <p class="text-[11px] text-gray-500 font-medium mt-0.5">Доступно: ${cWordsCount}</p>
                                 </div>
-                                <div class="bg-neon-blue/10 w-8 h-8 rounded-sm flex items-center justify-center text-neon-blue backdrop-blur-md border border-neon-blue/30"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+                                <div class="bg-gray-50 dark:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center text-gray-400"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                             </button>
                         `;
                     } else {
-                        folderActiveHTML += `<h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-5 mb-1.5 ml-2 font-mono">UNIT: ${folder}</h3>`;
+                        folderActiveHTML += `<h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-5 mb-2 ml-1">${folder}</h3>`;
                     }
 
-                    let folderMasteredHTML = `<h3 class="text-[10px] font-black text-gray-600 uppercase tracking-widest mt-5 mb-1.5 ml-2 font-mono">UNIT: ${folder} [ARCHIVED]</h3>`;
-                    
-                    let hasActive = false;
-                    let hasMastered = false;
+                    let folderMasteredHTML = `<h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-5 mb-2 ml-1">${folder}</h3>`;
+                    let hasActive = false; let hasMastered = false;
 
                     groupedTopics[folder].forEach(t => {
                         const [f, l, s] = t.split('|');
-                        const allInTopic = globalWords.filter(w => w.folder === f && (w.level||'General') === l && w.subfolder === s);
-                        
+                        const allInTopic = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
                         const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
                         const waitingCount = allInTopic.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
                         const archivedCount = allInTopic.filter(w => w.score >= MAX_SCORE).length;
@@ -1095,29 +937,28 @@
                         if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
                             hasMastered = true;
                             folderMasteredHTML += `
-                                <button onclick="startTraining('${escapeStr(t)}', true)" class="w-full text-left bg-obsidian hover:scale-[0.99] transition-all p-3 rounded-md shadow-none border border-neon-blue/5 flex justify-between items-center mb-1.5 opacity-60 grayscale">
+                                <button onclick="startTraining('${escapeStr(t)}', true)" class="w-full text-left bg-gray-50 dark:bg-gray-800/40 hover:scale-[0.98] transition-all p-3 rounded-lg border border-gray-100 dark:border-gray-800 flex justify-between items-center mb-1.5 opacity-70">
                                     <div>
                                         <div class="flex items-center gap-2 mb-0.5">
-                                            <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm bg-dark-panel text-gray-500 font-mono border border-gray-700">DONE</span>
-                                            <h3 class="text-sm font-bold text-gray-500 line-through font-mono">${s}</h3>
+                                            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 line-through">${s}</h3>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 font-medium font-mono">Archived: ${archivedCount}</p>
+                                        <p class="text-xs text-gray-400">В архиве: ${archivedCount}</p>
                                     </div>
-                                    <div class="bg-dark-panel w-6 h-6 rounded-sm flex items-center justify-center text-neon-green border border-neon-green/20">✓</div>
+                                    <div class="text-green-500">✓</div>
                                 </button>
                             `;
                         } else {
                             hasActive = true;
                             folderActiveHTML += `
-                                <button onclick="startTraining('${escapeStr(t)}')" class="w-full text-left bg-dark-panel hover:scale-[0.99] transition-all p-3 rounded-md shadow-sm border border-neon-blue/20 flex justify-between items-center mb-1.5 ml-2 w-[calc(100%-8px)]">
+                                <button onclick="startTraining('${escapeStr(t)}')" class="w-full text-left bg-white dark:bg-gray-800 hover:scale-[0.98] transition-all p-3 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center mb-1.5 ml-2 w-[calc(100%-8px)]">
                                     <div>
                                         <div class="flex items-center gap-2 mb-0.5">
-                                            ${l !== 'General' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm border font-mono ${getLevelColor(l)}">${l}</span>` : ''}
-                                            <h3 class="text-sm font-bold text-white font-mono">${s}</h3>
+                                            ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${getLevelColor(l)}">${l}</span>` : ''}
+                                            <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">${s}</h3>
                                         </div>
-                                        <p class="text-[10px] text-gray-400 font-medium font-mono">Items: ${wordsCount} <span class="opacity-50">${waitingCount>0?`| PENDING: ${waitingCount}`:''}</span></p>
+                                        <p class="text-xs text-gray-500">Слов: ${wordsCount} <span class="opacity-60">${waitingCount>0?`| Ожидают: ${waitingCount}`:''}</span></p>
                                     </div>
-                                    <div class="bg-obsidian w-6 h-6 rounded-sm flex items-center justify-center text-neon-blue/50 border border-neon-blue/10"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                                    <div class="text-gray-400"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                                 </button>
                             `;
                         }
@@ -1127,10 +968,8 @@
                     if (hasMastered) masteredTopicsHTML.push(folderMasteredHTML);
                 }
 
-                container.innerHTML = html + activeTopicsHTML.join('') + (masteredTopicsHTML.length > 0 ? '<div class="mt-6 border-t border-neon-blue/10 pt-3"></div><h2 class="text-sm font-bold text-center text-gray-500 mb-3 font-mono">✅ COMPLETED MODULES</h2>' + masteredTopicsHTML.join('') : '');
-                
-                document.getElementById('train-setup-block').classList.remove('hidden'); 
-                document.getElementById('train-card-block').classList.add('hidden');
+                container.innerHTML = html + activeTopicsHTML.join('') + (masteredTopicsHTML.length > 0 ? '<div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-4"></div><h2 class="text-sm font-bold text-center text-gray-500 mb-3">Завершенные темы</h2>' + masteredTopicsHTML.join('') : '');
+                document.getElementById('train-setup-block').classList.remove('hidden'); document.getElementById('train-card-block').classList.add('hidden');
             } catch(err) { console.error(err); }
         }
 
@@ -1139,106 +978,55 @@
 
             if (sel === 'all') { trainList = availableWords; } 
             else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 4); }
-            else if (sel.startsWith('course|')) {
-                const courseName = sel.split('|')[1];
-                trainList = availableWords.filter(w => (w.folder || 'Uncategorized') === courseName);
-            }
+            else if (sel.startsWith('course|')) { const courseName = sel.split('|')[1]; trainList = availableWords.filter(w => (w.folder || 'Без курса') === courseName); }
             else if (sel === 'mastered' || forceArchive) { 
-                if (forceArchive) {
-                    const [f, l, s] = sel.split('|');
-                    trainList = globalWords.filter(w => w.folder === f && (w.level||'General') === l && w.subfolder === s);
-                } else {
-                    trainList = globalWords.filter(w => w.score >= MAX_SCORE); 
-                }
+                if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s); } 
+                else { trainList = globalWords.filter(w => w.score >= MAX_SCORE); }
             }
-            else {
-                const [f, l, s] = sel.split('|');
-                trainList = availableWords.filter(w => w.folder === f && (w.level||'General') === l && w.subfolder === s);
-            }
+            else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s); }
             
-            if (!trainList.length) {
-                if (sel !== 'mastered' && !forceArchive) return alert('> NO DATA AVAILABLE FOR TRAINING SESSION.');
-                return alert('> ARCHIVE EMPTY.');
-            }
-            
-            trainList.sort(() => 0.5 - Math.random()); 
-            curIdx = 0;
-            sessionStartMs = Date.now();
-            
-            document.getElementById('train-setup-block').classList.add('hidden'); 
-            document.getElementById('train-card-block').classList.remove('hidden'); 
-            renderCard();
+            if (!trainList.length) return alert('На сегодня слов нет! Отдыхай.');
+            trainList.sort(() => 0.5 - Math.random()); curIdx = 0; sessionStartMs = Date.now();
+            document.getElementById('train-setup-block').classList.add('hidden'); document.getElementById('train-card-block').classList.remove('hidden'); renderCard();
         };
 
-        document.getElementById('btn-stop-training').onclick = () => {
-            saveSessionTime();
-            setupTrainMenu();
-        };
+        document.getElementById('btn-stop-training').onclick = () => { saveSessionTime(); setupTrainMenu(); };
 
         function renderCard() {
             const cardBlock = document.getElementById('train-card-block');
-            cardBlock.classList.remove('animate-fold-up'); // Сброс анимации
+            cardBlock.classList.remove('animate-fold-up'); 
 
             if (curIdx >= trainList.length) { 
-                alert('> SESSION COMPLETE. DATA LOGGED.'); 
-                saveSessionTime();
-                document.getElementById('main-scroll').scrollTo(0, 0);
-                setupTrainMenu(); 
-                return; 
+                saveSessionTime(); document.getElementById('main-scroll').scrollTo(0, 0); setupTrainMenu(); return; 
             }
             
             const w = trainList[curIdx]; 
-            const qEl = document.getElementById('train-question'); 
-            const exQ = document.getElementById('train-example-q'); 
-            const badge = document.getElementById('train-level-badge');
+            const qEl = document.getElementById('train-question'); const exQ = document.getElementById('train-example-q'); const badge = document.getElementById('train-level-badge');
             
-            const totalCardsEl = document.getElementById('train-total-cards');
-            if(totalCardsEl) totalCardsEl.innerText = `QUEUE: ${curIdx + 1}/${trainList.length}`;
+            document.getElementById('train-total-cards').innerText = `Осталось: ${trainList.length - curIdx}`;
+            document.getElementById('train-card-progress-text').innerText = `Освоено: ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
+            document.getElementById('train-card-progress-fill').style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
             
-            const progressFill = document.getElementById('train-card-progress-fill');
-            const progressText = document.getElementById('train-card-progress-text');
-            if(progressText) progressText.innerText = `MASTERY SCORE: ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
-            if(progressFill) progressFill.style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
-            
-            document.getElementById('train-answer-block').classList.add('hidden'); 
-            document.getElementById('train-manual-block').classList.add('hidden'); 
-            document.getElementById('btn-show-answer').classList.add('hidden');
-            document.getElementById('manual-feedback').classList.add('hidden');
+            document.getElementById('train-answer-block').classList.add('hidden'); document.getElementById('train-manual-block').classList.add('hidden'); 
+            document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('manual-feedback').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
-            if(exQ) {
-                exQ.classList.add('hidden');
-                exQ.className = "text-xs text-neon-blue/70 italic mb-5 hidden px-2 leading-relaxed block font-mono bg-neon-blue/5 p-2 rounded border-l-2 border-neon-blue"; 
-            }
+            if(exQ) { exQ.classList.add('hidden'); exQ.className = "text-sm text-gray-500 dark:text-gray-400 italic mb-5 hidden px-2 leading-relaxed block"; }
 
-            const manArt = document.getElementById('manual-article'); 
-            const manMain = document.getElementById('manual-main'); 
-            const manPluralContainer = document.getElementById('manual-plural-container');
-            const manPlural = document.getElementById('manual-plural');
-            
-            const manVerbContainer = document.getElementById('manual-verb-forms-container');
-            const manPraet = document.getElementById('manual-praeteritum');
-            const manPart = document.getElementById('manual-partizip');
-            
-            const btnCheck = document.getElementById('btn-check-manual');
-            const umlautBar = document.getElementById('train-umlauts');
-            const btnSpeakQ = document.getElementById('btn-speak-question');
-            const btnSpeakAns = document.getElementById('btn-speak-answer');
-            const btnMic = document.getElementById('btn-mic');
+            const manArt = document.getElementById('manual-article'); const manMain = document.getElementById('manual-main'); 
+            const manPluralContainer = document.getElementById('manual-plural-container'); const manPlural = document.getElementById('manual-plural');
+            const manVerbContainer = document.getElementById('manual-verb-forms-container'); const manPraet = document.getElementById('manual-praeteritum'); const manPart = document.getElementById('manual-partizip');
+            const btnCheck = document.getElementById('btn-check-manual'); const umlautBar = document.getElementById('train-umlauts');
+            const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer'); const btnMic = document.getElementById('btn-mic');
 
-            if(manArt) manArt.disabled = false;
-            if(manMain) manMain.disabled = false;
-            if(manPlural) manPlural.disabled = false;
-            if(manPraet) manPraet.disabled = false;
-            if(manPart) manPart.disabled = false;
-            if(btnCheck) btnCheck.disabled = false;
+            if(manArt) manArt.disabled = false; if(manMain) manMain.disabled = false; if(manPlural) manPlural.disabled = false;
+            if(manPraet) manPraet.disabled = false; if(manPart) manPart.disabled = false; if(btnCheck) btnCheck.disabled = false;
 
             const fullGerman = (w.word_type==='noun' ? (w.article||'') + ' ' : '') + (w.word_de||'');
-            
             let state = w.score < 4 ? 'L1' : w.score < 6 ? 'L2' : 'Archive';
 
-            if (trainDirection === 'de-ru') { currentIsGermanQuestion = true; } 
-            else if (trainDirection === 'ru-de') { currentIsGermanQuestion = false; } 
-            else { currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5; } 
+            if (trainDirection === 'de-ru') currentIsGermanQuestion = true; 
+            else if (trainDirection === 'ru-de') currentIsGermanQuestion = false; 
+            else currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
 
             if (currentIsGermanQuestion) {
                 if(btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
@@ -1251,68 +1039,39 @@
             if (recognition && btnMic) {
                 btnMic.classList.remove('hidden');
                 btnMic.onclick = () => {
-                    recognition.lang = currentIsGermanQuestion ? 'ru-RU' : 'de-DE';
-                    recognition.start();
-                    btnMic.classList.add('text-neon-red', 'animate-pulse');
-                    btnMic.classList.remove('text-neon-blue/50');
+                    recognition.lang = currentIsGermanQuestion ? 'ru-RU' : 'de-DE'; recognition.start();
+                    btnMic.classList.add('text-red-500', 'animate-pulse'); btnMic.classList.remove('text-gray-400');
                 };
-
                 recognition.onresult = (event) => {
                     let transcript = event.results[0][0].transcript.replace(/[.,!?]$/, '').trim();
                     if (!currentIsGermanQuestion && w.word_type === 'noun') {
-                        const parts = transcript.split(' ');
-                        const art = parts[0].toLowerCase();
-                        if (['der', 'die', 'das'].includes(art)) {
-                            manArt.value = art;
-                            manMain.value = parts.slice(1).join(' ');
-                        } else { manMain.value = transcript; }
-                    } else { manMain.value = transcript; }
+                        const parts = transcript.split(' '); const art = parts[0].toLowerCase();
+                        if (['der', 'die', 'das'].includes(art)) { manArt.value = art; manMain.value = parts.slice(1).join(' '); } else manMain.value = transcript;
+                    } else manMain.value = transcript;
                 };
-                recognition.onend = () => {
-                    btnMic.classList.remove('text-neon-red', 'animate-pulse');
-                    btnMic.classList.add('text-neon-blue/50');
-                };
-                recognition.onerror = () => {
-                    btnMic.classList.remove('text-neon-red', 'animate-pulse');
-                    btnMic.classList.add('text-neon-blue/50');
-                };
+                recognition.onend = () => { btnMic.classList.remove('text-red-500', 'animate-pulse'); btnMic.classList.add('text-gray-400'); };
+                recognition.onerror = () => { btnMic.classList.remove('text-red-500', 'animate-pulse'); btnMic.classList.add('text-gray-400'); };
             } else if (btnMic) { btnMic.classList.add('hidden'); }
 
             const ansEx = document.getElementById('train-answer-example');
-            if (w.example && ansEx) {
-                ansEx.innerText = '"' + w.example + '"';
-                ansEx.classList.remove('hidden');
-            } else if (ansEx) { ansEx.classList.add('hidden'); }
+            if (w.example && ansEx) { ansEx.innerText = '"' + w.example + '"'; ansEx.classList.remove('hidden'); } else if (ansEx) ansEx.classList.add('hidden');
 
             document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru||'') : fullGerman;
-            
-            if (w.word_type === 'noun' && w.plural) {
-                document.getElementById('train-de-plural').innerText = `Plural: die ${w.plural}`;
-            } else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
-                document.getElementById('train-de-plural').innerText = `Formen: ${w.praeteritum || '-'}, ${w.partizip || '-'}`;
-            }
+            if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerText = `мн. ч.: die ${w.plural}`;
+            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').innerText = `Формы: ${w.praeteritum || '-'}, ${w.partizip || '-'}`;
 
             if (state === 'L1' || state === 'Archive') {
                 if(badge) { 
-                    if (state === 'Archive') {
-                        badge.innerText = "STATUS: ARCHIVED 🏆"; badge.className = "px-2 py-1 rounded-sm text-[9px] font-mono uppercase tracking-widest bg-neon-green/10 text-neon-green border border-neon-green/30";
-                    } else {
-                        badge.innerText = `STATUS: L1 (RECOGNITION) [${w.score}/4]`; badge.className = "px-2 py-1 rounded-sm text-[9px] font-mono uppercase tracking-widest bg-neon-blue/10 text-neon-blue border border-neon-blue/30"; 
-                    }
+                    if (state === 'Archive') { badge.innerText = "Архив"; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-gray-100 dark:bg-gray-800 text-gray-500"; } 
+                    else { badge.innerText = `Узнавание (${w.score}/4)`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"; }
                 }
                 if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||''); 
                 document.getElementById('btn-show-answer').classList.remove('hidden');
-
             } else if (state === 'L2') {
-                if(badge) { badge.innerText = `STATUS: L2 (RECALL) [${w.score === 4 ? '1/2' : 'FINAL'}]`; badge.className = "px-2 py-1 rounded-sm text-[9px] font-mono uppercase tracking-widest bg-orange-900/40 text-orange-400 border border-orange-500/50"; }
-                
+                if(badge) { badge.innerText = `Письмо (${w.score === 4 ? '1/2' : 'Финал'})`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
                 if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
-                
                 if(!currentIsGermanQuestion && w.example && exQ) { 
-                    try {
-                        const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        exQ.innerHTML = escapeStr(w.example).replace(new RegExp(safeWord, 'ig'), '_____'); 
-                    } catch(e) { exQ.innerHTML = escapeStr(w.example); }
+                    try { const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); exQ.innerHTML = escapeStr(w.example).replace(new RegExp(safeWord, 'ig'), '_____'); } catch(e) { exQ.innerHTML = escapeStr(w.example); }
                     exQ.classList.remove('hidden'); 
                 }
                 
@@ -1320,34 +1079,21 @@
                 
                 if (currentIsGermanQuestion) {
                     if(manArt) manArt.classList.add('hidden'); 
-                    if(manMain) { manMain.value = ''; manMain.placeholder = "Translation Data..."; }
-                    if(manPluralContainer) manPluralContainer.classList.add('hidden');
-                    if(manVerbContainer) manVerbContainer.classList.add('hidden');
-                    if(umlautBar) umlautBar.classList.add('hidden'); 
+                    if(manMain) { manMain.value = ''; manMain.placeholder = "Напишите перевод..."; }
+                    if(manPluralContainer) manPluralContainer.classList.add('hidden'); if(manVerbContainer) manVerbContainer.classList.add('hidden'); if(umlautBar) umlautBar.classList.add('hidden'); 
                     setTimeout(() => { if(manMain) manMain.focus() }, 150);
                 } else {
                     if(manArt) { manArt.classList.remove('hidden'); manArt.classList.toggle('hidden', w.word_type==='verb'); manArt.value = ''; }
-                    if(manMain) { manMain.value = ''; manMain.placeholder = "German Data..."; }
-                    if (w.word_type === 'noun' && w.plural) {
-                        if(manPluralContainer) manPluralContainer.classList.remove('hidden');
-                        if(manPlural) manPlural.value = '';
-                    } else { if(manPluralContainer) manPluralContainer.classList.add('hidden'); }
-                    if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
-                        if(manVerbContainer) manVerbContainer.classList.remove('hidden');
-                        if(manPraet) manPraet.value = '';
-                        if(manPart) manPart.value = '';
-                    } else { if(manVerbContainer) manVerbContainer.classList.add('hidden'); }
+                    if(manMain) { manMain.value = ''; manMain.placeholder = "Слово на немецком..."; }
+                    if (w.word_type === 'noun' && w.plural) { if(manPluralContainer) manPluralContainer.classList.remove('hidden'); if(manPlural) manPlural.value = ''; } else { if(manPluralContainer) manPluralContainer.classList.add('hidden'); }
+                    if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) { if(manVerbContainer) manVerbContainer.classList.remove('hidden'); if(manPraet) manPraet.value = ''; if(manPart) manPart.value = ''; } else { if(manVerbContainer) manVerbContainer.classList.add('hidden'); }
                     if(umlautBar) umlautBar.classList.remove('hidden'); 
-                    setTimeout(() => { 
-                        const target = w.word_type==='noun' ? document.getElementById('manual-article') : document.getElementById('manual-main');
-                        if (target) target.focus();
-                    }, 150);
+                    setTimeout(() => { const target = w.word_type==='noun' ? document.getElementById('manual-article') : document.getElementById('manual-main'); if (target) target.focus(); }, 150);
                 }
             }
         }
 
         async function updateScore(newScore, isCorrect) {
-            // Tech-анимация сворачивания в лог
             const cardBlock = document.getElementById('train-card-block');
             cardBlock.classList.add('animate-fold-up');
 
@@ -1362,108 +1108,56 @@
                 else nextReviewMs = now + 30 * 86400000; 
             }
             
-            try {
-                await apiFetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})});
-            } catch (e) {
-                console.warn("Offline mode. Data cached locally.");
-            }
-
-            const gwItem = globalWords.find(gw => gw.id === trainList[curIdx].id);
-            if(gwItem) { gwItem.score = newScore; gwItem.next_review = nextReviewMs; }
+            try { await apiFetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})}); } catch (e) {}
+            const gwItem = globalWords.find(gw => gw.id === trainList[curIdx].id); if(gwItem) { gwItem.score = newScore; gwItem.next_review = nextReviewMs; }
             trainList[curIdx].score = newScore; 
-            
             localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
             
-            curIdx++; 
-            // Ждем окончания анимации перед рендером следующей карточки
-            setTimeout(renderCard, 300);
+            curIdx++; setTimeout(renderCard, 250);
         }
 
         document.getElementById('btn-show-answer').onclick = () => { 
-            document.getElementById('btn-show-answer').classList.add('hidden'); 
-            document.getElementById('train-answer-block').classList.remove('hidden'); 
-            const w = trainList[curIdx];
-            if (w.word_type === 'noun' && w.plural) { document.getElementById('train-de-plural').classList.remove('hidden'); } 
-            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) { document.getElementById('train-de-plural').classList.remove('hidden'); }
+            document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden'); 
+            const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
         };
         
         document.getElementById('btn-forgot').onclick = () => updateScore(0, false); 
-        document.getElementById('btn-remembered').onclick = () => {
-            const w = trainList[curIdx];
-            updateScore(Math.min(w.score + 1, MAX_SCORE), true); 
-        };
+        document.getElementById('btn-remembered').onclick = () => { const w = trainList[curIdx]; updateScore(Math.min(w.score + 1, MAX_SCORE), true); };
         
         document.getElementById('btn-check-manual').onclick = () => {
             const w = trainList[curIdx]; 
-            const artRaw = document.getElementById('manual-article').value;
-            const mainRaw = document.getElementById('manual-main').value;
-            const pluralRaw = document.getElementById('manual-plural').value;
-            const praetRaw = document.getElementById('manual-praeteritum').value;
-            const partRaw = document.getElementById('manual-partizip').value;
-
-            const art = (artRaw ? artRaw.trim().toLowerCase() : ""); 
-            const main = (mainRaw ? mainRaw.trim() : "");
-            const typedPlural = (pluralRaw ? pluralRaw.trim().toLowerCase() : "");
-            const typedPraet = (praetRaw ? praetRaw.trim().toLowerCase() : "");
-            const typedPart = (partRaw ? partRaw.trim().toLowerCase() : "");
+            const art = (document.getElementById('manual-article').value || "").trim().toLowerCase(); 
+            const main = (document.getElementById('manual-main').value || "").trim();
+            const typedPlural = (document.getElementById('manual-plural').value || "").trim().toLowerCase();
+            const typedPraet = (document.getElementById('manual-praeteritum').value || "").trim().toLowerCase();
+            const typedPart = (document.getElementById('manual-partizip').value || "").trim().toLowerCase();
             
-            const feedback = document.getElementById('manual-feedback');
-            const btnCheck = document.getElementById('btn-check-manual');
-            
-            let isCorrect = false;
-            let correctAnswer = "";
+            const feedback = document.getElementById('manual-feedback'); const btnCheck = document.getElementById('btn-check-manual');
+            let isCorrect = false; let correctAnswer = "";
 
             if (!currentIsGermanQuestion) {
-                const expectedArt = (w.article ? w.article.toLowerCase() : "");
-                const expectedWord = (w.word_de ? w.word_de.toLowerCase() : "");
-                const expectedPlural = (w.plural ? w.plural.toLowerCase() : "");
-                const expectedPraet = (w.praeteritum ? w.praeteritum.toLowerCase() : "");
-                const expectedPart = (w.partizip ? w.partizip.toLowerCase() : "");
+                const expectedArt = (w.article ? w.article.toLowerCase() : ""); const expectedWord = (w.word_de ? w.word_de.toLowerCase() : "");
+                const expectedPlural = (w.plural ? w.plural.toLowerCase() : ""); const expectedPraet = (w.praeteritum ? w.praeteritum.toLowerCase() : ""); const expectedPart = (w.partizip ? w.partizip.toLowerCase() : "");
                 
                 if (w.word_type === 'noun') {
-                    if (w.plural) {
-                        isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord) && (typedPlural === expectedPlural);
-                        correctAnswer = `${w.article} ${w.word_de} (die ${w.plural})`;
-                    } else {
-                        isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord);
-                        correctAnswer = `${w.article} ${w.word_de}`;
-                    }
+                    if (w.plural) { isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord) && (typedPlural === expectedPlural); correctAnswer = `${w.article} ${w.word_de} (die ${w.plural})`; } 
+                    else { isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord); correctAnswer = `${w.article} ${w.word_de}`; }
                 } else if (w.word_type === 'verb') {
-                    let baseCorrect = (main.toLowerCase() === expectedWord);
-                    let formsCorrect = true;
-                    if (w.praeteritum || w.partizip) {
-                        formsCorrect = (typedPraet === expectedPraet) && (typedPart === expectedPart);
-                        correctAnswer = `${w.word_de} (${w.praeteritum}, ${w.partizip})`;
-                    } else { correctAnswer = w.word_de; }
+                    let baseCorrect = (main.toLowerCase() === expectedWord); let formsCorrect = true;
+                    if (w.praeteritum || w.partizip) { formsCorrect = (typedPraet === expectedPraet) && (typedPart === expectedPart); correctAnswer = `${w.word_de} (${w.praeteritum}, ${w.partizip})`; } 
+                    else { correctAnswer = w.word_de; }
                     isCorrect = baseCorrect && formsCorrect;
-                } else {
-                    isCorrect = main.toLowerCase() === expectedWord;
-                    correctAnswer = w.word_de;
-                }
-            } else {
-                const expectedWord = (w.word_ru ? w.word_ru.toLowerCase() : "");
-                isCorrect = main.toLowerCase() === expectedWord;
-                correctAnswer = w.word_ru;
-            }
+                } else { isCorrect = main.toLowerCase() === expectedWord; correctAnswer = w.word_de; }
+            } else { const expectedWord = (w.word_ru ? w.word_ru.toLowerCase() : ""); isCorrect = main.toLowerCase() === expectedWord; correctAnswer = w.word_ru; }
 
-            document.getElementById('manual-article').disabled = true;
-            document.getElementById('manual-main').disabled = true;
-            document.getElementById('manual-plural').disabled = true;
-            document.getElementById('manual-praeteritum').disabled = true;
-            document.getElementById('manual-partizip').disabled = true;
-            btnCheck.disabled = true;
-
-            feedback.className = "w-full text-center py-2.5 rounded-sm font-bold text-sm mb-2 transition-all animate-in fade-in zoom-in duration-200 font-mono border";
+            document.getElementById('manual-article').disabled = true; document.getElementById('manual-main').disabled = true; document.getElementById('manual-plural').disabled = true; document.getElementById('manual-praeteritum').disabled = true; document.getElementById('manual-partizip').disabled = true; btnCheck.disabled = true;
+            feedback.className = "w-full text-center py-3 rounded-xl font-medium text-sm mb-3 transition-all animate-in fade-in zoom-in duration-200 border";
 
             if (isCorrect) {
-                feedback.classList.add('bg-neon-green/10', 'text-neon-green', 'border-neon-green/30');
-                feedback.innerText = "> INPUT VALIDATED. CORRECT.";
-                feedback.classList.remove('hidden');
+                feedback.classList.add('bg-green-50', 'text-green-600', 'border-green-200', 'dark:bg-green-900/20', 'dark:border-green-800'); feedback.innerText = "Верно!"; feedback.classList.remove('hidden');
                 setTimeout(() => updateScore(Math.min(w.score + 1, MAX_SCORE), true), 1000);
             } else {
-                feedback.classList.add('bg-neon-red/10', 'text-neon-red', 'border-neon-red/30');
-                feedback.innerText = `> ERROR. EXPECTED: ${correctAnswer}`;
-                feedback.classList.remove('hidden');
+                feedback.classList.add('bg-red-50', 'text-red-600', 'border-red-200', 'dark:bg-red-900/20', 'dark:border-red-800'); feedback.innerText = `Ошибка. Правильно: ${correctAnswer}`; feedback.classList.remove('hidden');
                 setTimeout(() => updateScore(0, false), 2500);
             }
         };
@@ -1472,35 +1166,19 @@
         
         document.getElementById('file-restore').onchange = async function() {
             if(!this.files[0]) return;
-            if(!confirm("> WARNING: Full database overwrite initiated. Confirm?")) {
-                this.value = ''; return;
-            }
-            const f = new FormData();
-            f.append('file', this.files[0]);
-            const btn = document.getElementById('btn-trigger-restore');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '> RESTORING...';
-            btn.disabled = true;
-            
+            if(!confirm("Внимание: это полностью заменит вашу базу данных. Продолжить?")) { this.value = ''; return; }
+            const f = new FormData(); f.append('file', this.files[0]);
+            const btn = document.getElementById('btn-trigger-restore'); const originalText = btn.innerHTML; btn.innerHTML = 'Восстановление...'; btn.disabled = true;
             try {
-                const res = await apiFetch('/restore_backup', { method: 'POST', body: f });
-                const result = await res.json();
-                if(result.status === 'success') {
-                    document.getElementById('backup-modal').classList.add('hidden');
-                    alert(`> RESTORE COMPLETE. Entries processed: ${result.restored}`);
-                    await fetchWords(); loadStats();
-                } else { alert("Server Error during restore procedure."); }
-            } catch(e) { alert("Restore Failed. Corrupted file."); }
-            finally {
-                btn.innerHTML = originalText; btn.disabled = false; this.value = '';
-            }
+                const res = await apiFetch('/restore_backup', { method: 'POST', body: f }); const result = await res.json();
+                if(result.status === 'success') { document.getElementById('backup-modal').classList.add('hidden'); alert(`Успешно! Восстановлено: ${result.restored}`); await fetchWords(); loadStats(); } 
+                else alert("Ошибка сервера!");
+            } catch(e) { alert("Ошибка файла бэкапа."); } finally { btn.innerHTML = originalText; btn.disabled = false; this.value = ''; }
         };
 
         window.resetFolderStats = async (f, l, s) => {
-            if(confirm(`> RESET progress for Module "${s}"?`)){
-                await apiFetch('/words/reset_folder', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder:f, level:l, subfolder:s})});
-                await fetchWords(); 
-                loadStats();
+            if(confirm(`Сбросить прогресс изучения для темы "${s}"?`)){
+                await apiFetch('/words/reset_folder', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder:f, level:l, subfolder:s})}); await fetchWords(); loadStats();
             }
         };
 
@@ -1511,150 +1189,131 @@
                 const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
                 const pctMastery = total === 0 ? 0 : Math.round((mastered / total) * 100);
 
-                // Определение "Технического статуса"
-                let techStatus = "NOVICE (A0)";
-                if (mastered > 50) techStatus = "BEGINNER (A1)";
-                if (mastered > 200) techStatus = "ADVANCED (A2)";
-                if (mastered > 500) techStatus = "PROFESSIONAL (B1)";
-                if (mastered > 1000) techStatus = "EXPERT (B2+)";
+                let statusLevel = "Новичек (A1.1)";
+                if (mastered > 50) statusLevel = "Базовый (A1.2)";
+                if (mastered > 200) statusLevel = "Средний (A2)";
+                if (mastered > 500) statusLevel = "Уверенный (B1+)";
 
                 const folders = {};
                 globalWords.forEach(w => { 
-                    const k = `${w.folder}|${w.level||'General'}|${w.subfolder}`; 
-                    if(!folders[k]) folders[k] = {f:w.folder, l:w.level||'General', s:w.subfolder, total:0, done:0}; 
-                    folders[k].total++; 
-                    if(w.score>=MAX_SCORE) folders[k].done++; 
+                    const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
+                    if(!folders[k]) folders[k] = {f:w.folder, l:w.level||'Общее', s:w.subfolder, total:0, done:0}; 
+                    folders[k].total++; if(w.score>=MAX_SCORE) folders[k].done++; 
                 });
 
                 const sortedFolders = Object.values(folders).sort((a, b) => {
-                    const pctA = a.done / a.total;
-                    const pctB = b.done / b.total;
-                    if (pctB !== pctA) return pctA - pctB; 
-                    return a.s.localeCompare(b.s); 
+                    const pctA = a.done / a.total; const pctB = b.done / b.total;
+                    if (pctB !== pctA) return pctA - pctB; return a.s.localeCompare(b.s); 
                 });
 
-                let history = {};
-                try { history = JSON.parse(localStorage.getItem('studyHistory')) || {}; } catch(e){}
+                let history = {}; try { history = JSON.parse(localStorage.getItem('studyHistory')) || {}; } catch(e){}
                 
-                const daysHtml = [];
-                const maxDailyMs = DAILY_GOAL_MINUTES * 60000;
-
+                const daysHtml = []; const maxDailyMs = DAILY_GOAL_MINUTES * 60000;
                 for (let i = 6; i >= 0; i--) {
-                    let iterD = new Date();
-                    iterD.setDate(iterD.getDate() - i);
-                    let tzIter = iterD.getTimezoneOffset() * 60000;
+                    let iterD = new Date(); iterD.setDate(iterD.getDate() - i); let tzIter = iterD.getTimezoneOffset() * 60000;
                     let iso = new Date(iterD.getTime() - tzIter).toISOString().slice(0, 10);
-                    let ms = history[iso] || 0;
-                    let pct = Math.min(100, (ms / maxDailyMs) * 100);
-                    let dayName = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][iterD.getDay()];
+                    let ms = history[iso] || 0; let pct = Math.min(100, (ms / maxDailyMs) * 100);
+                    let dayName = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'][iterD.getDay()];
                     
-                    // Tech-Эквалайзер
                     daysHtml.push(`
-                        <div class="flex flex-col items-center gap-1">
-                             <div class="w-full bg-dark-panel rounded-sm h-24 relative overflow-hidden border border-neon-blue/10">
-                                <div class="absolute bottom-0 left-0 right-0 bg-neon-blue transition-all duration-1000 shadow-[0_0_10px_rgba(0,243,255,0.5)] ${pct > 0 ? 'animate-pulse' : ''}" style="height: ${pct}%"></div>
-                                <div class="absolute inset-0 flex flex-col justify-between py-1 opacity-30 pointer-events-none">
-                                    <div class="h-px bg-obsidian"></div><div class="h-px bg-obsidian"></div><div class="h-px bg-obsidian"></div>
-                                    <div class="h-px bg-obsidian"></div><div class="h-px bg-obsidian"></div><div class="h-px bg-obsidian"></div>
-                                </div>
+                        <div class="flex flex-col items-center gap-2">
+                             <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-24 relative overflow-hidden">
+                                <div class="absolute bottom-0 left-0 right-0 bg-blue-500 transition-all duration-1000 rounded-full" style="height: ${pct}%"></div>
                             </div>
-                            <span class="text-[9px] font-bold text-gray-500 font-mono">${dayName}</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">${dayName}</span>
                         </div>
                     `);
                 }
 
-                // Рендер грамматических модулей
                 let grammarHtml = '';
                 for (const key in GRAMMAR_MODULES) {
-                    const module = GRAMMAR_MODULES[key];
-                    const isCollapsed = collapsedGrammarModules[key] !== false; // По умолчанию свернуты
-                    const chevronClass = isCollapsed ? '' : 'rotate-180';
+                    const module = GRAMMAR_MODULES[key]; const isCollapsed = collapsedGrammarModules[key] !== false; const chevronClass = isCollapsed ? '' : 'rotate-180';
                     grammarHtml += `
-                        <div class="bg-dark-panel border border-neon-blue/20 rounded-sm overflow-hidden">
-                            <button onclick="toggleGrammarModule('${key}')" class="w-full flex justify-between items-center p-3 text-left hover:bg-neon-blue/5 transition-all">
-                                <div>
-                                    <h4 class="text-xs font-bold text-white font-mono uppercase tracking-wider">${module.title}</h4>
-                                    <p class="text-[9px] text-neon-blue/70 font-mono mt-0.5">[STATUS: READY]</p>
-                                </div>
-                                <svg class="w-4 h-4 text-neon-blue/50 transition-transform ${chevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm transition-all mb-2">
+                            <button onclick="toggleGrammarModule('${key}')" class="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <h4 class="text-sm font-bold text-gray-900 dark:text-white">${module.title}</h4>
+                                <svg class="w-5 h-5 text-gray-400 transition-transform ${chevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
-                             <div class="${isCollapsed ? 'hidden' : 'p-3 bg-obsidian border-t border-neon-blue/10 font-mono text-sm'}">
+                             <div class="${isCollapsed ? 'hidden' : 'p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700'}">
                                 ${module.content}
                             </div>
                         </div>
                     `;
                 }
 
-
                 stats.innerHTML = `
-                    <div class="flex justify-center mb-6 relative">
-                         <div class="w-48 h-48 relative flex items-center justify-center">
-                             <svg class="w-full h-full transform -rotate-90 drop-shadow-[0_0_10px_rgba(0,243,255,0.3)]">
-                                <circle cx="96" cy="96" r="88" stroke="#12121a" stroke-width="12" fill="none"/>
-                                <circle cx="96" cy="96" r="88" stroke="#00f3ff" stroke-width="12" fill="none" stroke-dasharray="552.9" stroke-dashoffset="${552.9 * (1 - pctMastery / 100)}" stroke-linecap="round" class="transition-all duration-1000 ease-out"/>
+                    <div class="flex flex-col items-center mb-8 mt-2">
+                        <div class="w-48 h-48 relative flex items-center justify-center mb-4">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="96" cy="96" r="88" stroke="currentColor" class="text-gray-100 dark:text-gray-800" stroke-width="12" fill="none"/>
+                                <circle cx="96" cy="96" r="88" stroke="currentColor" class="text-blue-500 transition-all duration-1000 ease-out" stroke-width="12" fill="none" stroke-dasharray="552.9" stroke-dashoffset="${552.9 * (1 - pctMastery / 100)}" stroke-linecap="round"/>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <span class="text-gray-500 text-[10px] font-mono uppercase tracking-widest mb-1">Mastery Score</span>
-                                <span class="text-4xl font-black text-white tracking-tighter font-tech leading-none neon-text-blue">${pctMastery}%</span>
-                                <span class="text-neon-blue/70 text-[9px] font-bold font-mono uppercase tracking-wider mt-2 px-2 py-0.5 border border-neon-blue/30 rounded-sm bg-obsidian/50">${techStatus}</span>
+                                <span class="text-gray-400 text-xs font-medium uppercase tracking-widest mb-1">Освоено</span>
+                                <span class="text-5xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">${pctMastery}%</span>
                             </div>
-                         </div>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 px-4 py-1.5 rounded-full border border-blue-100 dark:border-blue-800/50">
+                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Твой уровень: ${statusLevel}</span>
+                        </div>
                     </div>
 
-                    <div class="bg-dark-panel p-4 rounded-lg shadow-[0_0_15px_rgba(0,0,0,0.3)] border border-neon-blue/20 mb-6 relative overflow-hidden">
-                         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-blue/50 to-transparent opacity-50 animate-pulse"></div>
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-[10px] font-black text-white uppercase tracking-widest font-mono">SYSTEM ACTIVITY (7 DAYS)</h3>
-                             <span class="text-[9px] font-bold text-neon-blue/70 font-mono">TARGET: ${DAILY_GOAL_MINUTES} MIN/DAY</span>
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+                        <div class="flex justify-between items-center mb-5">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Активность (7 дней)</h3>
+                             <span class="text-xs font-bold text-gray-400">Цель: ${DAILY_GOAL_MINUTES} мин</span>
                         </div>
                         <div class="grid grid-cols-7 gap-2">
                             ${daysHtml.join('')}
                         </div>
                     </div>
                     
-                    <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono mb-3 ml-1">SYSTEM LOGIC MODULES</h3>
-                    <div class="space-y-2 mb-6">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Справочник грамматики</h3>
+                    <div class="mb-8">
                         ${grammarHtml}
                     </div>
 
-                    <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest font-mono mb-3 ml-1">UNIT PERFORMANCE</h3>
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Прогресс по темам</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
                         ${sortedFolders.map(dat => {
                             const pct = Math.round((dat.done / dat.total) * 100);
                             const isDone = pct === 100;
-                            const barColor = isDone ? 'bg-neon-green' : 'bg-neon-blue';
-                            const textColor = isDone ? 'text-neon-green' : 'text-white';
-                            const borderColor = isDone ? 'border-neon-green/30' : 'border-neon-blue/20';
+                            const barColor = isDone ? 'bg-green-500' : 'bg-blue-500';
+                            const textColor = isDone ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white';
                             
                             return `
-                            <div class="bg-dark-panel p-4 rounded-lg shadow-sm border ${borderColor} relative flex flex-col justify-between hover:border-opacity-50 transition-all group overflow-hidden">
-                                <div class="relative z-10 mb-4">
-                                    <div class="flex items-center gap-1.5 mb-2 pr-6">
-                                        ${dat.l !== 'General' ? `<span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm font-mono border ${getLevelColor(dat.l)}">${dat.l}</span>` : ''}
-                                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate font-mono">${dat.f}</span>
+                            <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative flex flex-col justify-between overflow-hidden">
+                                <button onclick="resetFolderStats('${escapeStr(dat.f)}', '${escapeStr(dat.l)}', '${escapeStr(dat.s)}')" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors z-10" title="Сбросить">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                </button>
+                                
+                                <div class="relative z-10 mb-5">
+                                    <div class="flex items-center gap-2 mb-2 pr-6">
+                                        ${dat.l !== 'Общее' ? `<span class="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${getLevelColor(dat.l)}">${dat.l}</span>` : ''}
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">${dat.f}</span>
                                     </div>
-                                    <h4 class="font-bold text-sm ${textColor} leading-tight pr-4 font-tech">${dat.s}</h4>
+                                    <h4 class="font-bold text-base ${textColor} pr-4">${dat.s}</h4>
                                 </div>
                                 
                                 <div class="relative z-10 mt-auto">
                                     <div class="flex justify-between items-end mb-2">
-                                        <span class="text-lg font-black tracking-tighter ${textColor} font-mono">${pct}%</span>
-                                        <span class="text-[10px] font-bold text-gray-500 font-mono">${dat.done} / ${dat.total}</span>
+                                        <span class="text-xl font-black ${isDone ? 'text-green-500' : 'text-blue-500'}">${pct}%</span>
+                                        <span class="text-xs font-medium text-gray-400">${dat.done} / ${dat.total}</span>
                                     </div>
-                                    <div class="w-full bg-obsidian h-2 rounded-sm overflow-hidden border border-white/10">
-                                        <div class="${barColor} h-full transition-all duration-1000 ease-out shadow-[0_0_5px_currentColor]" style="width: ${pct}%"></div>
+                                    <div class="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                                        <div class="${barColor} h-full transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
                                     </div>
                                 </div>
                             </div>`;
                         }).join('')}
                     </div>
                     
-                    <button onclick="document.getElementById('backup-modal').classList.remove('hidden')" class="w-full mb-4 bg-dark-panel text-gray-300 font-bold py-4 rounded-lg hover:text-neon-blue hover:border-neon-blue/50 transition-all flex justify-center items-center gap-2 shadow-sm border border-neon-blue/20 text-sm font-mono uppercase active:scale-95">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg> 
-                        > DATA MANAGEMENT CONSOLE
+                    <button onclick="document.getElementById('backup-modal').classList.remove('hidden')" class="w-full mb-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all flex justify-center items-center gap-2 shadow-sm border border-gray-100 dark:border-gray-700 text-sm active:scale-95">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> 
+                        Настройки данных
                     </button>
                 `;
-            } catch(err) { console.error("Stats error", err); }
+            } catch(err) {}
         }
 
         switchView('dict');
