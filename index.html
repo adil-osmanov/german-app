@@ -22,9 +22,7 @@
                 } 
             } 
         };
-        
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
-
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
         }
@@ -35,12 +33,10 @@
         .dark .glass { background: rgba(17, 24, 39, 0.85); border-color: rgba(255,255,255,0.05); }
         .active-tab { color: #3b82f6; transform: translateY(-2px); }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        
         .drag-handle-folder, .drag-handle-topic { touch-action: none; cursor: grab; }
         .drag-handle-folder:active, .drag-handle-topic:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; transform: scale(0.98); background: #f3f4f6; border-radius: 12px; }
         .dark .sortable-ghost { background: #1f2937; }
-
         @keyframes foldUp {
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-15px) scale(0.97); }
@@ -98,11 +94,11 @@
             <div id="train-card-block" class="hidden w-full bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg text-center relative flex flex-col transition-all border border-gray-100 dark:border-gray-800 mt-2 sm:mt-6">
                 <button id="btn-stop-training" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold z-10 transition-colors">×</button>
                 
-                <div class="mb-3"><span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">Уровень 1</span></div>
+                <div class="mb-3"><span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">Узнавание</span></div>
                 
                 <div class="mb-5 w-full px-1">
                     <div class="flex justify-between text-[10px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
-                        <span id="train-card-progress-text">Прогресс: 0/6</span>
+                        <span id="train-card-progress-text">Уровень: 0/6</span>
                         <span id="train-total-cards">Осталось: 0</span>
                     </div>
                     <div class="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden relative">
@@ -133,9 +129,16 @@
                         <p id="train-answer-example" class="text-sm text-blue-600 dark:text-blue-400 italic font-medium mt-3 hidden px-2 leading-relaxed text-center"></p>
                     </div>
 
-                    <div class="flex gap-2">
-                        <button id="btn-forgot" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-3.5 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-sm hover:bg-red-100 dark:hover:bg-red-900/40">Не помню</button>
-                        <button id="btn-remembered" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-3.5 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-sm hover:bg-green-100 dark:hover:bg-green-900/40">Помню</button>
+                    <div class="flex gap-2" id="sm2-buttons-block">
+                        <button id="btn-sm2-again" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-3 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-xs flex flex-col items-center">
+                            <span class="mb-0.5">Снова</span><span class="text-[9px] font-medium opacity-70">10 мин</span>
+                        </button>
+                        <button id="btn-sm2-hard" class="flex-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 font-bold py-3 rounded-xl border border-yellow-100 dark:border-yellow-900/30 active:scale-95 transition-all text-xs flex flex-col items-center">
+                            <span class="mb-0.5">Сложно</span><span id="sm2-hard-time" class="text-[9px] font-medium opacity-70">1 дн</span>
+                        </button>
+                        <button id="btn-sm2-good" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-3 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-xs flex flex-col items-center">
+                            <span class="mb-0.5">Легко</span><span id="sm2-good-time" class="text-[9px] font-medium opacity-70">X дн</span>
+                        </button>
                     </div>
                 </div>
 
@@ -170,8 +173,7 @@
             </div>
         </section>
 
-        <section id="view-stats" class="hidden pb-10 pt-4">
-            </section>
+        <section id="view-stats" class="hidden pb-10 pt-4"></section>
     </main>
 
     <div id="backup-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
@@ -309,6 +311,24 @@
             recognition.maxAlternatives = 1;
         }
 
+        // --- АЛГОРИТМ SM-2 (Интервальные повторения) ---
+        function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5) {
+            // quality: 0 (Забыл), 3 (Сложно), 4 (Легко/Нормально)
+            if (quality < 3) {
+                repetitions = 0;
+                interval = 0; // 0 означает возврат через 10 минут
+            } else {
+                if (repetitions === 0) interval = 1;
+                else if (repetitions === 1) interval = 3;
+                else interval = Math.round(interval * easeFactor);
+                repetitions++;
+            }
+            easeFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+            if (easeFactor < 1.3) easeFactor = 1.3;
+            
+            return { repetitions, interval, easeFactor };
+        }
+
         async function apiFetch(url, options = {}) {
             const res = await fetch(url, options);
             if (!res.ok) throw new Error('Network Error');
@@ -406,7 +426,12 @@
                 const res = await apiFetch(API_URL); 
                 const data = await res.json();
                 if (Array.isArray(data)) {
-                    globalWords = data;
+                    globalWords = data.map(w => ({
+                        ...w,
+                        ease_factor: w.ease_factor || 2.5,
+                        interval: w.interval || 0,
+                        repetitions: w.repetitions || 0
+                    }));
                     localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
                 }
             } catch (e) { 
@@ -691,8 +716,8 @@
         const modal = document.getElementById('add-modal');
         const setType = (t) => {
             currentType = t;
-            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
-            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
             document.getElementById('article-selector').classList.toggle('hidden', t === 'verb');
             document.getElementById('plural-input-group').classList.toggle('hidden', t === 'verb');
             const verbGroup = document.getElementById('verb-forms-group');
@@ -709,7 +734,6 @@
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
-            // Зеленая кнопка вкладки CSV
             document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-bold rounded-lg bg-green-500 text-white shadow-md shadow-green-500/40 transition-all transform scale-[1.02]";
             document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
         };
@@ -1029,6 +1053,17 @@
                 }
                 if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||''); 
                 document.getElementById('btn-show-answer').classList.remove('hidden');
+                
+                // Рендер кнопок SM-2
+                document.getElementById('btn-sm2-hard').onclick = () => updateScoreWithSM2(3);
+                document.getElementById('btn-sm2-good').onclick = () => updateScoreWithSM2(4);
+                document.getElementById('btn-sm2-again').onclick = () => updateScoreWithSM2(0);
+                
+                const hardCalc = calculateSM2(3, w.repetitions, w.interval, w.ease_factor);
+                const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor);
+                document.getElementById('sm2-hard-time').innerText = hardCalc.interval > 0 ? `${hardCalc.interval} дн` : '10 мин';
+                document.getElementById('sm2-good-time').innerText = `${goodCalc.interval} дн`;
+
             } else if (state === 'L2') {
                 if(badge) { badge.innerText = `Письмо (${w.score === 4 ? '1/2' : 'Финал'})`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
                 if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
@@ -1055,26 +1090,48 @@
             }
         }
 
-        async function updateScore(newScore, isCorrect) {
+        async function updateScoreWithSM2(quality) {
             const cardBlock = document.getElementById('train-card-block');
             cardBlock.classList.add('animate-fold-up');
 
+            const w = trainList[curIdx];
+            const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor);
+            
             let nextReviewMs = 0;
-            if (isCorrect) {
-                const now = Date.now();
-                if (newScore <= 1) nextReviewMs = now + 12 * 3600000; 
-                else if (newScore === 2) nextReviewMs = now + 86400000; 
-                else if (newScore === 3) nextReviewMs = now + 3 * 86400000; 
-                else if (newScore === 4) nextReviewMs = now + 7 * 86400000; 
-                else if (newScore === 5) nextReviewMs = now + 14 * 86400000; 
-                else nextReviewMs = now + 30 * 86400000; 
+            if (sm2Result.interval === 0) {
+                nextReviewMs = Date.now() + 10 * 60 * 1000; // +10 минут
+            } else {
+                nextReviewMs = Date.now() + sm2Result.interval * 24 * 60 * 60 * 1000; // + дни
+            }
+
+            let newScore = w.score;
+            if (quality >= 3) newScore = Math.min(w.score + 1, MAX_SCORE);
+            else newScore = 0;
+            
+            try { 
+                await apiFetch(`${API_URL}/${w.id}/score`, { 
+                    method: 'PUT', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({
+                        score: newScore, 
+                        next_review: nextReviewMs,
+                        ease_factor: sm2Result.easeFactor,
+                        interval: sm2Result.interval,
+                        repetitions: sm2Result.repetitions
+                    })
+                }); 
+            } catch (e) {}
+            
+            const gwItem = globalWords.find(gw => gw.id === w.id); 
+            if(gwItem) { 
+                gwItem.score = newScore; 
+                gwItem.next_review = nextReviewMs; 
+                gwItem.ease_factor = sm2Result.easeFactor;
+                gwItem.interval = sm2Result.interval;
+                gwItem.repetitions = sm2Result.repetitions;
             }
             
-            try { await apiFetch(`${API_URL}/${trainList[curIdx].id}/score`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: newScore, next_review: nextReviewMs})}); } catch (e) {}
-            const gwItem = globalWords.find(gw => gw.id === trainList[curIdx].id); if(gwItem) { gwItem.score = newScore; gwItem.next_review = nextReviewMs; }
-            trainList[curIdx].score = newScore; 
             localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
-            
             curIdx++; setTimeout(renderCard, 250);
         }
 
@@ -1082,9 +1139,6 @@
             document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden'); 
             const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
         };
-        
-        document.getElementById('btn-forgot').onclick = () => updateScore(0, false); 
-        document.getElementById('btn-remembered').onclick = () => { const w = trainList[curIdx]; updateScore(Math.min(w.score + 1, MAX_SCORE), true); };
         
         document.getElementById('btn-check-manual').onclick = () => {
             const w = trainList[curIdx]; 
@@ -1117,10 +1171,10 @@
 
             if (isCorrect) {
                 feedback.classList.add('bg-green-50', 'text-green-600', 'border-green-200', 'dark:bg-green-900/20', 'dark:border-green-800'); feedback.innerText = "Верно!"; feedback.classList.remove('hidden');
-                setTimeout(() => updateScore(Math.min(w.score + 1, MAX_SCORE), true), 1000);
+                setTimeout(() => updateScoreWithSM2(4), 1000); // Качество 4 = Легко
             } else {
                 feedback.classList.add('bg-red-50', 'text-red-600', 'border-red-200', 'dark:bg-red-900/20', 'dark:border-red-800'); feedback.innerText = `Ошибка. Правильно: ${correctAnswer}`; feedback.classList.remove('hidden');
-                setTimeout(() => updateScore(0, false), 2500);
+                setTimeout(() => updateScoreWithSM2(0), 2500); // Качество 0 = Забыл
             }
         };
 
@@ -1170,20 +1224,33 @@
 
                 let history = {}; try { history = JSON.parse(localStorage.getItem('studyHistory')) || {}; } catch(e){}
                 
+                // --- СТРОГАЯ ЛОГИКА СТРИКА (Только >= 15 минут) ---
                 let streak = 0;
                 let d = new Date(); let tz = d.getTimezoneOffset() * 60000;
                 let todayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
                 d.setDate(d.getDate() - 1); let yesterdayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
 
+                const goalMs = DAILY_GOAL_MINUTES * 60000;
                 let checkD = new Date();
-                if (history[todayIso] > 0) {} 
-                else if (history[yesterdayIso] > 0) { checkD.setDate(checkD.getDate() - 1); } 
-                else { checkD = null; }
+                
+                if ((history[todayIso] || 0) >= goalMs) {
+                    // Цель сегодня выполнена
+                } else if ((history[yesterdayIso] || 0) >= goalMs) {
+                    // Цель за сегодня еще не выполнена, но вчера была выполнена - стрик не сброшен
+                    checkD.setDate(checkD.getDate() - 1);
+                } else {
+                    checkD = null; // Сброс
+                }
 
                 if (checkD) {
                     while (true) {
                         let iso = new Date(checkD.getTime() - checkD.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-                        if (history[iso] > 0) { streak++; checkD.setDate(checkD.getDate() - 1); } else { break; }
+                        if ((history[iso] || 0) >= goalMs) { 
+                            streak++; 
+                            checkD.setDate(checkD.getDate() - 1); 
+                        } else { 
+                            break; 
+                        }
                     }
                 }
 
@@ -1249,12 +1316,13 @@
 
                     <div class="bg-white dark:bg-gray-800 p-5 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
                         <div class="flex justify-between items-center mb-5">
-                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Активность (7 дней)</h3>
-                             <span class="text-xs font-bold text-gray-400">Цель: ${DAILY_GOAL_MINUTES} мин</span>
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">Активность (Стрик: ${streak} <svg class="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-1.245-1.134-1.766-.153-.52-.175-1.043-.175-1.534z" clip-rule="evenodd" /></svg>)</h3>
+                             <span class="text-xs font-bold text-gray-400">Сегодня: ${minutesToday}/${DAILY_GOAL_MINUTES} мин</span>
                         </div>
-                        <div class="grid grid-cols-7 gap-2">
+                        <div class="grid grid-cols-7 gap-2 mb-2">
                             ${daysHtml.join('')}
                         </div>
+                        <p class="text-[10px] text-gray-400 text-center italic">* Огонь зажигается только при достижении 15 минут в день.</p>
                     </div>
                     
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Достижения</h3>
