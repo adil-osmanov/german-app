@@ -117,7 +117,7 @@
                     </div>
                 </div>
                 
-                <p id="train-example-q" class="text-sm text-blue-600 dark:text-blue-400 italic mb-5 hidden px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500 leading-relaxed block w-full text-left"></p>
+                <p id="train-example-q" class="text-xs text-blue-500/90 dark:text-blue-400 italic font-medium mb-5 hidden px-2 leading-relaxed text-center block w-full"></p>
                 
                 <button id="btn-show-answer" class="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">Показать ответ</button>
                 
@@ -131,7 +131,7 @@
                         </div>
                         <p id="train-de-plural" class="text-xs font-medium text-gray-500 mb-2 hidden"></p>
                         
-                        <p id="train-answer-example" class="text-sm text-blue-600 dark:text-blue-400 italic font-medium mt-1 hidden px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500 leading-relaxed w-full text-left"></p>
+                        <p id="train-answer-example" class="text-xs text-blue-500/90 dark:text-blue-400 italic font-medium mt-1 hidden px-2 leading-relaxed text-center w-full"></p>
                     </div>
 
                     <div class="flex gap-2" id="sm2-buttons-block">
@@ -646,7 +646,7 @@
                                 <div class="flex-1 pr-3 min-w-0">
                                     <p class="text-base font-bold text-gray-900 dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
                                     <p class="text-gray-500 text-sm font-medium mt-0.5 truncate">${w.word_ru}</p>
-                                    ${w.example ? `<p class="text-[11px] text-gray-400 mt-1 italic leading-tight truncate">"${escapeStr(w.example)}"</p>` : ''}
+                                    ${w.example ? `<p class="text-[11px] text-blue-500/80 dark:text-blue-400 mt-1 italic font-medium leading-tight truncate">"${escapeStr(w.example)}"</p>` : ''}
                                 </div>
                                 <div class="flex flex-col items-end gap-1 flex-shrink-0">
                                     <div class="flex gap-1 mb-1">
@@ -737,7 +737,6 @@
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
-            // Зеленая кнопка вкладки CSV
             document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-bold rounded-lg bg-green-500 text-white shadow-md shadow-green-500/40 transition-all transform scale-[1.02]";
             document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
         };
