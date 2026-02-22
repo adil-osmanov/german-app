@@ -22,7 +22,9 @@
                 } 
             } 
         };
+        
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
         }
@@ -33,10 +35,12 @@
         .dark .glass { background: rgba(17, 24, 39, 0.85); border-color: rgba(255,255,255,0.05); }
         .active-tab { color: #3b82f6; transform: translateY(-2px); }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
         .drag-handle-folder, .drag-handle-topic { touch-action: none; cursor: grab; }
         .drag-handle-folder:active, .drag-handle-topic:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; transform: scale(0.98); background: #f3f4f6; border-radius: 12px; }
         .dark .sortable-ghost { background: #1f2937; }
+
         @keyframes foldUp {
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-15px) scale(0.97); }
@@ -129,15 +133,14 @@
                         <p id="train-answer-example" class="text-sm text-blue-600 dark:text-blue-400 italic font-medium mt-3 hidden px-2 leading-relaxed text-center"></p>
                     </div>
 
-                    <div class="flex gap-2" id="sm2-buttons-block">
-                        <button id="btn-sm2-again" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-3 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-xs flex flex-col items-center">
-                            <span class="mb-0.5">Снова</span><span class="text-[9px] font-medium opacity-70">10 мин</span>
+                    <div class="flex gap-2">
+                        <button id="btn-forgot" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-3 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-red-100 dark:hover:bg-red-900/40">
+                            <span class="mb-0.5">Не помню</span>
+                            <span class="text-[10px] font-medium opacity-70">10 мин</span>
                         </button>
-                        <button id="btn-sm2-hard" class="flex-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 font-bold py-3 rounded-xl border border-yellow-100 dark:border-yellow-900/30 active:scale-95 transition-all text-xs flex flex-col items-center">
-                            <span class="mb-0.5">Сложно</span><span id="sm2-hard-time" class="text-[9px] font-medium opacity-70">1 дн</span>
-                        </button>
-                        <button id="btn-sm2-good" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-3 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-xs flex flex-col items-center">
-                            <span class="mb-0.5">Легко</span><span id="sm2-good-time" class="text-[9px] font-medium opacity-70">X дн</span>
+                        <button id="btn-remembered" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-3 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-green-100 dark:hover:bg-green-900/40">
+                            <span class="mb-0.5">Помню</span>
+                            <span id="sm2-good-time" class="text-[10px] font-medium opacity-70">X дн</span>
                         </button>
                     </div>
                 </div>
@@ -313,7 +316,7 @@
 
         // --- АЛГОРИТМ SM-2 (Интервальные повторения) ---
         function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5) {
-            // quality: 0 (Забыл), 3 (Сложно), 4 (Легко/Нормально)
+            // quality: 0 (Забыл), 4 (Помню)
             if (quality < 3) {
                 repetitions = 0;
                 interval = 0; // 0 означает возврат через 10 минут
@@ -734,6 +737,7 @@
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
+            // Зеленая кнопка вкладки CSV
             document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-bold rounded-lg bg-green-500 text-white shadow-md shadow-green-500/40 transition-all transform scale-[1.02]";
             document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
         };
@@ -1054,15 +1058,12 @@
                 if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||''); 
                 document.getElementById('btn-show-answer').classList.remove('hidden');
                 
-                // Рендер кнопок SM-2
-                document.getElementById('btn-sm2-hard').onclick = () => updateScoreWithSM2(3);
-                document.getElementById('btn-sm2-good').onclick = () => updateScoreWithSM2(4);
-                document.getElementById('btn-sm2-again').onclick = () => updateScoreWithSM2(0);
+                // Рендер 2-х умных кнопок SM-2
+                document.getElementById('btn-forgot').onclick = () => updateScoreWithSM2(0); // 0 = забыл
+                document.getElementById('btn-remembered').onclick = () => updateScoreWithSM2(4); // 4 = помню (легко)
                 
-                const hardCalc = calculateSM2(3, w.repetitions, w.interval, w.ease_factor);
                 const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor);
-                document.getElementById('sm2-hard-time').innerText = hardCalc.interval > 0 ? `${hardCalc.interval} дн` : '10 мин';
-                document.getElementById('sm2-good-time').innerText = `${goodCalc.interval} дн`;
+                document.getElementById('sm2-good-time').innerText = goodCalc.interval > 0 ? `${goodCalc.interval} дн` : '1 дн';
 
             } else if (state === 'L2') {
                 if(badge) { badge.innerText = `Письмо (${w.score === 4 ? '1/2' : 'Финал'})`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
