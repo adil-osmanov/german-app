@@ -36,13 +36,11 @@
         .active-tab { color: #3b82f6; transform: translateY(-2px); }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         
-        /* Стили для перетаскивания */
         .drag-handle-folder, .drag-handle-topic { touch-action: none; cursor: grab; }
         .drag-handle-folder:active, .drag-handle-topic:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; transform: scale(0.98); background: #f3f4f6; border-radius: 12px; }
         .dark .sortable-ghost { background: #1f2937; }
 
-        /* Плавное сворачивание карточки при ответе */
         @keyframes foldUp {
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-15px) scale(0.97); }
@@ -205,8 +203,8 @@
             </div>
             <div class="overflow-y-auto pr-1 -mr-1 pb-1">
                 <div id="modal-tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-4">
-                    <button id="tab-single" class="flex-1 py-2 text-xs font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Одно слово</button>
-                    <button id="tab-bulk" class="flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком (CSV)</button>
+                    <button id="tab-single" class="flex-1 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Одно слово</button>
+                    <button id="tab-bulk" class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком (CSV)</button>
                 </div>
                 
                 <div id="form-single">
@@ -250,18 +248,18 @@
                  <div class="hidden space-y-3" id="form-bulk">
                     <p class="text-xs text-gray-500 text-center mb-3">Загрузка списка слов в формате .csv</p>
                     <div class="flex w-full gap-2">
-                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 ring-blue-500/50"></div>
-                        <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none font-medium text-gray-900 dark:text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 ring-blue-500/50"></div>
-                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 ring-blue-500/50"></div>
+                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
+                        <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none font-medium text-gray-900 dark:text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
+                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
                     </div>
-                    <div class="mt-2 p-6 border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-xl text-center transition-all group hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <div class="mt-2 p-6 border-2 border-dashed border-green-300 dark:border-green-800/50 bg-green-50 dark:bg-green-900/10 rounded-xl text-center transition-all group hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer" onclick="document.getElementById('bulk-file').click()">
                         <input type="file" id="bulk-file" accept=".csv" class="hidden">
-                        <label for="bulk-file" class="cursor-pointer flex flex-col items-center gap-2">
-                            <svg class="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <span class="text-blue-600 dark:text-blue-400 font-medium text-sm">Выбрать CSV файл</span>
-                        </label>
+                        <div class="flex flex-col items-center gap-2 pointer-events-none">
+                            <svg class="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <span class="text-green-600 dark:text-green-400 font-medium text-sm" id="bulk-file-label">Выбрать CSV файл</span>
+                        </div>
                     </div>
-                    <button id="btn-upload-csv" class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-blue-500/20">Загрузить слова</button>
+                    <button id="btn-upload-csv" class="w-full bg-green-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-green-600 shadow-md shadow-green-500/30">Загрузить слова</button>
                 </div>
             </div>
         </div>
@@ -287,55 +285,6 @@
     <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
 
     <script>
-        // Справочник грамматики для вкладки прогресса
-        const GRAMMAR_MODULES = {
-            syntax_core: {
-                title: "Порядок слов (Синтаксис)",
-                content: `
-                    <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                        <p><strong class="text-gray-900 dark:text-white">Прямой порядок:</strong><br> Подлежащее + Глагол + Объекты.<br> <span class="italic">Ich lerne Deutsch.</span></p>
-                        <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
-                        <p><strong class="text-gray-900 dark:text-white">Обратный порядок:</strong><br> Если начинаем не с подлежащего, глагол ВСЕГДА на втором месте.<br> <span class="italic">Heute <strong class="text-blue-500">lerne</strong> ich Deutsch.</span></p>
-                         <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
-                        <p><strong class="text-gray-900 dark:text-white">Рамочная конструкция:</strong><br> Второй глагол (инфинитив или причастие) уходит в самый конец.<br> <span class="italic">Ich <strong class="text-blue-500">will</strong> heute Deutsch <strong class="text-blue-500">lernen</strong>.</span></p>
-                    </div>`
-            },
-            articles_cases: {
-                title: "Падежи и Артикли",
-                content: `
-                    <table class="w-full text-sm text-left border-collapse mb-2">
-                        <thead>
-                            <tr class="text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                                <th class="pb-2 font-medium">Падеж</th><th class="pb-2 font-medium">Муж</th><th class="pb-2 font-medium">Жен</th><th class="pb-2 font-medium">Ср</th><th class="pb-2 font-medium">Мн.ч</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-700 dark:text-gray-200">
-                            <tr class="border-b border-gray-100 dark:border-gray-800"><td class="py-2 text-gray-400">Nom</td><td class="font-medium text-blue-500">der</td><td class="font-medium text-red-500">die</td><td class="font-medium text-green-500">das</td><td class="font-medium text-gray-500">die</td></tr>
-                            <tr class="border-b border-gray-100 dark:border-gray-800"><td class="py-2 text-gray-400">Akk</td><td class="font-bold underline text-blue-500">den</td><td class="font-medium text-red-500">die</td><td class="font-medium text-green-500">das</td><td class="font-medium text-gray-500">die</td></tr>
-                            <tr><td class="py-2 text-gray-400">Dat</td><td class="font-bold underline text-blue-500">dem</td><td class="font-bold underline text-red-500">der</td><td class="font-bold underline text-green-500">dem</td><td class="font-bold underline text-gray-500">den+n</td></tr>
-                        </tbody>
-                    </table>
-                    <p class="text-xs text-gray-500 italic mt-2">Akkusativ — для прямого объекта (вижу кого? что?). Dativ — для косвенного (даю кому? где?).</p>`
-            },
-            verb_forms: {
-                 title: "Времена глаголов",
-                 content: `
-                    <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                        <p><strong class="text-gray-900 dark:text-white">Präsens (Настоящее):</strong><br> Базовая форма общения.<br> <span class="italic">Er macht es.</span></p>
-                         <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
-                        <p><strong class="text-gray-900 dark:text-white">Präteritum (Прошедшее письменное):</strong><br> Используется в книгах и новостях. Слабые глаголы получают суффикс <span class="font-medium">-te-</span>.<br> <span class="italic">Er mach<strong class="text-blue-500">te</strong> es.</span></p>
-                         <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
-                        <p><strong class="text-gray-900 dark:text-white">Perfekt (Прошедшее разговорное):</strong><br> haben/sein (на 2 месте) + Partizip II (в самом конце).<br> <span class="italic">Er <strong class="text-blue-500">hat</strong> es <strong class="text-blue-500">gemacht</strong>.</span></p>
-                    </div>`
-            }
-        };
-        let collapsedGrammarModules = {};
-
-        window.toggleGrammarModule = (moduleKey) => {
-            collapsedGrammarModules[moduleKey] = !collapsedGrammarModules[moduleKey];
-            loadStats();
-        };
-
         const escapeStr = (str) => (str||'').replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
         const API_URL = '/words';
         let currentType = 'noun';
@@ -742,8 +691,8 @@
         const modal = document.getElementById('add-modal');
         const setType = (t) => {
             currentType = t;
-            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
-            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
             document.getElementById('article-selector').classList.toggle('hidden', t === 'verb');
             document.getElementById('plural-input-group').classList.toggle('hidden', t === 'verb');
             const verbGroup = document.getElementById('verb-forms-group');
@@ -760,7 +709,8 @@
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
-            document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white";
+            // Зеленая кнопка вкладки CSV
+            document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-bold rounded-lg bg-green-500 text-white shadow-md shadow-green-500/40 transition-all transform scale-[1.02]";
             document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
         };
 
@@ -772,7 +722,7 @@
             document.getElementById('add-form').reset(); 
             document.getElementById('bulk-folder').value = ''; document.getElementById('bulk-level').value = ''; document.getElementById('bulk-subfolder').value = ''; 
             const bulkFile = document.getElementById('bulk-file'); if(bulkFile) bulkFile.value = '';
-            const bulkLabel = document.querySelector('label[for="bulk-file"] span'); if(bulkLabel) bulkLabel.innerText = 'Выбрать CSV файл';
+            const bulkLabel = document.getElementById('bulk-file-label'); if(bulkLabel) bulkLabel.innerText = 'Выбрать CSV файл';
             setType('noun'); showSingleTab(); selectArticle('der'); modal.classList.remove('hidden'); 
         };
         document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
@@ -849,7 +799,7 @@
         };
 
         document.getElementById('bulk-file').onchange = function() {
-            const label = this.nextElementSibling.querySelector('span');
+            const label = document.getElementById('bulk-file-label');
             if(this.files[0]) label.innerText = this.files[0].name; else label.innerText = 'Выбрать CSV файл';
         };
 
@@ -859,8 +809,8 @@
 
         window.setDirection = (dir) => {
             trainDirection = dir;
-            const activeCls = "flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-500 shadow-sm transition-all uppercase";
-            const inactiveCls = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300";
+            const activeCls = "flex-1 py-2 text-[10px] font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-500 shadow-sm transition-all uppercase";
+            const inactiveCls = "flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300";
             document.getElementById('dir-auto').className = dir === 'auto' ? activeCls : inactiveCls;
             document.getElementById('dir-ru-de').className = dir === 'ru-de' ? activeCls : inactiveCls;
             document.getElementById('dir-de-ru').className = dir === 'de-ru' ? activeCls : inactiveCls;
@@ -893,6 +843,18 @@
                                 <p class="text-orange-600/70 dark:text-orange-500/70 text-[10px] font-medium mt-0.5">Требуют внимания: ${weakWordsCount}</p>
                             </div>
                             <div class="text-orange-400"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
+                        </button>
+                    `;
+                }
+
+                if (masteredCount > 0) {
+                    html += `
+                        <button onclick="startTraining('mastered')" class="w-full text-left bg-white dark:bg-gray-800 hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">🏆 Повторить архив</h3>
+                                <p class="text-gray-500 text-[10px] font-medium mt-0.5">Изучено: ${masteredCount}</p>
+                            </div>
+                            <div class="text-gray-400"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
                         </button>
                     `;
                 }
@@ -1189,10 +1151,10 @@
                 const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
                 const pctMastery = total === 0 ? 0 : Math.round((mastered / total) * 100);
 
-                let statusLevel = "Новичек (A1.1)";
-                if (mastered > 50) statusLevel = "Базовый (A1.2)";
-                if (mastered > 200) statusLevel = "Средний (A2)";
-                if (mastered > 500) statusLevel = "Уверенный (B1+)";
+                let statusLevel = "Новичок (A1)";
+                if (mastered > 50) statusLevel = "Студент (A2)";
+                if (mastered > 200) statusLevel = "Специалист (B1)";
+                if (mastered > 500) statusLevel = "Профи (B2+)";
 
                 const folders = {};
                 globalWords.forEach(w => { 
@@ -1208,7 +1170,26 @@
 
                 let history = {}; try { history = JSON.parse(localStorage.getItem('studyHistory')) || {}; } catch(e){}
                 
+                let streak = 0;
+                let d = new Date(); let tz = d.getTimezoneOffset() * 60000;
+                let todayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
+                d.setDate(d.getDate() - 1); let yesterdayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
+
+                let checkD = new Date();
+                if (history[todayIso] > 0) {} 
+                else if (history[yesterdayIso] > 0) { checkD.setDate(checkD.getDate() - 1); } 
+                else { checkD = null; }
+
+                if (checkD) {
+                    while (true) {
+                        let iso = new Date(checkD.getTime() - checkD.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+                        if (history[iso] > 0) { streak++; checkD.setDate(checkD.getDate() - 1); } else { break; }
+                    }
+                }
+
                 const daysHtml = []; const maxDailyMs = DAILY_GOAL_MINUTES * 60000;
+                let minutesToday = Math.floor((history[todayIso] || 0) / 60000);
+
                 for (let i = 6; i >= 0; i--) {
                     let iterD = new Date(); iterD.setDate(iterD.getDate() - i); let tzIter = iterD.getTimezoneOffset() * 60000;
                     let iso = new Date(iterD.getTime() - tzIter).toISOString().slice(0, 10);
@@ -1225,21 +1206,29 @@
                     `);
                 }
 
-                let grammarHtml = '';
-                for (const key in GRAMMAR_MODULES) {
-                    const module = GRAMMAR_MODULES[key]; const isCollapsed = collapsedGrammarModules[key] !== false; const chevronClass = isCollapsed ? '' : 'rotate-180';
-                    grammarHtml += `
-                        <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm transition-all mb-2">
-                            <button onclick="toggleGrammarModule('${key}')" class="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                <h4 class="text-sm font-bold text-gray-900 dark:text-white">${module.title}</h4>
-                                <svg class="w-5 h-5 text-gray-400 transition-transform ${chevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                             <div class="${isCollapsed ? 'hidden' : 'p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700'}">
-                                ${module.content}
-                            </div>
+                // Логика Ачивок
+                const achievements = [
+                    { id: 'first_word', title: 'Первый шаг', desc: 'Выучить 1 слово', check: mastered >= 1, icon: '🌟', color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400' },
+                    { id: 'words_50', title: 'Словарный запас', desc: '50 слов в архиве', check: mastered >= 50, icon: '📚', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+                    { id: 'words_200', title: 'Полиглот', desc: '200 слов в архиве', check: mastered >= 200, icon: '🧠', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+                    { id: 'streak_3', title: 'В ритме', desc: 'Учить 3 дня подряд', check: streak >= 3, icon: '🔥', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
+                    { id: 'streak_7', title: 'Марафонец', desc: 'Учить 7 дней подряд', check: streak >= 7, icon: '⚡', color: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
+                    { id: 'goal_met', title: 'Дисциплина', desc: 'Выполнить цель на день', check: minutesToday >= DAILY_GOAL_MINUTES, icon: '🎯', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' }
+                ];
+
+                const achievementsHtml = achievements.map(a => {
+                    const isUnlocked = a.check;
+                    const bgClass = isUnlocked ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm' : 'bg-gray-50 dark:bg-gray-800/40 border-dashed border-gray-200 dark:border-gray-700 opacity-60 grayscale';
+                    const iconBg = isUnlocked ? a.color : 'bg-gray-200 text-gray-500 dark:bg-gray-700';
+                    return `
+                    <div class="${bgClass} p-3 rounded-xl border flex items-center gap-3 transition-all">
+                        <div class="${iconBg} w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0">${a.icon}</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">${a.title}</h4>
+                            <p class="text-[10px] font-medium text-gray-500 mt-0.5">${a.desc}</p>
                         </div>
-                    `;
-                }
+                    </div>`;
+                }).join('');
 
                 stats.innerHTML = `
                     <div class="flex flex-col items-center mb-8 mt-2">
@@ -1254,7 +1243,7 @@
                             </div>
                         </div>
                         <div class="bg-blue-50 dark:bg-blue-900/20 px-4 py-1.5 rounded-full border border-blue-100 dark:border-blue-800/50">
-                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Твой уровень: ${statusLevel}</span>
+                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Статус: ${statusLevel}</span>
                         </div>
                     </div>
 
@@ -1268,9 +1257,9 @@
                         </div>
                     </div>
                     
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Справочник грамматики</h3>
-                    <div class="mb-8">
-                        ${grammarHtml}
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Достижения</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-8">
+                        ${achievementsHtml}
                     </div>
 
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Прогресс по темам</h3>
