@@ -21,10 +21,16 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_rgLF4vIjyqH1@ep-sparkling-truth-aiwf28f5-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require")
 
 # === НАСТРОЙКА ИИ ===
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyACR9GygxO-y_eAdYA4d5HxQq0qCBBd4c8") 
-if AI_AVAILABLE and GEMINI_API_KEY and GEMINI_API_KEY != "AIzaSyACR9GygxO-y_eAdYA4d5HxQq0qCBBd4c8":
-    genai.configure(api_key=GEMINI_API_KEY)
-    ai_model = genai.GenerativeModel('gemini-1.5-flash')
+# Твой реальный ключ жестко прописан здесь:
+GEMINI_API_KEY = "AIzaSyACR9GygxO-y_eAdYA4d5HxQq0qCBBd4c8" 
+
+if AI_AVAILABLE and GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        ai_model = genai.GenerativeModel('gemini-1.5-flash')
+    except Exception as e:
+        ai_model = None
+        print(f"Ошибка инициализации Gemini: {e}")
 else:
     ai_model = None
 
@@ -137,7 +143,7 @@ def update_history(data: HistoryUpdate):
 
 @app.get("/words")
 def get_words():
-    # Убрали фильтр WHERE username. Теперь выгружаются ВСЕ слова!
+    # Единый профиль: выгружаем все слова
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM words ORDER BY id DESC")
@@ -292,7 +298,7 @@ def export_csv():
 @app.get("/ai/slang-hang")
 def ai_slang_hang(topic: str):
     if not AI_AVAILABLE or not ai_model:
-        return {"error": "API ключ не настроен или библиотека google-generativeai не установлена на сервере."}
+        return {"error": "Библиотека ИИ не установлена или проблемы с ключом."}
     
     prompt = f"""
     Действуй как молодой носитель немецкого языка. Напиши короткий диалог между двумя друзьями на тему: "{topic}".
@@ -319,7 +325,7 @@ def ai_slang_hang(topic: str):
 @app.post("/ai/word-cam")
 async def ai_word_cam(file: UploadFile = File(...)):
     if not AI_AVAILABLE or not ai_model:
-        return {"error": "API ключ не настроен или библиотека google-generativeai не установлена на сервере."}
+        return {"error": "Библиотека ИИ не установлена или проблемы с ключом."}
     try:
         image_bytes = await file.read()
         image_part = {
