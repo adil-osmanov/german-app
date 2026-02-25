@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form, Header
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -7,32 +7,11 @@ from psycopg2.extras import RealDictCursor
 import os
 import csv
 import io
-import json
-
-try:
-    import google.generativeai as genai
-    AI_AVAILABLE = True
-except ImportError:
-    AI_AVAILABLE = False
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_rgLF4vIjyqH1@ep-sparkling-truth-aiwf28f5-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require")
-
-# === НАСТРОЙКА ИИ ===
-# Твой реальный ключ жестко прописан здесь:
-GEMINI_API_KEY = "AIzaSyACR9GygxO-y_eAdYA4d5HxQq0qCBBd4c8" 
-
-if AI_AVAILABLE and GEMINI_API_KEY:
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        ai_model = genai.GenerativeModel('gemini-1.5-flash')
-    except Exception as e:
-        ai_model = None
-        print(f"Ошибка инициализации Gemini: {e}")
-else:
-    ai_model = None
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
@@ -40,10 +19,10 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
+    # Таблица слов
     cur.execute("""
         CREATE TABLE IF NOT EXISTS words (
             id SERIAL PRIMARY KEY,
-            username TEXT DEFAULT 'default',
             word_type TEXT,
             article TEXT,
             word_de TEXT,
@@ -54,23 +33,33 @@ def init_db():
             example TEXT DEFAULT '',
             level TEXT DEFAULT '',
             next_review BIGINT DEFAULT 0,
-            plural TEXT DEFAULT '',
-            praeteritum TEXT DEFAULT '',
-            partizip TEXT DEFAULT '',
-            ease_factor REAL DEFAULT 2.5,
-            interval INTEGER DEFAULT 0,
-            repetitions INTEGER DEFAULT 0
+            plural TEXT DEFAULT ''
         )
     """)
+    # Таблица облачной истории изучения
     cur.execute("""
         CREATE TABLE IF NOT EXISTS study_history (
-            username TEXT DEFAULT 'default',
-            date_str TEXT,
-            ms_spent BIGINT DEFAULT 0,
-            PRIMARY KEY (username, date_str)
+            date_str TEXT PRIMARY KEY,
+            ms_spent BIGINT DEFAULT 0
         )
     """)
     conn.commit()
+    
+    # Добавляем колонки для SM-2
+    columns_to_add = [
+        ("praeteritum", "TEXT DEFAULT ''"),
+        ("partizip", "TEXT DEFAULT ''"),
+        ("ease_factor", "REAL DEFAULT 2.5"),
+        ("interval", "INTEGER DEFAULT 0"),
+        ("repetitions", "INTEGER DEFAULT 0")
+    ]
+    for col_name, col_type in columns_to_add:
+        try:
+            cur.execute(f"ALTER TABLE words ADD COLUMN {col_name} {col_type}")
+            conn.commit()
+        except Exception:
+            conn.rollback() 
+
     cur.close()
     conn.close()
 
@@ -115,12 +104,11 @@ class HistoryUpdate(BaseModel):
     date_str: str
     ms_spent: int
 
-# --- API ---
 @app.get("/history")
 def get_history():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT date_str, ms_spent FROM study_history WHERE username = 'default'")
+    cur.execute("SELECT date_str, ms_spent FROM study_history")
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -131,9 +119,9 @@ def update_history(data: HistoryUpdate):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO study_history (username, date_str, ms_spent) 
-        VALUES ('default', %s, %s) 
-        ON CONFLICT (username, date_str) 
+        INSERT INTO study_history (date_str, ms_spent) 
+        VALUES (%s, %s) 
+        ON CONFLICT (date_str) 
         DO UPDATE SET ms_spent = study_history.ms_spent + EXCLUDED.ms_spent
     """, (data.date_str, data.ms_spent))
     conn.commit()
@@ -143,7 +131,6 @@ def update_history(data: HistoryUpdate):
 
 @app.get("/words")
 def get_words():
-    # Единый профиль: выгружаем все слова
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM words ORDER BY id DESC")
@@ -157,8 +144,7 @@ def add_word(word: WordCreate):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
-        """INSERT INTO words (username, word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip) 
-           VALUES ('default', %s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s)""", 
+        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s)", 
         (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip)
     )
     conn.commit()
@@ -171,8 +157,7 @@ def edit_word(word_id: int, word: WordCreate):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s 
-        WHERE id=%s
+        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s WHERE id=%s
     """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word_id))
     conn.commit()
     cur.close()
@@ -208,6 +193,7 @@ async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder:
         
     csv_reader = csv.reader(io.StringIO(text_data), delimiter=';')
     words_added = 0
+    
     conn = get_db_connection()
     cur = conn.cursor()
     
@@ -226,8 +212,7 @@ async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder:
         ex = row[7].strip()
         
         cur.execute(
-            """INSERT INTO words (username, word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, ease_factor, interval, repetitions) 
-               VALUES ('default', %s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, 2.5, 0, 0)""", 
+            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, ease_factor, interval, repetitions) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, 2.5, 0, 0)", 
             (w_type, article, word_de, plural, word_ru, folder, level, subfolder, ex, praeteritum, partizip)
         )
         words_added += 1
@@ -294,62 +279,42 @@ def export_csv():
     conn.close()
     return StreamingResponse(iter([csv_string]), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": "attachment; filename=backup.csv"})
 
-# === AI ROUTES ===
-@app.get("/ai/slang-hang")
-def ai_slang_hang(topic: str):
-    if not AI_AVAILABLE or not ai_model:
-        return {"error": "Библиотека ИИ не установлена или проблемы с ключом."}
+@app.post("/restore_backup")
+async def restore_backup(file: UploadFile = File(...)):
+    content = await file.read()
+    try: text_data = content.decode("utf-8-sig")
+    except UnicodeDecodeError: text_data = content.decode("cp1251", errors="replace")
+    csv_reader = csv.reader(io.StringIO(text_data), delimiter=';')
+    next(csv_reader, None) 
     
-    prompt = f"""
-    Действуй как молодой носитель немецкого языка. Напиши короткий диалог между двумя друзьями на тему: "{topic}".
-    ОБЯЗАТЕЛЬНО используй современный немецкий сленг (например, krass, Digga, läuft, Bock haben и тд).
-    Верни СТРОГО JSON-объект (без markdown разметки ```json):
-    {{
-        "title": "Название диалога",
-        "dialogue": [
-            {{"speaker": "A", "de": "реплика", "ru": "живой перевод"}},
-            {{"speaker": "B", "de": "реплика", "ru": "живой перевод"}}
-        ],
-        "slang_explained": [
-            {{"de": "сленговое слово из текста", "ru": "что оно означает"}}
-        ]
-    }}
-    """
-    try:
-        response = ai_model.generate_content(prompt)
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        return json.loads(text)
-    except Exception as e:
-        return {"error": f"Ошибка генерации: {str(e)}"}
-
-@app.post("/ai/word-cam")
-async def ai_word_cam(file: UploadFile = File(...)):
-    if not AI_AVAILABLE or not ai_model:
-        return {"error": "Библиотека ИИ не установлена или проблемы с ключом."}
-    try:
-        image_bytes = await file.read()
-        image_part = {
-            "mime_type": file.content_type,
-            "data": image_bytes
-        }
-        prompt = """
-        Посмотри на это изображение. Найди 3-5 главных объектов на нем. 
-        Верни СТРОГО JSON-объект в следующем формате (без markdown разметки ```json):
-        {
-            "objects": [
-                {"de": "слово с артиклем (например, der Tisch)", "ru": "перевод на русский"}
-            ],
-            "phrase": {
-                "de": "Одна короткая полезная фраза на немецком, описывающая картинку.",
-                "ru": "Перевод этой фразы на русский."
-            }
-        }
-        """
-        response = ai_model.generate_content([prompt, image_part])
-        text = response.text.replace('```json', '').replace('```', '').strip()
-        return json.loads(text)
-    except Exception as e:
-        return {"error": f"Ошибка обработки: {str(e)}"}
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM words")
+    
+    words_added = 0
+    for row in csv_reader:
+        if len(row) < 10: continue 
+        try:
+            score = int(row[8]) if row[8] else 0
+            next_rev = int(row[10]) if len(row) > 10 and row[10] else 0
+            plural_val = row[11] if len(row) > 11 else ""
+            praet = row[12] if len(row) > 12 else ""
+            part = row[13] if len(row) > 13 else ""
+            ease = float(row[14]) if len(row) > 14 and row[14] else 2.5
+            interv = int(row[15]) if len(row) > 15 and row[15] else 0
+            reps = int(row[16]) if len(row) > 16 and row[16] else 0
+            
+            cur.execute(
+                "INSERT INTO words (word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip, ease_factor, interval, repetitions) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                (row[1], row[2], row[3], row[4], row[5], row[6], row[7], score, row[9], next_rev, plural_val, praet, part, ease, interv, reps)
+            )
+            words_added += 1
+        except: continue
+            
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success", "restored": words_added}
 
 @app.get("/")
 def serve_html(): return FileResponse("index.html")

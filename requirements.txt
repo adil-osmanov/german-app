@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-pydantic
-psycopg2-binary
 python-multipart
-google-generativeai
+psycopg2-binary
+pydantic
