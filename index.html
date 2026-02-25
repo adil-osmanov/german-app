@@ -83,7 +83,9 @@
 
             <div id="train-card-block" class="hidden w-full bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg text-center relative flex flex-col transition-all border border-gray-100 dark:border-gray-800 mt-2 sm:mt-6">
                 <button id="btn-stop-training" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold z-10 transition-colors">×</button>
+                
                 <div class="mb-3"><span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">Узнавание</span></div>
+                
                 <div class="mb-5 w-full px-1">
                     <div class="flex justify-between text-[10px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
                         <span id="train-card-progress-text">Уровень: 0/4</span>
@@ -151,21 +153,38 @@
             </div>
         </section>
 
-        <section id="view-builder" class="hidden relative pt-2 pb-6">
-            <div id="builder-setup" class="text-center mt-10 animate-in fade-in duration-300">
-                <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
-                </div>
-                <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">Слепая сборка</h2>
-                <p class="text-gray-500 text-sm mb-8 max-w-[280px] mx-auto leading-relaxed">Собери немецкую фразу, опираясь только на смысл и грамматику. Берегись слов-ловушек!</p>
-                <button onclick="startBuilder()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-blue-500/30 active:scale-95 transition-all">Начать</button>
-            </div>
+        <section id="view-practice" class="hidden relative pt-4 pb-6">
             
+            <div id="practice-menu" class="space-y-4 px-2">
+                <div class="mb-4 mt-2 text-center">
+                    <h2 class="text-3xl font-black tracking-tight mb-2">Практика</h2>
+                    <p class="text-gray-500 text-sm leading-relaxed">Мини-игры для отработки сложных навыков.</p>
+                </div>
+
+                <button onclick="startBuilder()" class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-lg shadow-blue-500/20 text-white flex justify-between items-center group">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Синтаксис</span>
+                        <h3 class="text-xl font-bold">Конструктор фраз</h3>
+                        <p class="text-blue-100 text-xs font-medium mt-1">Собирай предложения из своих примеров.</p>
+                    </div>
+                    <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl">🧩</div>
+                </button>
+
+                <button onclick="startVerbTrainer()" class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-lg shadow-red-500/20 text-white flex justify-between items-center group">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Грамматика</span>
+                        <h3 class="text-xl font-bold">Тренажер глаголов</h3>
+                        <p class="text-orange-100 text-xs font-medium mt-1">Вспоминай формы Präteritum и Partizip II.</p>
+                    </div>
+                    <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl">⚔️</div>
+                </button>
+            </div>
+
             <div id="builder-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
                 <div class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800">
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Собери оригинал</span>
-                        <button onclick="document.getElementById('builder-game').classList.add('hidden'); document.getElementById('builder-setup').classList.remove('hidden');" class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
+                        <button onclick="document.getElementById('builder-game').classList.add('hidden'); document.getElementById('practice-menu').classList.remove('hidden');" class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
                     </div>
                     
                     <p id="builder-target-word" class="text-sm font-medium text-gray-500 mb-5 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-center leading-relaxed"></p>
@@ -178,8 +197,40 @@
                     
                     <button id="btn-check-builder" onclick="checkBuilder()" class="w-full bg-gray-100 dark:bg-gray-800 text-gray-400 font-bold py-3.5 rounded-xl mt-6 transition-all border border-transparent" disabled>Проверить</button>
                 </div>
-                <p class="text-center text-[10px] text-gray-400 mt-4 italic">* Глаголы подсвечены синим, чтобы ты не забыл поставить их на 2-е место.</p>
+                <p class="text-center text-[10px] text-gray-400 mt-4 px-4 leading-relaxed">* Осторожно: в списке есть слова-ловушки. Пунктуация убрана специально.</p>
             </div>
+
+            <div id="verb-trainer-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
+                <div class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 relative">
+                    <button onclick="document.getElementById('verb-trainer-game').classList.add('hidden'); document.getElementById('practice-menu').classList.remove('hidden');" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold z-10 transition-colors">×</button>
+                    
+                    <div class="mb-4 text-center">
+                        <span class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">Формы глагола</span>
+                    </div>
+
+                    <div class="text-center mb-6">
+                        <p class="text-sm font-medium text-gray-400 mb-1" id="vt-translation"></p>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white" id="vt-infinitive">Загрузка...</h2>
+                        <span class="text-[10px] font-medium text-gray-400 mt-1 block" id="vt-counter">Осталось: 0</span>
+                    </div>
+
+                    <div class="space-y-3 mb-6">
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1 ml-1">2 форма (Präteritum)</label>
+                            <input type="text" id="vt-praeteritum" placeholder="напр. machte" autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-orange-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all text-sm text-center">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1 ml-1">3 форма (Partizip II)</label>
+                            <input type="text" id="vt-partizip" placeholder="напр. gemacht" autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-orange-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all text-sm text-center">
+                        </div>
+                    </div>
+
+                    <div id="vt-feedback" class="hidden w-full text-center py-3 rounded-xl font-bold text-sm mb-4 transition-all"></div>
+
+                    <button id="btn-check-vt" onclick="checkVerbTrainer()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-md shadow-orange-500/20 active:scale-95 transition-all">Проверить</button>
+                </div>
+            </div>
+
         </section>
 
         <section id="view-stats" class="hidden pb-10 pt-4"></section>
@@ -228,24 +279,17 @@
                             <input type="text" id="word-praeteritum" placeholder="Präteritum..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
                             <input type="text" id="word-partizip" placeholder="Partizip II..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
                         </div>
-                         <div id="add-umlauts" class="flex justify-center gap-2 mt-2 mb-2">
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ä</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ö</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ü</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-100 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-base text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">ß</button>
-                        </div>
                         <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition-all text-sm">
                         <input type="text" id="word-example" placeholder="Пример (необязательно)..." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white transition-all">
                         <div class="flex w-full gap-2">
-                            <div class="flex-[2] min-w-0"><input type="text" id="word-folder" list="folder-list" placeholder="Курс (напр. Учебник)" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
+                            <div class="flex-[2] min-w-0"><input type="text" id="word-folder" list="folder-list" placeholder="Курс" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
                             <div class="flex-[1] min-w-0"><input type="text" id="word-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-center uppercase"></div>
-                            <div class="flex-[2] min-w-0"><input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема (напр. Урок 1)" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
+                            <div class="flex-[2] min-w-0"><input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
                         </div>
                         <button type="submit" class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-blue-500/20">Сохранить</button>
                     </form>
                 </div>
                  <div class="hidden space-y-3" id="form-bulk">
-                    <p class="text-xs text-gray-500 text-center mb-3">Загрузка списка слов в формате .csv</p>
                     <div class="flex w-full gap-2">
                         <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
                         <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none font-medium text-gray-900 dark:text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
@@ -274,9 +318,9 @@
                  <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 <span class="text-[9px] font-medium group-[.active-tab]:text-blue-500 truncate">Учить</span>
             </button>
-            <button id="nav-builder" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
-                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
-                <span class="text-[9px] font-medium group-[.active-tab]:text-blue-500 truncate">Сборка</span>
+            <button id="nav-practice" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
+                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-[9px] font-medium group-[.active-tab]:text-blue-500 truncate">Игры</span>
             </button>
             <button id="nav-stats" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
                 <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -297,7 +341,7 @@
         
         let sessionStartMs = 0;
         const DAILY_GOAL_MINUTES = 15;
-        const MAX_SCORE = 4; // Турбо-режим! Раньше было 6
+        const MAX_SCORE = 4;
         
         let dictTabFilter = 'active'; 
         let trainDirection = 'auto'; 
@@ -309,16 +353,9 @@
         let recognition = null;
         if (SpeechRecognition) { recognition = new SpeechRecognition(); recognition.interimResults = false; recognition.maxAlternatives = 1; }
 
-        // --- АЛГОРИТМ SM-2 (ТУРБО) ---
         function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5) {
-            if (quality < 3) {
-                repetitions = 0; interval = 0; 
-            } else {
-                if (repetitions === 0) interval = 1;
-                else if (repetitions === 1) interval = 4; // Агрессивный старт
-                else interval = Math.round(interval * easeFactor * 1.2); // +20% турбо-буст
-                repetitions++;
-            }
+            if (quality < 3) { repetitions = 0; interval = 0; } 
+            else { if (repetitions === 0) interval = 1; else if (repetitions === 1) interval = 4; else interval = Math.round(interval * easeFactor * 1.2); repetitions++; }
             easeFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
             if (easeFactor < 1.3) easeFactor = 1.3;
             return { repetitions, interval, easeFactor };
@@ -344,39 +381,26 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
         const darkIcon = document.getElementById('theme-toggle-dark-icon');
         const lightIcon = document.getElementById('theme-toggle-light-icon');
-
-        const updateIcons = () => {
-            if (document.documentElement.classList.contains('dark')) { darkIcon.classList.add('hidden'); lightIcon.classList.remove('hidden'); } 
-            else { lightIcon.classList.add('hidden'); darkIcon.classList.remove('hidden'); }
-        };
+        const updateIcons = () => { if (document.documentElement.classList.contains('dark')) { darkIcon.classList.add('hidden'); lightIcon.classList.remove('hidden'); } else { lightIcon.classList.add('hidden'); darkIcon.classList.remove('hidden'); } };
         updateIcons();
-
-        themeToggleBtn.onclick = () => {
-            document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; updateIcons();
-        };
-
-        window.speakWord = (text, event) => {
-            if (event) event.stopPropagation();
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text); u.lang = 'de-DE'; u.rate = 0.85; window.speechSynthesis.speak(u);
-        };
-
+        themeToggleBtn.onclick = () => { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; updateIcons(); };
+        
+        window.speakWord = (text, event) => { if (event) event.stopPropagation(); window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'de-DE'; u.rate = 0.85; window.speechSynthesis.speak(u); };
         window.activeInput = null; document.addEventListener('focusin', e => { if(e.target.tagName === 'INPUT') window.activeInput = e.target; });
-
         window.insertChar = (char, event) => {
-            event.preventDefault(); 
-            if (!window.activeInput) return;
+            event.preventDefault(); if (!window.activeInput) return;
             const start = window.activeInput.selectionStart; const end = window.activeInput.selectionEnd; const val = window.activeInput.value;
-            window.activeInput.value = val.slice(0, start) + char + val.slice(end);
-            window.activeInput.selectionStart = window.activeInput.selectionEnd = start + 1;
-            window.activeInput.dispatchEvent(new Event('input'));
+            window.activeInput.value = val.slice(0, start) + char + val.slice(end); window.activeInput.selectionStart = window.activeInput.selectionEnd = start + 1; window.activeInput.dispatchEvent(new Event('input'));
         };
-
         const handleEnter = (e) => {
             if (e.key === 'Enter') {
                 const btnCheck = document.getElementById('btn-check-manual'); const btnNext = document.getElementById('btn-show-answer');
+                const btnCheckBuilder = document.getElementById('btn-check-builder'); const btnCheckVt = document.getElementById('btn-check-vt');
+                
                 if (btnCheck && !btnCheck.disabled && !document.getElementById('train-manual-block').classList.contains('hidden')) { e.preventDefault(); btnCheck.click(); } 
                 else if (btnNext && !btnNext.classList.contains('hidden')) { e.preventDefault(); btnNext.click(); }
+                else if (btnCheckBuilder && !btnCheckBuilder.disabled && !document.getElementById('builder-game').classList.contains('hidden')) { e.preventDefault(); btnCheckBuilder.click(); }
+                else if (btnCheckVt && !btnCheckVt.disabled && !document.getElementById('verb-trainer-game').classList.contains('hidden')) { e.preventDefault(); btnCheckVt.click(); }
             }
         };
         document.addEventListener('keydown', handleEnter);
@@ -386,17 +410,13 @@
                 const elapsedMs = Date.now() - sessionStartMs;
                 const tzoffset = (new Date()).getTimezoneOffset() * 60000;
                 const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
-                try {
-                    await apiFetch('/history', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({date_str: localISOTime, ms_spent: elapsedMs}) });
-                } catch(e) { 
-                    try { let h = JSON.parse(localStorage.getItem('studyHistory')) || {}; h[localISOTime] = (h[localISOTime]||0) + elapsedMs; localStorage.setItem('studyHistory', JSON.stringify(h)); } catch(err){}
-                }
+                try { await apiFetch('/history', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({date_str: localISOTime, ms_spent: elapsedMs}) }); } catch(e) {}
                 sessionStartMs = 0;
             }
         }
 
-        const views = { dict: document.getElementById('view-dict'), train: document.getElementById('view-train'), builder: document.getElementById('view-builder'), stats: document.getElementById('view-stats') };
-        const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), builder: document.getElementById('nav-builder'), stats: document.getElementById('nav-stats') };
+        const views = { dict: document.getElementById('view-dict'), train: document.getElementById('view-train'), practice: document.getElementById('view-practice'), stats: document.getElementById('view-stats') };
+        const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), practice: document.getElementById('nav-practice'), stats: document.getElementById('nav-stats') };
         const isWordDue = (w) => Date.now() >= (w.next_review || 0);
 
         async function fetchWords() {
@@ -418,24 +438,28 @@
         }
 
         async function switchView(target) {
-            if (target !== 'train' && target !== 'builder') saveSessionTime();
+            if (target !== 'train' && target !== 'practice') saveSessionTime();
 
             Object.keys(views).forEach(v => {
                 const isActive = (v === target);
                 views[v].classList.toggle('hidden', !isActive);
                 navBtns[v].classList.toggle('active-tab', isActive);
-                if(isActive) navBtns[v].classList.remove('text-gray-400');
-                else navBtns[v].classList.add('text-gray-400');
+                if(isActive) navBtns[v].classList.remove('text-gray-400'); else navBtns[v].classList.add('text-gray-400');
             });
             document.getElementById('header-title').innerText = "Обновление...";
             document.getElementById('add-btn').classList.toggle('hidden', target !== 'dict');
             
             await fetchWords();
-            document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', builder:'Сборка предложений', stats:'Прогресс'}[target];
+            document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', practice:'Мини-игры', stats:'Прогресс'}[target];
             
             try {
                 if (target === 'dict') renderDict();
                 if (target === 'train') setupTrainMenu();
+                if (target === 'practice') {
+                    document.getElementById('practice-menu').classList.remove('hidden');
+                    document.getElementById('builder-game').classList.add('hidden');
+                    document.getElementById('verb-trainer-game').classList.add('hidden');
+                }
                 if (target === 'stats') loadStats();
             } catch(e) {}
             window.scrollTo(0, 0);
@@ -443,16 +467,16 @@
 
         navBtns.dict.onclick = () => switchView('dict');
         navBtns.train.onclick = () => switchView('train');
-        navBtns.builder.onclick = () => switchView('builder');
+        navBtns.practice.onclick = () => switchView('practice');
         navBtns.stats.onclick = () => switchView('stats');
 
         window.selectArticle = (art) => {
             currentArticle = art;
             const btns = { der: document.getElementById('btn-art-der'), die: document.getElementById('btn-art-die'), das: document.getElementById('btn-art-das') };
             Object.values(btns).forEach(b => { b.className = "flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700"; });
-            if (art === 'der') btns.der.className = "flex-1 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium transition-all shadow-sm text-sm";
-            else if (art === 'die') btns.die.className = "flex-1 py-2 rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium transition-all shadow-sm text-sm";
-            else if (art === 'das') btns.das.className = "flex-1 py-2 rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium transition-all shadow-sm text-sm";
+            if (art === 'der') btns.der.className = "flex-1 py-2 rounded-lg border-2 border-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium transition-all shadow-sm text-sm";
+            else if (art === 'die') btns.die.className = "flex-1 py-2 rounded-lg border-2 border-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium transition-all shadow-sm text-sm";
+            else if (art === 'das') btns.das.className = "flex-1 py-2 rounded-lg border-2 border-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium transition-all shadow-sm text-sm";
         };
 
         const wordInp = document.getElementById('word-de');
@@ -475,7 +499,6 @@
 
         const searchInp = document.getElementById('search-input');
         searchInp.oninput = () => { if (searchInp.value.trim().length > 0) collapsedDictTopics = {}; renderDict(searchInp.value.toLowerCase()); };
-
         window.toggleTopic = (topicKey) => { collapsedDictTopics[topicKey] = !collapsedDictTopics[topicKey]; renderDict(searchInp.value.toLowerCase()); };
 
         function renderDict(query = searchInp.value.toLowerCase()) {
@@ -486,8 +509,7 @@
                 else filtered = filtered.filter(w => w.score >= MAX_SCORE);
 
                 if (filtered.length === 0) {
-                    container.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 font-medium text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все текущие слова выучены 🎉'}</p></div>`;
-                    return;
+                    container.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 font-medium text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все текущие слова выучены 🎉'}</p></div>`; return;
                 }
 
                 const colors = { der: 'text-der', die: 'text-die', das: 'text-das' };
@@ -502,10 +524,7 @@
                 try { savedFolderOrder = JSON.parse(localStorage.getItem('folderOrder')) || []; } catch(e){}
                 try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch(e){}
 
-                const folderNames = Object.keys(grouped).sort((a, b) => {
-                    let idxA = savedFolderOrder.indexOf(a); let idxB = savedFolderOrder.indexOf(b);
-                    if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB;
-                });
+                const folderNames = Object.keys(grouped).sort((a, b) => { let idxA = savedFolderOrder.indexOf(a); let idxB = savedFolderOrder.indexOf(b); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
 
                 let html = '<div id="dict-folders-container">';
                 folderNames.forEach(f => {
@@ -527,10 +546,7 @@
                     
                     let topics = [];
                     for (const l in grouped[f]) { for (const s in grouped[f][l]) { topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` }); } }
-                    topics.sort((a, b) => {
-                        let orderArr = savedTopicOrder[f] || []; let idxA = orderArr.indexOf(a.key); let idxB = orderArr.indexOf(b.key);
-                        if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB;
-                    });
+                    topics.sort((a, b) => { let orderArr = savedTopicOrder[f] || []; let idxA = orderArr.indexOf(a.key); let idxB = orderArr.indexOf(b.key); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
 
                     topics.forEach(t => {
                         const l = t.l; const s = t.s; const wordsInTopic = t.words; const topicKey = t.key;
@@ -615,7 +631,7 @@
         window.renameFolder = async (oldFolder) => {
             const newFolder = prompt(`Введите новое название для курса "${oldFolder}":`, oldFolder);
             if (newFolder && newFolder.trim() !== '' && newFolder.trim() !== oldFolder) {
-                try { await apiFetch('/words/rename_folder', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_folder: oldFolder, new_folder: newFolder.trim()}) }); await fetchWords(); renderDict(); } catch(e) { alert('Ошибка сети!'); }
+                try { await apiFetch('/words/rename_folder', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_folder: oldFolder, new_folder: newFolder.trim()}) }); await fetchWords(); renderDict(); } catch(e) {}
             }
         };
 
@@ -627,7 +643,7 @@
                     const oldKey = `${f}|${l}|${oldS}`; const newKey = `${f}|${l}|${newS.trim()}`;
                     if (collapsedDictTopics[oldKey] !== undefined) { collapsedDictTopics[newKey] = collapsedDictTopics[oldKey]; delete collapsedDictTopics[oldKey]; }
                     await fetchWords(); renderDict();
-                } catch(e) { alert('Ошибка сети!'); }
+                } catch(e) {}
             }
         };
 
@@ -952,7 +968,7 @@
             } else if (btnMic) { btnMic.classList.add('hidden'); }
 
             const ansEx = document.getElementById('train-answer-example');
-            if (w.example && ansEx) { ansEx.innerText = '"' + w.example + '"'; ansEx.classList.remove('hidden'); } else if (ansEx) ansEx.classList.add('hidden');
+            if (w.example && ansEx) { ansEx.innerText = '"' + extractGermanSentence(w.example) + '"'; ansEx.classList.remove('hidden'); } else if (ansEx) ansEx.classList.add('hidden');
 
             document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru||'') : fullGerman;
             if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerText = `мн. ч.: die ${w.plural}`;
@@ -976,7 +992,11 @@
                 if(badge) { badge.innerText = `Письмо (Финал)`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
                 if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
                 if(!currentIsGermanQuestion && w.example && exQ) { 
-                    try { const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); exQ.innerHTML = escapeStr(w.example).replace(new RegExp(safeWord, 'ig'), '_____'); } catch(e) { exQ.innerHTML = escapeStr(w.example); }
+                    try { 
+                        const deSentence = extractGermanSentence(w.example);
+                        const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+                        exQ.innerHTML = escapeStr(deSentence).replace(new RegExp(safeWord, 'ig'), '_____'); 
+                    } catch(e) { exQ.innerHTML = escapeStr(w.example); }
                     exQ.classList.remove('hidden'); 
                 }
                 
@@ -1072,7 +1092,15 @@
             }
         };
 
-        // --- КОНСТРУКТОР ФРАЗ 2.0 (С ловушками и якорями) ---
+        // --- УТИЛИТА ПАРСИНГА ПРИМЕРОВ ---
+        function extractGermanSentence(ex) {
+            if (!ex) return "";
+            // Отрезаем русский перевод после тире, скобок или слэша
+            let text = ex.split(/[-—(/]/)[0].trim();
+            return text;
+        }
+
+        // --- МИНИ-ИГРА 1: КОНСТРУКТОР ФРАЗ ---
         let builderTarget = "";
         let builderWords = [];
         let builderSelected = [];
@@ -1084,28 +1112,40 @@
         }
 
         window.startBuilder = () => {
-            const wordsWithEx = globalWords.filter(w => w.example && w.example.trim().length > 5);
-            if(wordsWithEx.length === 0) return alert("Добавьте примеры к словам, чтобы использовать конструктор!");
-            
-            const randomWord = wordsWithEx[Math.floor(Math.random() * wordsWithEx.length)];
-            builderTarget = randomWord.example.trim();
-            
-            // Чистим пунктуацию, чтобы не было подсказок, и разбиваем на блоки
-            const cleanWords = builderTarget.replace(/[.,?!]/g, '').split(/\s+/).filter(Boolean);
-            let pool = [...cleanWords];
+            // Фильтруем: пример должен быть, отрезаем перевод, проверяем длину и отсутствие двоеточий
+            const validWords = globalWords.filter(w => {
+                if (!w.example || (w.word_type !== 'noun' && w.word_type !== 'verb')) return false;
+                let deText = extractGermanSentence(w.example);
+                if (deText.includes(':')) return false; // Убираем списки типа "Buchstabe: a s w"
+                let parts = deText.split(/\s+/);
+                return parts.length >= 3 && parts.length <= 8; // Только нормальные предложения
+            });
 
-            // Подкидываем 2 случайных слова-ловушки (дистракторы)
+            if(validWords.length === 0) return alert("Не найдено подходящих предложений в ваших примерах!");
+            
+            const randomWord = validWords[Math.floor(Math.random() * validWords.length)];
+            
+            // Чистое немецкое предложение без русского перевода
+            builderTarget = extractGermanSentence(randomWord.example); 
+            
+            // Убираем знаки препинания для усложнения
+            const cleanText = builderTarget.replace(/[.,?!]/g, '').trim();
+            let pool = cleanText.split(/\s+/).filter(Boolean);
+
+            // Подкидываем 2 случайных слова-ловушки из словаря
             const availableDistractors = globalWords.filter(w => w.word_de && !pool.includes(w.word_de));
-            const distractors = availableDistractors.sort(() => 0.5 - Math.random()).slice(0, 2).map(w => w.word_de);
-            pool = pool.concat(distractors);
+            if (availableDistractors.length >= 2) {
+                const distractors = availableDistractors.sort(() => 0.5 - Math.random()).slice(0, 2).map(w => w.word_de);
+                pool = pool.concat(distractors);
+            }
             
             builderWords = shuffle(pool);
             builderSelected = [];
 
-            document.getElementById('builder-setup').classList.add('hidden');
+            document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('builder-game').classList.remove('hidden');
             
-            // Слепая сборка: показываем только русское слово, никаких немецких подсказок
+            // Слепая сборка: показываем только русский перевод слова, чтобы вспомнить контекст
             document.getElementById('builder-target-word').innerHTML = `Собери оригинальную фразу, содержащую слово:<br><strong class="text-blue-500 text-lg block mt-2">${randomWord.word_ru}</strong>`;
             
             renderBuilder();
@@ -1117,17 +1157,13 @@
             const btnCheck = document.getElementById('btn-check-builder');
             const feedback = document.getElementById('builder-feedback');
             
-            // Массив известных глаголов для подсветки (Якорь)
-            const knownVerbs = new Set(globalWords.filter(w => w.word_type === 'verb').map(w => w.word_de.toLowerCase()));
-
             feedback.classList.add('hidden');
             btnCheck.disabled = builderSelected.length === 0;
             btnCheck.className = builderSelected.length === 0 ? "w-full bg-gray-100 dark:bg-gray-800 text-gray-400 font-bold py-3.5 rounded-xl mt-6 transition-all border border-transparent" : "w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-6 shadow-md shadow-blue-500/20 active:scale-95 transition-all";
 
+            // Обычный рендер без подсветки глаголов
             pool.innerHTML = builderWords.map((w, i) => {
-                const isVerb = knownVerbs.has(w.toLowerCase());
-                const verbStyle = isVerb ? "border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.4)]" : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200";
-                return `<button onclick="builderSelect(${i})" class="px-4 py-2 bg-white dark:bg-gray-800 border ${verbStyle} shadow-sm rounded-lg font-medium active:scale-95 transition-transform">${w}</button>`;
+                return `<button onclick="builderSelect(${i})" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 shadow-sm rounded-lg font-medium active:scale-95 transition-transform">${w}</button>`;
             }).join('');
             
             dropzone.innerHTML = builderSelected.map((w, i) => `<button onclick="builderDeselect(${i})" class="px-4 py-2 bg-blue-500 text-white shadow-md rounded-lg font-bold active:scale-95 transition-transform animate-in zoom-in duration-200">${w}</button>`).join('');
@@ -1158,7 +1194,82 @@
             }
         };
 
-        // --- ТЕПЛОВАЯ КАРТА ---
+        // --- МИНИ-ИГРА 2: ТРЕНАЖЕР ГЛАГОЛОВ ---
+        let verbQueue = [];
+        let currentVerbIdx = 0;
+
+        window.startVerbTrainer = () => {
+            verbQueue = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip);
+            if (verbQueue.length === 0) return alert("Добавьте глаголы с формами Präteritum и Partizip II в словарь!");
+            
+            verbQueue = shuffle(verbQueue);
+            currentVerbIdx = 0;
+            
+            document.getElementById('practice-menu').classList.add('hidden');
+            document.getElementById('verb-trainer-game').classList.remove('hidden');
+            renderVerbTrainer();
+        };
+
+        function renderVerbTrainer() {
+            if (currentVerbIdx >= verbQueue.length) {
+                alert("Отлично! Все глаголы повторили.");
+                document.getElementById('verb-trainer-game').classList.add('hidden');
+                document.getElementById('practice-menu').classList.remove('hidden');
+                return;
+            }
+
+            const w = verbQueue[currentVerbIdx];
+            document.getElementById('vt-counter').innerText = `Осталось: ${verbQueue.length - currentVerbIdx}`;
+            document.getElementById('vt-translation').innerText = w.word_ru;
+            document.getElementById('vt-infinitive').innerText = w.word_de;
+
+            document.getElementById('vt-praeteritum').value = '';
+            document.getElementById('vt-partizip').value = '';
+            document.getElementById('vt-praeteritum').disabled = false;
+            document.getElementById('vt-partizip').disabled = false;
+            
+            const btnCheck = document.getElementById('btn-check-vt');
+            btnCheck.disabled = false;
+            btnCheck.className = "w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-md shadow-orange-500/20 active:scale-95 transition-all";
+            
+            const feedback = document.getElementById('vt-feedback');
+            feedback.classList.add('hidden');
+            
+            setTimeout(() => document.getElementById('vt-praeteritum').focus(), 150);
+        }
+
+        window.checkVerbTrainer = () => {
+            const w = verbQueue[currentVerbIdx];
+            const praetInp = document.getElementById('vt-praeteritum').value.trim().toLowerCase();
+            const partInp = document.getElementById('vt-partizip').value.trim().toLowerCase();
+            
+            const expectedPraet = w.praeteritum.toLowerCase();
+            const expectedPart = w.partizip.toLowerCase();
+            
+            const isCorrect = (praetInp === expectedPraet) && (partInp === expectedPart);
+            
+            document.getElementById('vt-praeteritum').disabled = true;
+            document.getElementById('vt-partizip').disabled = true;
+            const btnCheck = document.getElementById('btn-check-vt');
+            btnCheck.disabled = true;
+            
+            const feedback = document.getElementById('vt-feedback');
+            feedback.classList.remove('hidden');
+
+            if (isCorrect) {
+                feedback.className = "w-full text-center py-3 rounded-xl font-bold text-sm mb-4 transition-all bg-green-50 text-green-600 border border-green-200 dark:bg-green-900/20 dark:border-green-800 animate-in fade-in zoom-in";
+                feedback.innerText = "Идеально!";
+                setTimeout(() => { currentVerbIdx++; renderVerbTrainer(); }, 1000);
+            } else {
+                feedback.className = "w-full text-center py-3 rounded-xl font-bold text-sm mb-4 transition-all bg-red-50 text-red-600 border border-red-200 dark:bg-red-900/20 dark:border-red-800 animate-in fade-in zoom-in";
+                feedback.innerHTML = `Ошибка.<br><span class="font-normal text-xs">Правильно: ${expectedPraet}, ${expectedPart}</span>`;
+                // Закидываем в конец очереди, если ошибся
+                verbQueue.push({...w});
+                setTimeout(() => { currentVerbIdx++; renderVerbTrainer(); }, 3000);
+            }
+        };
+
+        // --- СТАТИСТИКА И ТЕПЛОВАЯ КАРТА ---
         function generateHeatmap(history) {
             let html = '<div class="flex gap-1.5 overflow-x-auto pb-2 scroll-smooth">';
             let cols = []; let currCol = [];
@@ -1243,7 +1354,6 @@
                 }
                 let minutesToday = Math.floor((serverHistory[todayIso] || 0) / 60000);
 
-                // Динамические уровни ачивок
                 const nextMilestone = (current, tiers) => tiers.find(t => current < t) || tiers[tiers.length - 1];
                 const wordsMax = nextMilestone(mastered, [50, 200, 500, 1000]);
                 const totalWordsMax = nextMilestone(total, [100, 500, 1000, 3000]);
@@ -1276,7 +1386,7 @@
 
                     <div class="bg-white dark:bg-gray-800 p-5 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
                         <div class="flex justify-between items-center mb-5">
-                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">Github Активность (Стрик: ${streak} <svg class="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-1.245-1.134-1.766-.153-.52-.175-1.043-.175-1.534z" clip-rule="evenodd" /></svg>)</h3>
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">Активность (Стрик: ${streak} <svg class="w-3 h-3 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-1.245-1.134-1.766-.153-.52-.175-1.043-.175-1.534z" clip-rule="evenodd" /></svg>)</h3>
                              <span class="text-xs font-bold text-gray-400">Сегодня: ${minutesToday}/${DAILY_GOAL_MINUTES} мин</span>
                         </div>
                         ${generateHeatmap(serverHistory)}
