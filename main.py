@@ -1,20 +1,44 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 import psycopg2
+from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
 import os
 import csv
 import io
 
 app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_rgLF4vIjyqH1@ep-sparkling-truth-aiwf28f5-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require")
 
+try:
+    connection_pool = pool.SimpleConnectionPool(1, 20, DATABASE_URL, cursor_factory=RealDictCursor)
+except Exception as e:
+    connection_pool = None
+
+class DBConnection:
+    def __init__(self):
+        self.conn = connection_pool.getconn() if connection_pool else psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        self.is_pooled = connection_pool is not None
+    def cursor(self, *args, **kwargs):
+        return self.conn.cursor(*args, **kwargs)
+    def commit(self):
+        self.conn.commit()
+    def rollback(self):
+        self.conn.rollback()
+    def close(self):
+        if self.is_pooled:
+            connection_pool.putconn(self.conn)
+        else:
+            self.conn.close()
+
 def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    return DBConnection()
 
 def init_db():
     conn = get_db_connection()
@@ -33,32 +57,42 @@ def init_db():
             example TEXT DEFAULT '',
             level TEXT DEFAULT '',
             next_review BIGINT DEFAULT 0,
-            plural TEXT DEFAULT ''
+            plural TEXT DEFAULT '',
+            praeteritum TEXT DEFAULT '',
+            partizip TEXT DEFAULT '',
+            ease_factor REAL DEFAULT 2.5,
+            interval INTEGER DEFAULT 0,
+            repetitions INTEGER DEFAULT 0,
+            username TEXT DEFAULT 'osman'
         )
     """)
     # Таблица облачной истории изучения
     cur.execute("""
         CREATE TABLE IF NOT EXISTS study_history (
-            date_str TEXT PRIMARY KEY,
-            ms_spent BIGINT DEFAULT 0
+            date_str TEXT,
+            ms_spent BIGINT DEFAULT 0,
+            username TEXT DEFAULT 'osman',
+            PRIMARY KEY (date_str, username)
         )
     """)
     conn.commit()
-    
-    # Добавляем колонки для SM-2
-    columns_to_add = [
-        ("praeteritum", "TEXT DEFAULT ''"),
-        ("partizip", "TEXT DEFAULT ''"),
-        ("ease_factor", "REAL DEFAULT 2.5"),
-        ("interval", "INTEGER DEFAULT 0"),
-        ("repetitions", "INTEGER DEFAULT 0")
-    ]
-    for col_name, col_type in columns_to_add:
-        try:
-            cur.execute(f"ALTER TABLE words ADD COLUMN {col_name} {col_type}")
-            conn.commit()
-        except Exception:
-            conn.rollback() 
+
+    # Миграция: добавление username в старые таблицы
+    try:
+        cur.execute("ALTER TABLE words ADD COLUMN username TEXT DEFAULT 'osman'")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        
+    try:
+        cur.execute("ALTER TABLE study_history ADD COLUMN username TEXT DEFAULT 'osman'")
+        conn.commit()
+        # Если колонка добавилась, надо обновить PRIMARY KEY
+        cur.execute("ALTER TABLE study_history DROP CONSTRAINT IF EXISTS study_history_pkey CASCADE")
+        cur.execute("ALTER TABLE study_history ADD PRIMARY KEY (date_str, username)")
+        conn.commit()
+    except Exception:
+        conn.rollback()
 
     cur.close()
     conn.close()
@@ -105,47 +139,47 @@ class HistoryUpdate(BaseModel):
     ms_spent: int
 
 @app.get("/history")
-def get_history():
+def get_history(x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT date_str, ms_spent FROM study_history")
+    cur.execute("SELECT date_str, ms_spent FROM study_history WHERE username = %s", (x_user,))
     rows = cur.fetchall()
     cur.close()
     conn.close()
     return {row['date_str']: row['ms_spent'] for row in rows}
 
 @app.post("/history")
-def update_history(data: HistoryUpdate):
+def update_history(data: HistoryUpdate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO study_history (date_str, ms_spent) 
-        VALUES (%s, %s) 
-        ON CONFLICT (date_str) 
+        INSERT INTO study_history (date_str, ms_spent, username) 
+        VALUES (%s, %s, %s) 
+        ON CONFLICT (date_str, username) 
         DO UPDATE SET ms_spent = study_history.ms_spent + EXCLUDED.ms_spent
-    """, (data.date_str, data.ms_spent))
+    """, (data.date_str, data.ms_spent, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.get("/words")
-def get_words():
+def get_words(x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM words ORDER BY id DESC")
+    cur.execute("SELECT * FROM words WHERE username = %s ORDER BY id DESC", (x_user,))
     rows = cur.fetchall()
     cur.close()
     conn.close()
     return rows
 
 @app.post("/words")
-def add_word(word: WordCreate):
+def add_word(word: WordCreate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s)", 
-        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip)
+        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, %s)", 
+        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, x_user)
     )
     conn.commit()
     cur.close()
@@ -153,41 +187,41 @@ def add_word(word: WordCreate):
     return {"status": "success"}
 
 @app.put("/words/{word_id}/full")
-def edit_word(word_id: int, word: WordCreate):
+def edit_word(word_id: int, word: WordCreate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s WHERE id=%s
-    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word_id))
+        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s WHERE id=%s AND username=%s
+    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word_id, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.put("/words/rename_folder")
-def rename_folder(data: FolderRename):
+def rename_folder(data: FolderRename, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE words SET folder = %s WHERE folder = %s", (data.new_folder, data.old_folder))
+    cur.execute("UPDATE words SET folder = %s WHERE folder = %s AND username = %s", (data.new_folder, data.old_folder, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.put("/words/rename_subfolder")
-def rename_subfolder(data: SubfolderRename):
+def rename_subfolder(data: SubfolderRename, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE words SET subfolder = %s WHERE folder = %s AND level = %s AND subfolder = %s", 
-                (data.new_subfolder, data.folder, data.level, data.old_subfolder))
+    cur.execute("UPDATE words SET subfolder = %s WHERE folder = %s AND level = %s AND subfolder = %s AND username = %s", 
+                (data.new_subfolder, data.folder, data.level, data.old_subfolder, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.post("/upload_csv")
-async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), file: UploadFile = File(...)):
-    content = await file.read()
+def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), file: UploadFile = File(...), x_user: str = Header("osman")):
+    content = file.file.read()
     try: text_data = content.decode("utf-8-sig")
     except UnicodeDecodeError: text_data = content.decode("cp1251", errors="replace")
         
@@ -212,8 +246,8 @@ async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder:
         ex = row[7].strip()
         
         cur.execute(
-            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, ease_factor, interval, repetitions) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, 2.5, 0, 0)", 
-            (w_type, article, word_de, plural, word_ru, folder, level, subfolder, ex, praeteritum, partizip)
+            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, ease_factor, interval, repetitions, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, 2.5, 0, 0, %s)", 
+            (w_type, article, word_de, plural, word_ru, folder, level, subfolder, ex, praeteritum, partizip, x_user)
         )
         words_added += 1
         
@@ -223,51 +257,51 @@ async def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder:
     return {"status": "success", "added": words_added}
 
 @app.put("/words/{word_id}/score")
-def update_score(word_id: int, data: ScoreUpdate):
+def update_score(word_id: int, data: ScoreUpdate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE words SET score = %s, next_review = %s, ease_factor = %s, interval = %s, repetitions = %s WHERE id = %s", 
-                (data.score, data.next_review, data.ease_factor, data.interval, data.repetitions, word_id))
+    cur.execute("UPDATE words SET score = %s, next_review = %s, ease_factor = %s, interval = %s, repetitions = %s WHERE id = %s AND username = %s", 
+                (data.score, data.next_review, data.ease_factor, data.interval, data.repetitions, word_id, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.put("/words/reset_folder")
-def reset_folder(data: FolderReset):
+def reset_folder(data: FolderReset, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE words SET score = 0, next_review = 0, ease_factor = 2.5, interval = 0, repetitions = 0 WHERE folder = %s AND level = %s AND subfolder = %s", (data.folder, data.level, data.subfolder))
+    cur.execute("UPDATE words SET score = 0, next_review = 0, ease_factor = 2.5, interval = 0, repetitions = 0 WHERE folder = %s AND level = %s AND subfolder = %s AND username = %s", (data.folder, data.level, data.subfolder, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.post("/words/delete_folder")
-def delete_folder(data: FolderReset):
+def delete_folder(data: FolderReset, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM words WHERE folder = %s AND level = %s AND subfolder = %s", (data.folder, data.level, data.subfolder))
+    cur.execute("DELETE FROM words WHERE folder = %s AND level = %s AND subfolder = %s AND username = %s", (data.folder, data.level, data.subfolder, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.delete("/words/{word_id}")
-def delete_word(word_id: int):
+def delete_word(word_id: int, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM words WHERE id = %s", (word_id,))
+    cur.execute("DELETE FROM words WHERE id = %s AND username = %s", (word_id, x_user))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.get("/export_csv")
-def export_csv():
+def export_csv(x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip, ease_factor, interval, repetitions FROM words")
+    cur.execute("SELECT id, word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip, ease_factor, interval, repetitions FROM words WHERE username = %s", (x_user,))
     rows = cur.fetchall()
     output = io.StringIO(newline='')
     writer = csv.writer(output, delimiter=';')
@@ -277,11 +311,11 @@ def export_csv():
     csv_string = '\ufeff' + output.getvalue()
     cur.close()
     conn.close()
-    return StreamingResponse(iter([csv_string]), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": "attachment; filename=backup.csv"})
+    return StreamingResponse(iter([csv_string]), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f"attachment; filename=backup_{x_user}.csv"})
 
 @app.post("/restore_backup")
-async def restore_backup(file: UploadFile = File(...)):
-    content = await file.read()
+def restore_backup(file: UploadFile = File(...), x_user: str = Header("osman")):
+    content = file.file.read()
     try: text_data = content.decode("utf-8-sig")
     except UnicodeDecodeError: text_data = content.decode("cp1251", errors="replace")
     csv_reader = csv.reader(io.StringIO(text_data), delimiter=';')
@@ -289,7 +323,7 @@ async def restore_backup(file: UploadFile = File(...)):
     
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM words")
+    cur.execute("DELETE FROM words WHERE username = %s", (x_user,))
     
     words_added = 0
     for row in csv_reader:
@@ -305,8 +339,8 @@ async def restore_backup(file: UploadFile = File(...)):
             reps = int(row[16]) if len(row) > 16 and row[16] else 0
             
             cur.execute(
-                "INSERT INTO words (word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip, ease_factor, interval, repetitions) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
-                (row[1], row[2], row[3], row[4], row[5], row[6], row[7], score, row[9], next_rev, plural_val, praet, part, ease, interv, reps)
+                "INSERT INTO words (word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip, ease_factor, interval, repetitions, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                (row[1], row[2], row[3], row[4], row[5], row[6], row[7], score, row[9], next_rev, plural_val, praet, part, ease, interv, reps, x_user)
             )
             words_added += 1
         except: continue

@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Wörterbuch Pro</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
@@ -10,221 +12,395 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    
+
     <script>
-        tailwind.config = { 
-            darkMode: 'class', 
-            theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } } 
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } }
         };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
-        if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
+        if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => { }); });
     </script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; height: 100dvh; }
-        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        .dark .glass { background: rgba(17, 24, 39, 0.85); border-color: rgba(255,255,255,0.05); }
-        .active-tab { color: #3b82f6; transform: translateY(-2px); }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .drag-handle-folder, .drag-handle-topic { touch-action: none; cursor: grab; }
-        .drag-handle-folder:active, .drag-handle-topic:active { cursor: grabbing; }
-        .sortable-ghost { opacity: 0.4; transform: scale(0.98); background: #f3f4f6; border-radius: 12px; }
-        .dark .sortable-ghost { background: #1f2937; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            height: 100dvh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .dark .glass {
+            background: rgba(17, 24, 39, 0.85);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .active-tab {
+            color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .drag-handle-folder,
+        .drag-handle-topic {
+            touch-action: none;
+            cursor: grab;
+        }
+
+        .drag-handle-folder:active,
+        .drag-handle-topic:active {
+            cursor: grabbing;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            transform: scale(0.98);
+            background: #f3f4f6;
+            border-radius: 12px;
+        }
+
+        .dark .sortable-ghost {
+            background: #1f2937;
+        }
 
         @keyframes foldUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-15px) scale(0.97); }
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-15px) scale(0.97);
+            }
         }
-        .animate-fold-up { animation: foldUp 0.25s ease-out forwards; }
+
+        .animate-fold-up {
+            animation: foldUp 0.25s ease-out forwards;
+        }
     </style>
 </head>
-<body class="bg-[#f2f2f7] dark:bg-black text-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen flex flex-col overflow-hidden relative">
 
-    <header class="fixed top-0 left-0 right-0 pt-12 pb-3 px-4 glass z-40 transition-all border-b border-gray-200 dark:border-gray-800">
+<body
+    class="bg-[#f2f2f7] dark:bg-black text-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen flex flex-col overflow-hidden relative">
+
+    <header
+        class="fixed top-0 left-0 right-0 pt-12 pb-3 px-4 glass z-40 transition-all border-b border-gray-200 dark:border-gray-800">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
             <h1 id="header-title" class="text-xl font-extrabold tracking-tight">Словарь</h1>
             <div class="flex items-center gap-3">
-                 <button id="theme-toggle" class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-gray-500 dark:text-gray-400">
-                    <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                    <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path></svg>
+                <button id="theme-toggle"
+                    class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-gray-500 dark:text-gray-400">
+                    <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                    <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z">
+                        </path>
+                    </svg>
                 </button>
-                <button id="add-btn" class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-blue-600 active:scale-95 transition-all text-lg font-medium shadow-md shadow-blue-500/30">+</button>
+                <button onclick="document.getElementById('profile-modal').classList.remove('hidden')"
+                    class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-gray-500 dark:text-gray-400 overflow-hidden flex items-center justify-center bg-cover bg-center"
+                    style="width: 32px; height: 32px;" id="header-avatar" title="Сменить профиль">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </button>
+                <button onclick="document.getElementById('backup-modal').classList.remove('hidden')"
+                    class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-gray-500 dark:text-gray-400"
+                    title="База данных">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                        </path>
+                    </svg>
+                </button>
+                <button id="add-btn"
+                    class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-blue-600 active:scale-95 transition-all text-lg font-medium shadow-md shadow-blue-500/30">+</button>
             </div>
         </div>
     </header>
 
     <main id="main-scroll" class="pt-28 pb-24 max-w-2xl mx-auto px-3 w-full overflow-y-auto">
-        
+
         <section id="view-dict" class="pt-4 pb-6">
             <div class="mb-5 mt-2">
                 <div class="relative group">
-                    <input type="text" id="search-input" placeholder="Поиск слов..." autocomplete="off" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl py-3 pl-10 shadow-sm outline-none focus:ring-2 ring-blue-500/50 transition-all text-gray-900 dark:text-white text-sm">
-                    <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="search-input" placeholder="Поиск слов..." autocomplete="off"
+                        class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl py-3 pl-10 shadow-sm outline-none focus:ring-2 ring-blue-500/50 transition-all text-gray-900 dark:text-white text-sm">
+                    <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                 </div>
             </div>
-            
-            <div class="flex bg-gray-200/60 dark:bg-gray-800/80 p-1 rounded-xl mb-4 border border-gray-100 dark:border-gray-800">
-                <button id="dict-tab-active" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">В процессе</button>
-                <button id="dict-tab-mastered" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-300">Архив 🏆</button>
+
+            <div
+                class="flex bg-gray-200/60 dark:bg-gray-800/80 p-1 rounded-xl mb-4 border border-gray-100 dark:border-gray-800">
+                <button id="dict-tab-active"
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">В
+                    процессе</button>
+                <button id="dict-tab-mastered"
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-300">Архив
+                    🏆</button>
             </div>
 
-            <div id="dict-list"><div class="text-center py-20"><p class="text-gray-400 text-sm animate-pulse">Загрузка данных...</p></div></div>
+            <div id="dict-list">
+                <div class="text-center py-20">
+                    <p class="text-gray-400 text-sm animate-pulse">Загрузка данных...</p>
+                </div>
+            </div>
         </section>
 
         <section id="view-train" class="hidden relative pt-2 pb-6">
             <div id="train-setup-block" class="w-full animate-in fade-in slide-in-from-bottom-4 duration-300 sm:mt-4">
-                <div class="flex bg-gray-200/60 dark:bg-gray-800/80 p-1 rounded-xl mb-4 mt-1 gap-1 border border-gray-100 dark:border-gray-800">
-                    <button id="dir-auto" onclick="setDirection('auto')" class="flex-1 py-2 text-[10px] font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-500 shadow-sm transition-all uppercase">Микс</button>
-                    <button id="dir-ru-de" onclick="setDirection('ru-de')" class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300">РУС > НЕМ</button>
-                    <button id="dir-de-ru" onclick="setDirection('de-ru')" class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300">НЕМ > РУС</button>
+                <div
+                    class="flex bg-gray-200/60 dark:bg-gray-800/80 p-1 rounded-xl mb-4 mt-1 gap-1 border border-gray-100 dark:border-gray-800">
+                    <button id="dir-auto" onclick="setDirection('auto')"
+                        class="flex-1 py-2 text-[10px] font-bold rounded-lg bg-white dark:bg-gray-700 text-blue-500 shadow-sm transition-all uppercase">Микс</button>
+                    <button id="dir-ru-de" onclick="setDirection('ru-de')"
+                        class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300">РУС
+                        > НЕМ</button>
+                    <button id="dir-de-ru" onclick="setDirection('de-ru')"
+                        class="flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300">НЕМ
+                        > РУС</button>
                 </div>
                 <div id="train-topics-container" class="space-y-3"></div>
             </div>
 
-            <div id="train-card-block" class="hidden w-full bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg text-center relative flex flex-col transition-all border border-gray-100 dark:border-gray-800 mt-2 sm:mt-6">
-                <button id="btn-stop-training" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold z-10 transition-colors">×</button>
-                
-                <div class="mb-3"><span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">Узнавание</span></div>
-                
+            <div id="train-card-block"
+                class="hidden w-full bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg text-center relative flex flex-col transition-all border border-gray-100 dark:border-gray-800 mt-2 sm:mt-6">
+                <button id="btn-stop-training"
+                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold z-10 transition-colors">×</button>
+
+                <div class="mb-3"><span id="train-level-badge"
+                        class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">Узнавание</span>
+                </div>
+
                 <div class="mb-5 w-full px-1">
-                    <div class="flex justify-between text-[10px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
+                    <div
+                        class="flex justify-between text-[10px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
                         <span id="train-card-progress-text">Уровень: 0/4</span>
                         <span id="train-total-cards">Осталось: 0</span>
                     </div>
                     <div class="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden relative">
-                        <div id="train-card-progress-fill" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        <div id="train-card-progress-fill" class="bg-blue-500 h-full transition-all duration-500"
+                            style="width: 0%"></div>
                     </div>
                 </div>
-                
+
                 <div class="relative w-full flex justify-center items-center min-h-[60px] mb-4 px-10">
-                    <h2 id="train-question" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight m-0 text-center break-words">Загрузка...</h2>
-                    <div class="absolute right-0 top-1/2 -translate-y-1/2"><button id="btn-speak-question" class="hidden bg-gray-50 dark:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-500 transition-all border border-gray-100 dark:border-gray-700">🔊</button></div>
+                    <h2 id="train-question"
+                        class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight m-0 text-center break-words">
+                        Загрузка...</h2>
+                    <div class="absolute right-0 top-1/2 -translate-y-1/2"><button id="btn-speak-question"
+                            class="hidden bg-gray-50 dark:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-500 transition-all border border-gray-100 dark:border-gray-700">🔊</button>
+                    </div>
                 </div>
-                
-                <p id="train-example-q" class="text-sm text-blue-500 dark:text-blue-400 italic mb-5 hidden text-center w-full"></p>
-                
-                <button id="btn-show-answer" class="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">Показать ответ</button>
-                
+
+                <p id="train-example-q"
+                    class="text-sm text-blue-500 dark:text-blue-400 italic mb-5 hidden text-center w-full"></p>
+
+                <button id="btn-show-answer"
+                    class="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">Показать
+                    ответ</button>
+
                 <div id="train-answer-block" class="hidden w-full mt-3">
-                    <div class="flex flex-col justify-center items-center mb-6 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <div
+                        class="flex flex-col justify-center items-center mb-6 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                         <div class="relative w-full flex justify-center items-center min-h-[40px] px-10 mb-2">
-                            <p id="train-de-word" class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight m-0 text-center"></p>
-                            <div class="absolute right-0 top-1/2 -translate-y-1/2"><button id="btn-speak-answer" class="hidden bg-blue-50 dark:bg-blue-900/30 w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:scale-110 transition-transform">🔊</button></div>
+                            <p id="train-de-word"
+                                class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight m-0 text-center">
+                            </p>
+                            <div class="absolute right-0 top-1/2 -translate-y-1/2"><button id="btn-speak-answer"
+                                    class="hidden bg-blue-50 dark:bg-blue-900/30 w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:scale-110 transition-transform">🔊</button>
+                            </div>
                         </div>
                         <p id="train-de-plural" class="text-xs font-medium text-gray-500 mb-2 hidden"></p>
-                        
-                        <p id="train-answer-example" class="text-sm text-blue-500 dark:text-blue-400 italic mt-3 hidden text-center w-full"></p>
+
+                        <p id="train-answer-example"
+                            class="text-sm text-blue-500 dark:text-blue-400 italic mt-3 hidden text-center w-full"></p>
                     </div>
 
                     <div class="flex gap-2" id="sm2-buttons-block">
-                        <button id="btn-forgot" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-3 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-red-100 dark:hover:bg-red-900/40">
-                            <span class="mb-0.5">Не помню</span><span class="text-[10px] font-medium opacity-70">Снова</span>
+                        <button id="btn-forgot"
+                            class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-3 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-red-100 dark:hover:bg-red-900/40">
+                            <span class="mb-0.5">Не помню</span><span
+                                class="text-[10px] font-medium opacity-70">Снова</span>
                         </button>
-                        <button id="btn-remembered" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-3 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-green-100 dark:hover:bg-green-900/40">
-                            <span class="mb-0.5">Помню</span><span id="sm2-good-time" class="text-[10px] font-medium opacity-70">X дн</span>
+                        <button id="btn-remembered"
+                            class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-3 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-green-100 dark:hover:bg-green-900/40">
+                            <span class="mb-0.5">Помню</span><span id="sm2-good-time"
+                                class="text-[10px] font-medium opacity-70">X дн</span>
                         </button>
                     </div>
                 </div>
 
                 <div id="train-manual-block" class="hidden w-full mt-3">
                     <div class="flex gap-2 mb-2 w-full">
-                        <input type="text" id="manual-article" placeholder="der" autocomplete="off" class="w-[60px] bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-1 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm" style="text-align-last: center;">
+                        <input type="text" id="manual-article" placeholder="der" autocomplete="off"
+                            class="w-[60px] bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-1 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm"
+                            style="text-align-last: center;">
                         <div class="flex-1 relative flex items-center min-w-0">
-                            <input type="text" id="manual-main" placeholder="Впишите слово..." autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-lg py-3 pl-3 pr-10 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
-                            <button id="btn-mic" type="button" class="absolute right-1 p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-md active:scale-90" title="Голосовой ввод"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg></button>
+                            <input type="text" id="manual-main" placeholder="Впишите слово..." autocomplete="off"
+                                class="w-full bg-gray-50 dark:bg-gray-800 rounded-lg py-3 pl-3 pr-10 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
+                            <button id="btn-mic" type="button"
+                                class="absolute right-1 p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-md active:scale-90"
+                                title="Голосовой ввод"><svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
+                                    </path>
+                                </svg></button>
                         </div>
                     </div>
-                     <div class="flex gap-2 mb-2 w-full hidden" id="manual-plural-container">
-                        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg py-3 px-1 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die (pl)</div>
-                        <input type="text" id="manual-plural" placeholder="Форма мн. числа..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-3 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
+                    <div class="flex gap-2 mb-2 w-full hidden" id="manual-plural-container">
+                        <div
+                            class="bg-gray-100 dark:bg-gray-800 rounded-lg py-3 px-1 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">
+                            die (pl)</div>
+                        <input type="text" id="manual-plural" placeholder="Форма мн. числа..." autocomplete="off"
+                            class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-3 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
                     </div>
                     <div class="flex gap-2 mb-2 w-full hidden" id="manual-verb-forms-container">
-                        <input type="text" id="manual-praeteritum" placeholder="Präteritum" autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
-                        <input type="text" id="manual-partizip" placeholder="Partizip II" autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
+                        <input type="text" id="manual-praeteritum" placeholder="Präteritum" autocomplete="off"
+                            class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
+                        <input type="text" id="manual-partizip" placeholder="Partizip II" autocomplete="off"
+                            class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
                     </div>
-                    <div id="manual-feedback" class="hidden w-full text-center py-3 rounded-lg font-medium text-sm mb-3 transition-all"></div>
+                    <div id="manual-feedback"
+                        class="hidden w-full text-center py-3 rounded-lg font-medium text-sm mb-3 transition-all"></div>
 
                     <div id="train-umlauts" class="flex justify-center gap-2 mb-4">
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ä</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ö</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ü</button>
-                        <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)" class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ß</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)"
+                            class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ä</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)"
+                            class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ö</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)"
+                            class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ü</button>
+                        <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)"
+                            class="bg-gray-50 dark:bg-gray-800 w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95">ß</button>
                     </div>
-                    <button id="btn-check-manual" class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl active:scale-95 transition-all disabled:opacity-50 text-sm shadow-md shadow-blue-500/20 hover:bg-blue-600">Проверить</button>
+                    <button id="btn-check-manual"
+                        class="w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl active:scale-95 transition-all disabled:opacity-50 text-sm shadow-md shadow-blue-500/20 hover:bg-blue-600">Проверить</button>
                 </div>
             </div>
         </section>
 
         <section id="view-practice" class="hidden relative pt-2 pb-6">
-            
+
             <div id="practice-menu" class="space-y-4 px-2 mt-4 animate-in fade-in duration-300">
                 <div class="mb-6 text-center">
                     <h2 class="text-3xl font-black tracking-tight mb-2 text-gray-900 dark:text-white">Практика</h2>
                     <p class="text-gray-500 text-sm leading-relaxed">Инструменты для отработки сложных навыков.</p>
                 </div>
 
-                <button onclick="startBuilder()" class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-blue-500/20 text-white flex justify-between items-center group">
+                <button onclick="startBuilder()"
+                    class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-blue-500/20 text-white flex justify-between items-center group">
                     <div>
-                        <span class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Синтаксис</span>
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Синтаксис</span>
                         <h3 class="text-xl font-bold">Конструктор фраз</h3>
                         <p class="text-blue-100 text-[11px] font-medium mt-1">Сборка предложений без подсказок.</p>
                     </div>
-                    <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl">🧩</div>
+                    <div
+                        class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl">
+                        🧩</div>
                 </button>
 
-                <button onclick="startVerbTrainer()" class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-orange-500/20 text-white flex justify-between items-center group">
+                <button onclick="startVerbTrainer()"
+                    class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-orange-500/20 text-white flex justify-between items-center group">
                     <div>
-                        <span class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Грамматика</span>
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Грамматика</span>
                         <h3 class="text-xl font-bold">Глаголы (Карточки)</h3>
                         <p class="text-orange-100 text-[11px] font-medium mt-1">Тренируй Präteritum и Partizip II.</p>
                     </div>
-                    <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl">⚔️</div>
+                    <div
+                        class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl">
+                        ⚔️</div>
                 </button>
             </div>
 
             <div id="builder-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
-                <div class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 relative">
+                <div
+                    class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 relative">
                     <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Собери оригинал</span>
-                        <button onclick="closePractice()" class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Собери
+                            оригинал</span>
+                        <button onclick="closePractice()"
+                            class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
                     </div>
-                    
-                    <p id="builder-target-word" class="text-sm font-medium text-gray-500 mb-5 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-center leading-relaxed"></p>
-                    
-                    <div id="builder-dropzone" class="min-h-[70px] flex flex-wrap content-start gap-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border-2 border-dashed border-blue-200 dark:border-blue-800/50 mb-6 transition-colors"></div>
+
+                    <p id="builder-target-word"
+                        class="text-sm font-medium text-gray-500 mb-5 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 text-center leading-relaxed">
+                    </p>
+
+                    <div id="builder-dropzone"
+                        class="min-h-[70px] flex flex-wrap content-start gap-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border-2 border-dashed border-blue-200 dark:border-blue-800/50 mb-6 transition-colors">
+                    </div>
                     <div id="builder-pool" class="flex flex-wrap justify-center gap-2 min-h-[80px]"></div>
-                    <div id="builder-feedback" class="hidden w-full text-center py-3 rounded-xl font-bold text-sm mt-4 transition-all"></div>
-                    
-                    <button id="btn-check-builder" onclick="checkBuilder()" class="w-full bg-gray-100 dark:bg-gray-800 text-gray-400 font-bold py-3.5 rounded-xl mt-6 transition-all border border-transparent" disabled>Проверить</button>
+                    <div id="builder-feedback"
+                        class="hidden w-full text-center py-3 rounded-xl font-bold text-sm mt-4 transition-all"></div>
+
+                    <button id="btn-check-builder" onclick="checkBuilder()"
+                        class="w-full bg-gray-100 dark:bg-gray-800 text-gray-400 font-bold py-3.5 rounded-xl mt-6 transition-all border border-transparent"
+                        disabled>Проверить</button>
                 </div>
             </div>
 
             <div id="verb-trainer-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
-                <div class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 text-center relative flex flex-col transition-all">
+                <div
+                    class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 text-center relative flex flex-col transition-all">
                     <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Тренировка памяти</span>
-                        <button onclick="closePractice()" class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Тренировка
+                            памяти</span>
+                        <button onclick="closePractice()"
+                            class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
                     </div>
-                    
+
                     <div class="flex bg-gray-100 dark:bg-gray-800/80 p-1 rounded-xl mb-6">
-                        <button id="vt-mode-praet" onclick="setVTMode('praet')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Präteritum (2 ф.)</button>
-                        <button id="vt-mode-perf" onclick="setVTMode('perf')" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Partizip II (3 ф.)</button>
+                        <button id="vt-mode-praet" onclick="setVTMode('praet')"
+                            class="flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Präteritum
+                            (2 ф.)</button>
+                        <button id="vt-mode-perf" onclick="setVTMode('perf')"
+                            class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Partizip
+                            II (3 ф.)</button>
                     </div>
 
                     <div class="mb-8">
-                        <span id="vt-counter" class="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2 block">Осталось: 0</span>
+                        <span id="vt-counter"
+                            class="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2 block">Осталось:
+                            0</span>
                         <p id="vt-ru" class="text-sm text-gray-500 mb-1 font-medium"></p>
                         <h2 id="vt-inf" class="text-3xl font-black text-gray-900 dark:text-white tracking-tight"></h2>
                     </div>
 
-                    <button id="vt-btn-show" onclick="showVTAnswer()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-md shadow-orange-500/20 active:scale-95 transition-all">Показать ответ</button>
+                    <button id="vt-btn-show" onclick="showVTAnswer()"
+                        class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-md shadow-orange-500/20 active:scale-95 transition-all">Показать
+                        ответ</button>
 
                     <div id="vt-answer-block" class="hidden w-full space-y-4">
-                        <div class="p-6 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-800/50 flex flex-col justify-center min-h-[100px]">
+                        <div
+                            class="p-6 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-800/50 flex flex-col justify-center min-h-[100px]">
                             <p id="vt-answer" class="text-3xl font-black text-orange-600 dark:text-orange-400"></p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="answerVerb(false)" class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-4 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all">Не помню</button>
-                            <button onclick="answerVerb(true)" class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-4 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all">Помню</button>
+                            <button onclick="answerVerb(false)"
+                                class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold py-4 rounded-xl border border-red-100 dark:border-red-900/30 active:scale-95 transition-all">Не
+                                помню</button>
+                            <button onclick="answerVerb(true)"
+                                class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-4 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all">Помню</button>
                         </div>
                     </div>
                 </div>
@@ -235,95 +411,254 @@
         <section id="view-stats" class="hidden pb-10 pt-4"></section>
     </main>
 
-    <div id="backup-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
-            <div class="flex justify-between items-center mb-5"><h2 class="text-xl font-bold">Данные</h2><button onclick="document.getElementById('backup-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800">×</button></div>
-            <button onclick="exportData()" class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mb-4">Скачать базу (.csv)</button>
-            <button id="btn-trigger-restore" onclick="document.getElementById('file-restore').click()" class="w-full bg-gray-50 dark:bg-gray-800 font-medium py-3.5 rounded-xl border border-gray-200 dark:border-gray-700">Восстановить из файла</button>
+    <div id="backup-modal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div
+            class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-bold">Данные</h2><button
+                    onclick="document.getElementById('backup-modal').classList.add('hidden')"
+                    class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800">×</button>
+            </div>
+            <button onclick="exportData()" id="btn-trigger-export"
+                class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mb-4">Скачать базу (.csv)</button>
+            <button id="btn-trigger-restore" onclick="document.getElementById('file-restore').click()"
+                class="w-full bg-gray-50 dark:bg-gray-800 font-medium py-3.5 rounded-xl border border-gray-200 dark:border-gray-700">Восстановить
+                из файла</button>
             <input type="file" id="file-restore" accept=".csv" class="hidden">
         </div>
     </div>
 
-    <div id="add-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
-         <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] flex flex-col relative" onclick="event.stopPropagation()">
+    <div id="profile-modal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div
+            class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
+            <h2 class="text-xl font-bold mb-6">Кто учит слова?</h2>
+
+            <div class="space-y-3 mb-6">
+                <button onclick="setProfile('osman')" id="profile-btn-osman"
+                    class="w-full flex items-center p-4 rounded-xl border-2 transition-all group">
+                    <div class="relative flex-shrink-0"
+                        onclick="event.stopPropagation(); document.getElementById('file-avatar-osman').click()">
+                        <div id="avatar-osman"
+                            class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold bg-cover bg-center group-hover:opacity-80 transition-all">
+                            О</div>
+                        <div class="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:scale-110 transition-transform"
+                            title="Изменить фото">
+                            <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex flex-col items-start">
+                        <span class="font-bold text-lg">Adil Osmanov</span>
+                        <span
+                            class="mt-1 bg-gradient-to-r from-blue-600 to-indigo-600 border border-blue-400/50 text-white text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-black shadow-sm flex items-center gap-1 shadow-blue-500/20">
+                            <svg class="w-2.5 h-2.5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z">
+                                </path>
+                            </svg>
+                            Admin
+                        </span>
+                    </div>
+                </button>
+                <input type="file" id="file-avatar-osman" accept="image/*" class="hidden"
+                    onchange="uploadAvatar('osman', this)">
+
+                <button onclick="setProfile('girlfriend')" id="profile-btn-girlfriend"
+                    class="w-full flex items-center p-4 rounded-xl border-2 transition-all group">
+                    <div class="relative flex-shrink-0"
+                        onclick="event.stopPropagation(); document.getElementById('file-avatar-girlfriend').click()">
+                        <div id="avatar-girlfriend"
+                            class="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-xl font-bold bg-cover bg-center group-hover:opacity-80 transition-all">
+                            Д</div>
+                        <div class="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:scale-110 transition-transform"
+                            title="Изменить фото">
+                            <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <span class="ml-4 font-bold text-lg">Ewelin Osmanova</span>
+                </button>
+                <input type="file" id="file-avatar-girlfriend" accept="image/*" class="hidden"
+                    onchange="uploadAvatar('girlfriend', this)">
+            </div>
+
+            <button onclick="document.getElementById('profile-modal').classList.add('hidden')"
+                class="w-full bg-gray-100 dark:bg-gray-800 font-medium py-3 rounded-xl hidden"
+                id="profile-close-btn">Скрыть</button>
+        </div>
+    </div>
+
+    <div id="add-modal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] flex flex-col relative"
+            onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <h2 id="modal-title" class="text-xl font-bold text-gray-900 dark:text-white">Новое слово</h2>
-                <button id="close-modal" class="text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-colors">×</button>
+                <button id="close-modal"
+                    class="text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-colors">×</button>
             </div>
             <div class="overflow-y-auto pr-1 -mr-1 pb-1">
                 <div id="modal-tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-4">
-                    <button id="tab-single" class="flex-1 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Одно слово</button>
-                    <button id="tab-bulk" class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком (CSV)</button>
+                    <button id="tab-single"
+                        class="flex-1 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Одно
+                        слово</button>
+                    <button id="tab-bulk"
+                        class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком
+                        (CSV)</button>
                 </div>
-                
+
                 <div id="form-single">
-                    <div class="flex bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
-                        <button id="type-noun" class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Существительное</button>
-                        <button id="type-verb" class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Глагол / Другое</button>
+                    <div
+                        class="flex bg-gray-50 dark:bg-gray-800/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
+                        <button id="type-noun"
+                            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white">Существительное</button>
+                        <button id="type-verb"
+                            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Глагол
+                            / Другое</button>
                     </div>
                     <form id="add-form" class="space-y-3">
                         <div id="article-selector" class="flex gap-1 w-full mb-1">
-                            <button type="button" id="btn-art-der" onclick="selectArticle('der')" class="flex-1 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium transition-all shadow-sm text-sm">der</button>
-                            <button type="button" id="btn-art-die" onclick="selectArticle('die')" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700">die</button>
-                            <button type="button" id="btn-art-das" onclick="selectArticle('das')" class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700">das</button>
+                            <button type="button" id="btn-art-der" onclick="selectArticle('der')"
+                                class="flex-1 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium transition-all shadow-sm text-sm">der</button>
+                            <button type="button" id="btn-art-die" onclick="selectArticle('die')"
+                                class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700">die</button>
+                            <button type="button" id="btn-art-das" onclick="selectArticle('das')"
+                                class="flex-1 py-2 rounded-lg border-2 border-transparent bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium transition-all text-sm hover:bg-gray-100 dark:hover:bg-gray-700">das</button>
                         </div>
                         <div class="flex w-full items-center">
-                            <input type="text" id="word-de" placeholder="Слово на немецком..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all text-sm">
+                            <input type="text" id="word-de" placeholder="Слово на немецком..." required
+                                autocomplete="off"
+                                class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all text-sm">
                         </div>
                         <div class="flex gap-2 w-full" id="plural-input-group">
-                            <div class="bg-gray-100 dark:bg-gray-800 rounded-xl py-3 px-2 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">die (pl)</div>
-                            <input type="text" id="word-plural" placeholder="Множественное число..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
+                            <div
+                                class="bg-gray-100 dark:bg-gray-800 rounded-xl py-3 px-2 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">
+                                die (pl)</div>
+                            <input type="text" id="word-plural" placeholder="Множественное число..." autocomplete="off"
+                                class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
                         </div>
                         <div class="flex gap-2 w-full hidden" id="verb-forms-group">
-                            <input type="text" id="word-praeteritum" placeholder="Präteritum..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
-                            <input type="text" id="word-partizip" placeholder="Partizip II..." autocomplete="off" class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
+                            <input type="text" id="word-praeteritum" placeholder="Präteritum..." autocomplete="off"
+                                class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
+                            <input type="text" id="word-partizip" placeholder="Partizip II..." autocomplete="off"
+                                class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
                         </div>
-                        <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition-all text-sm">
-                        <input type="text" id="word-example" placeholder="Пример использования (необязательно)..." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white transition-all">
+                        <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off"
+                            class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition-all text-sm">
+                        <input type="text" id="word-example" placeholder="Пример использования (необязательно)..."
+                            class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white transition-all">
                         <div class="flex w-full gap-2">
-                            <div class="flex-[2] min-w-0"><input type="text" id="word-folder" list="folder-list" placeholder="Курс" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
-                            <div class="flex-[1] min-w-0"><input type="text" id="word-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-center uppercase"></div>
-                            <div class="flex-[2] min-w-0"><input type="text" id="word-subfolder" list="subfolder-list" placeholder="Тема" required class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700"></div>
+                            <div class="flex-[2] min-w-0"><input type="text" id="word-folder" list="folder-list"
+                                    placeholder="Курс" required
+                                    class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700">
+                            </div>
+                            <div class="flex-[1] min-w-0"><input type="text" id="word-level" list="level-list"
+                                    placeholder="Ур."
+                                    class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-center uppercase">
+                            </div>
+                            <div class="flex-[2] min-w-0"><input type="text" id="word-subfolder" list="subfolder-list"
+                                    placeholder="Тема" required
+                                    class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none text-xs font-medium text-gray-900 dark:text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700">
+                            </div>
                         </div>
-                        <button type="submit" class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-blue-500/20">Сохранить</button>
+                        <button type="submit"
+                            class="w-full bg-blue-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-blue-500/20">Сохранить</button>
                     </form>
                 </div>
-                 <div class="hidden space-y-3" id="form-bulk">
+                <div class="hidden space-y-3" id="form-bulk">
                     <p class="text-xs text-gray-500 text-center mb-3">Загрузка списка слов в формате .csv</p>
                     <div class="flex w-full gap-2">
-                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list" placeholder="Курс" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
-                        <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list" placeholder="Ур." class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none font-medium text-gray-900 dark:text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
-                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-subfolder" list="subfolder-list" placeholder="Тема" class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50"></div>
-                    </div>
-                    <div class="mt-2 p-6 border-2 border-dashed border-green-300 dark:border-green-800/50 bg-green-50 dark:bg-green-900/10 rounded-xl text-center transition-all group hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer" onclick="document.getElementById('bulk-file').click()">
-                        <input type="file" id="bulk-file" accept=".csv" class="hidden">
-                        <div class="flex flex-col items-center gap-2 pointer-events-none">
-                            <svg class="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <span class="text-green-600 dark:text-green-400 font-medium text-sm" id="bulk-file-label">Выбрать CSV файл</span>
+                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list"
+                                placeholder="Курс"
+                                class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
+                        </div>
+                        <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list"
+                                placeholder="Ур."
+                                class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-1 outline-none font-medium text-gray-900 dark:text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
+                        </div>
+                        <div class="flex-[2] min-w-0"><input type="text" id="bulk-subfolder" list="subfolder-list"
+                                placeholder="Тема"
+                                class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-3 outline-none font-medium text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
                         </div>
                     </div>
-                    <button id="btn-upload-csv" class="w-full bg-green-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-green-600 shadow-md shadow-green-500/30">Загрузить слова</button>
+                    <div class="mt-2 p-6 border-2 border-dashed border-green-300 dark:border-green-800/50 bg-green-50 dark:bg-green-900/10 rounded-xl text-center transition-all group hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer"
+                        onclick="document.getElementById('bulk-file').click()">
+                        <input type="file" id="bulk-file" accept=".csv" class="hidden">
+                        <div class="flex flex-col items-center gap-2 pointer-events-none">
+                            <svg class="w-8 h-8 text-green-500 group-hover:scale-110 transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                </path>
+                            </svg>
+                            <span class="text-green-600 dark:text-green-400 font-medium text-sm"
+                                id="bulk-file-label">Выбрать CSV файл</span>
+                        </div>
+                    </div>
+                    <button id="btn-upload-csv"
+                        class="w-full bg-green-500 text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-green-600 shadow-md shadow-green-500/30">Загрузить
+                        слова</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 w-full glass border-t border-gray-200 dark:border-gray-800 z-30 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-2">
+    <nav
+        class="fixed bottom-0 left-0 right-0 w-full glass border-t border-gray-200 dark:border-gray-800 z-30 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-2">
         <div class="flex justify-around items-center max-w-md mx-auto">
-            <button id="nav-dict" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
-                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <button id="nav-dict"
+                class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
+                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                    </path>
+                </svg>
                 <span class="text-[9px] font-medium group-[.active-tab]:text-blue-500 truncate">Словарь</span>
             </button>
-            <button id="nav-train" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
-                 <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <button id="nav-train"
+                class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
+                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                    </path>
+                </svg>
                 <span class="text-[9px] font-medium group-[.active-tab]:text-blue-500 truncate">Учить</span>
             </button>
-            <button id="nav-practice" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
-                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
+            <button id="nav-practice"
+                class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
+                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5">
+                    </path>
+                </svg>
                 <span class="text-[9px] font-medium group-[.active-tab]:text-blue-500 truncate">Практика</span>
             </button>
-            <button id="nav-stats" class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
-                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <button id="nav-stats"
+                class="flex flex-col items-center gap-1 transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white group w-1/4">
+                <svg class="w-6 h-6 group-[.active-tab]:text-blue-500" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
                 <span class="text-[9px] font-medium group-[.active-tab]:text-blue-500 truncate">Прогресс</span>
             </button>
         </div>
@@ -332,8 +667,8 @@
     <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
 
     <script>
-        const escapeStr = (str) => (str||'').replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
-        
+        const escapeStr = (str) => (str || '').replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
         // Утилита очистки немецкого предложения от русского перевода
         const extractGermanSentence = (ex) => {
             if (!ex) return "";
@@ -344,14 +679,14 @@
         let currentType = 'noun';
         let editId = null;
         let globalWords = [];
-        let serverHistory = {}; 
-        
+        let serverHistory = {};
+
         let sessionStartMs = 0;
         const DAILY_GOAL_MINUTES = 15;
         const MAX_SCORE = 4;
-        
-        let dictTabFilter = 'active'; 
-        let trainDirection = 'auto'; 
+
+        let dictTabFilter = 'active';
+        let trainDirection = 'auto';
         let currentIsGermanQuestion = false;
         let currentArticle = 'der';
         let collapsedDictTopics = {};
@@ -361,18 +696,91 @@
         if (SpeechRecognition) { recognition = new SpeechRecognition(); recognition.interimResults = false; recognition.maxAlternatives = 1; }
 
         function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5) {
-            if (quality < 3) { repetitions = 0; interval = 0; } 
+            if (quality < 3) { repetitions = 0; interval = 0; }
             else { if (repetitions === 0) interval = 1; else if (repetitions === 1) interval = 4; else interval = Math.round(interval * easeFactor * 1.2); repetitions++; }
             easeFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
             if (easeFactor < 1.3) easeFactor = 1.3;
             return { repetitions, interval, easeFactor };
         }
 
+        let currentUser = localStorage.getItem('appUser');
+        if (!currentUser) {
+            document.getElementById('profile-modal').classList.remove('hidden');
+        } else {
+            document.getElementById('profile-modal').classList.add('hidden');
+            document.getElementById('profile-close-btn').classList.remove('hidden');
+        }
+
         async function apiFetch(url, options = {}) {
+            if (!currentUser) currentUser = 'osman';
+            options.headers = options.headers || {};
+            options.headers['x-user'] = currentUser;
             const res = await fetch(url, options);
             if (!res.ok) throw new Error('Network Error');
             return res;
         }
+
+        function loadAvatars() {
+            ['osman', 'girlfriend'].forEach(user => {
+                const av = localStorage.getItem('avatar_' + user);
+                const el = document.getElementById('avatar-' + user);
+                if (av && el) {
+                    el.style.backgroundImage = `url(${av})`; el.innerText = '';
+                } else if (el) {
+                    el.style.backgroundImage = 'none'; el.innerText = user === 'osman' ? 'О' : 'Д';
+                }
+            });
+            const hdAv = document.getElementById('header-avatar');
+            if (hdAv && currentUser) {
+                const currentAv = localStorage.getItem('avatar_' + currentUser);
+                if (currentAv) {
+                    hdAv.style.backgroundImage = `url(${currentAv})`; hdAv.innerHTML = '';
+                    hdAv.classList.replace('p-1.5', 'p-0'); hdAv.style.border = '1px solid #e5e7eb';
+                } else {
+                    hdAv.style.backgroundImage = 'none'; hdAv.classList.replace('p-0', 'p-1.5'); hdAv.style.border = 'none';
+                    hdAv.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
+                }
+            }
+        }
+
+        window.uploadAvatar = (user, input) => {
+            if (!input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); const MAX_SIZE = 150;
+                    let width = img.width, height = img.height; const size = Math.min(width, height);
+                    canvas.width = MAX_SIZE; canvas.height = MAX_SIZE;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, (width - size) / 2, (height - size) / 2, size, size, 0, 0, MAX_SIZE, MAX_SIZE);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    try { localStorage.setItem('avatar_' + user, dataUrl); loadAvatars(); }
+                    catch (err) { alert("Файл слишком большой!"); }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+            input.value = '';
+        };
+
+        function updateProfileUI() {
+            if (!currentUser) return;
+            document.getElementById('profile-btn-osman').className = currentUser === 'osman' ? "w-full flex items-center p-4 rounded-xl border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20 transition-all text-gray-900 dark:text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 transition-all hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white";
+            document.getElementById('profile-btn-girlfriend').className = currentUser === 'girlfriend' ? "w-full flex items-center p-4 rounded-xl border-2 border-pink-500 bg-pink-50 dark:bg-pink-900/20 transition-all text-gray-900 dark:text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 transition-all hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white";
+            loadAvatars();
+        }
+        updateProfileUI();
+
+        window.setProfile = async (user) => {
+            currentUser = user;
+            localStorage.setItem('appUser', user);
+            updateProfileUI();
+            document.getElementById('profile-modal').classList.add('hidden');
+            document.getElementById('profile-close-btn').classList.remove('hidden');
+            globalWords = []; serverHistory = {};
+            await switchView('dict');
+        };
 
         const getLevelColor = (level) => {
             if (!level) return 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
@@ -391,9 +799,9 @@
         const updateIcons = () => { if (document.documentElement.classList.contains('dark')) { darkIcon.classList.add('hidden'); lightIcon.classList.remove('hidden'); } else { lightIcon.classList.add('hidden'); darkIcon.classList.remove('hidden'); } };
         updateIcons();
         themeToggleBtn.onclick = () => { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; updateIcons(); };
-        
+
         window.speakWord = (text, event) => { if (event) event.stopPropagation(); window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'de-DE'; u.rate = 0.85; window.speechSynthesis.speak(u); };
-        window.activeInput = null; document.addEventListener('focusin', e => { if(e.target.tagName === 'INPUT') window.activeInput = e.target; });
+        window.activeInput = null; document.addEventListener('focusin', e => { if (e.target.tagName === 'INPUT') window.activeInput = e.target; });
         window.insertChar = (char, event) => {
             event.preventDefault(); if (!window.activeInput) return;
             const start = window.activeInput.selectionStart; const end = window.activeInput.selectionEnd; const val = window.activeInput.value;
@@ -402,7 +810,7 @@
         const handleEnter = (e) => {
             if (e.key === 'Enter') {
                 const btnCheck = document.getElementById('btn-check-manual'); const btnNext = document.getElementById('btn-show-answer');
-                if (btnCheck && !btnCheck.disabled && !document.getElementById('train-manual-block').classList.contains('hidden')) { e.preventDefault(); btnCheck.click(); } 
+                if (btnCheck && !btnCheck.disabled && !document.getElementById('train-manual-block').classList.contains('hidden')) { e.preventDefault(); btnCheck.click(); }
                 else if (btnNext && !btnNext.classList.contains('hidden')) { e.preventDefault(); btnNext.click(); }
             }
         };
@@ -413,7 +821,7 @@
                 const elapsedMs = Date.now() - sessionStartMs;
                 const tzoffset = (new Date()).getTimezoneOffset() * 60000;
                 const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
-                try { await apiFetch('/history', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({date_str: localISOTime, ms_spent: elapsedMs}) }); } catch(e) {}
+                try { await apiFetch('/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date_str: localISOTime, ms_spent: elapsedMs }) }); } catch (e) { }
                 sessionStartMs = 0;
             }
         }
@@ -427,17 +835,17 @@
                 const res = await apiFetch(API_URL); const data = await res.json();
                 if (Array.isArray(data)) {
                     globalWords = data.map(w => ({ ...w, ease_factor: w.ease_factor || 2.5, interval: w.interval || 0, repetitions: w.repetitions || 0 }));
-                    localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
+                    localStorage.setItem('offline_words_db', JSON.stringify(globalWords));
                 }
-            } catch (e) { 
-                try { const saved = localStorage.getItem('offline_words_db'); if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) globalWords = parsed; } } catch(err) {}
+            } catch (e) {
+                try { const saved = localStorage.getItem('offline_words_db'); if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) globalWords = parsed; } } catch (err) { }
             }
             if (!Array.isArray(globalWords)) globalWords = [];
             try {
                 document.getElementById('folder-list').innerHTML = [...new Set(globalWords.map(w => w.folder))].filter(Boolean).map(f => `<option value="${escapeStr(f)}">`).join('');
                 document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(Boolean))].map(l => `<option value="${escapeStr(l)}">`).join('');
                 document.getElementById('subfolder-list').innerHTML = [...new Set(globalWords.map(w => w.subfolder))].filter(Boolean).map(s => `<option value="${escapeStr(s)}">`).join('');
-            } catch(e) {}
+            } catch (e) { }
         }
 
         async function switchView(target) {
@@ -447,20 +855,20 @@
                 const isActive = (v === target);
                 views[v].classList.toggle('hidden', !isActive);
                 navBtns[v].classList.toggle('active-tab', isActive);
-                if(isActive) navBtns[v].classList.remove('text-gray-400'); else navBtns[v].classList.add('text-gray-400');
+                if (isActive) navBtns[v].classList.remove('text-gray-400'); else navBtns[v].classList.add('text-gray-400');
             });
             document.getElementById('header-title').innerText = "Обновление...";
             document.getElementById('add-btn').classList.toggle('hidden', target !== 'dict');
-            
+
             await fetchWords();
-            document.getElementById('header-title').innerText = {dict:'Словарь', train:'Тренировка', practice:'Практика', stats:'Прогресс'}[target];
-            
+            document.getElementById('header-title').innerText = { dict: 'Словарь', train: 'Тренировка', practice: 'Практика', stats: 'Прогресс' }[target];
+
             try {
                 if (target === 'dict') renderDict();
                 if (target === 'train') setupTrainMenu();
                 if (target === 'practice') { closePractice(); }
                 if (target === 'stats') loadStats();
-            } catch(e) {}
+            } catch (e) { }
             window.scrollTo(0, 0);
         }
 
@@ -491,8 +899,8 @@
         document.getElementById('dict-tab-active').onclick = () => { dictTabFilter = 'active'; renderDictTabs(); };
         document.getElementById('dict-tab-mastered').onclick = () => { dictTabFilter = 'mastered'; renderDictTabs(); };
         function renderDictTabs() {
-            document.getElementById('dict-tab-active').className = dictTabFilter==='active' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
-            document.getElementById('dict-tab-mastered').className = dictTabFilter==='mastered' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all flex items-center justify-center gap-1 text-gray-900 dark:text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('dict-tab-active').className = dictTabFilter === 'active' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all text-gray-900 dark:text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('dict-tab-mastered').className = dictTabFilter === 'mastered' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-gray-700 shadow-sm transition-all flex items-center justify-center gap-1 text-gray-900 dark:text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-300";
             renderDict();
         }
 
@@ -508,20 +916,20 @@
                 else filtered = filtered.filter(w => w.score >= MAX_SCORE);
 
                 if (filtered.length === 0) {
-                    container.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 font-medium text-sm">${dictTabFilter==='mastered'?'Архив пуст 😔':'Отлично! Все текущие слова выучены 🎉'}</p></div>`; return;
+                    container.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 font-medium text-sm">${dictTabFilter === 'mastered' ? 'Архив пуст 😔' : 'Отлично! Все текущие слова выучены 🎉'}</p></div>`; return;
                 }
 
                 const colors = { der: 'text-der', die: 'text-die', das: 'text-das' };
                 const grouped = {};
-                filtered.forEach(w => { 
+                filtered.forEach(w => {
                     const f = w.folder || 'Без курса'; const l = w.level || 'Общее'; const s = w.subfolder || 'Без темы';
-                    if (!grouped[f]) grouped[f] = {}; if (!grouped[f][l]) grouped[f][l] = {}; if (!grouped[f][l][s]) grouped[f][l][s] = []; 
-                    grouped[f][l][s].push(w); 
+                    if (!grouped[f]) grouped[f] = {}; if (!grouped[f][l]) grouped[f][l] = {}; if (!grouped[f][l][s]) grouped[f][l][s] = [];
+                    grouped[f][l][s].push(w);
                 });
 
                 let savedFolderOrder = []; let savedTopicOrder = {};
-                try { savedFolderOrder = JSON.parse(localStorage.getItem('folderOrder')) || []; } catch(e){}
-                try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch(e){}
+                try { savedFolderOrder = JSON.parse(localStorage.getItem('folderOrder')) || []; } catch (e) { }
+                try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch (e) { }
 
                 const folderNames = Object.keys(grouped).sort((a, b) => { let idxA = savedFolderOrder.indexOf(a); let idxB = savedFolderOrder.indexOf(b); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
 
@@ -542,7 +950,7 @@
                         </div>
                         <div class="dict-topics-container p-2 space-y-2" data-folder="${safeF}">
                     `;
-                    
+
                     let topics = [];
                     for (const l in grouped[f]) { for (const s in grouped[f][l]) { topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` }); } }
                     topics.sort((a, b) => { let orderArr = savedTopicOrder[f] || []; let idxA = orderArr.indexOf(a.key); let idxB = orderArr.indexOf(b.key); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
@@ -550,7 +958,7 @@
                     topics.forEach(t => {
                         const l = t.l; const s = t.s; const wordsInTopic = t.words; const topicKey = t.key;
                         const safeL = escapeStr(l); const safeS = escapeStr(s); const safeTopicKey = escapeStr(topicKey);
-                        if (collapsedDictTopics[topicKey] === undefined) collapsedDictTopics[topicKey] = true; 
+                        if (collapsedDictTopics[topicKey] === undefined) collapsedDictTopics[topicKey] = true;
                         const isCollapsed = collapsedDictTopics[topicKey]; const chevronClass = isCollapsed ? '' : 'rotate-180';
 
                         html += `
@@ -573,7 +981,7 @@
 
                             <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800'}">
                         `;
-                        
+
                         wordsInTopic.forEach(w => {
                             let extraInfo = '';
                             if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
@@ -583,44 +991,46 @@
                             html += `
                             <div onclick="openEdit(${w.id})" class="bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 flex justify-between items-center active:scale-[0.99] transition-all cursor-pointer hover:border-blue-200">
                                 <div class="flex-1 pr-3 min-w-0">
-                                    <p class="text-base font-bold text-gray-900 dark:text-white leading-tight truncate">${w.word_type==='noun'?`<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>`:''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
+                                    <p class="text-base font-bold text-gray-900 dark:text-white leading-tight truncate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-normal mr-1">${w.article}</span>` : ''}${w.word_de} <span class="text-gray-400 text-xs font-normal ml-1">${extraInfo}</span></p>
                                     <p class="text-gray-500 text-sm font-medium mt-0.5 truncate">${w.word_ru}</p>
                                    ${w.example ? `<p class="text-[11px] text-blue-500 dark:text-blue-400 mt-1.5 italic leading-tight truncate">"${escapeStr(w.example.split(/[-—(/\[]/)[0].trim())}"</p>` : ''}
                                 </div>
                                 <div class="flex flex-col items-end gap-1 flex-shrink-0">
                                     <div class="flex gap-1 mb-1">
-                                        <button onclick="speakWord('${(w.word_type==='noun'?w.article+' ':'')+safeWordDe}', event)" class="p-2 bg-gray-50 dark:bg-gray-700 rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
+                                        <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-2 bg-gray-50 dark:bg-gray-700 rounded-full text-gray-400 hover:text-blue-500 transition-colors">🔊</button>
                                         <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-gray-50 dark:bg-gray-700 rounded-full text-gray-400 hover:text-red-500 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                     </div>
-                                    <span class="text-xs font-bold ${w.score>=MAX_SCORE?'text-green-500':(w.score>=3?'text-orange-500':'text-gray-400')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+                                    <span class="text-xs font-bold ${w.score >= MAX_SCORE ? 'text-green-500' : (w.score >= 3 ? 'text-orange-500' : 'text-gray-400')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
                                 </div>
                             </div>`;
                         });
                         html += `</div></div>`;
                     });
-                    html += `</div></div>`; 
+                    html += `</div></div>`;
                 });
-                html += '</div>'; 
-                
+                html += '</div>';
+
                 container.innerHTML = html;
                 setTimeout(initSortable, 100);
-            } catch(err) { container.innerHTML = `<div class="text-center py-20 text-red-500">Ошибка рендера. Очистите кэш.</div>`; }
+            } catch (err) { container.innerHTML = `<div class="text-center py-20 text-red-500">Ошибка рендера. Очистите кэш.</div>`; }
         }
 
         function initSortable() {
             if (typeof Sortable === 'undefined') { setTimeout(initSortable, 500); return; }
             const folderContainer = document.getElementById('dict-folders-container');
             if (folderContainer) {
-                new Sortable(folderContainer, { handle: '.drag-handle-folder', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
+                new Sortable(folderContainer, {
+                    handle: '.drag-handle-folder', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
                     onEnd: function () { const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.dataset.folder); localStorage.setItem('folderOrder', JSON.stringify(order)); }
                 });
             }
             document.querySelectorAll('.dict-topics-container').forEach(topicContainer => {
-                new Sortable(topicContainer, { handle: '.drag-handle-topic', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
+                new Sortable(topicContainer, {
+                    handle: '.drag-handle-topic', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
                     onEnd: function (evt) {
                         const f = evt.item.closest('.dict-folder').dataset.folder;
                         const order = Array.from(topicContainer.querySelectorAll('.dict-topic')).map(el => el.dataset.topic);
-                        let savedTopicOrder = {}; try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch(e){}
+                        let savedTopicOrder = {}; try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch (e) { }
                         savedTopicOrder[f] = order; localStorage.setItem('topicOrder', JSON.stringify(savedTopicOrder));
                     }
                 });
@@ -630,7 +1040,7 @@
         window.renameFolder = async (oldFolder) => {
             const newFolder = prompt(`Введите новое название для курса "${oldFolder}":`, oldFolder);
             if (newFolder && newFolder.trim() !== '' && newFolder.trim() !== oldFolder) {
-                try { await apiFetch('/words/rename_folder', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_folder: oldFolder, new_folder: newFolder.trim()}) }); await fetchWords(); renderDict(); } catch(e) { alert('Ошибка сети!'); }
+                try { await apiFetch('/words/rename_folder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ old_folder: oldFolder, new_folder: newFolder.trim() }) }); await fetchWords(); renderDict(); } catch (e) { alert('Ошибка сети!'); }
             }
         };
 
@@ -638,11 +1048,11 @@
             const newS = prompt(`Введите новое название для темы "${oldS}":`, oldS);
             if (newS && newS.trim() !== '' && newS.trim() !== oldS) {
                 try {
-                    await apiFetch('/words/rename_subfolder', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({folder: f, level: l, old_subfolder: oldS, new_subfolder: newS.trim()}) });
+                    await apiFetch('/words/rename_subfolder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, old_subfolder: oldS, new_subfolder: newS.trim() }) });
                     const oldKey = `${f}|${l}|${oldS}`; const newKey = `${f}|${l}|${newS.trim()}`;
                     if (collapsedDictTopics[oldKey] !== undefined) { collapsedDictTopics[newKey] = collapsedDictTopics[oldKey]; delete collapsedDictTopics[oldKey]; }
                     await fetchWords(); renderDict();
-                } catch(e) { alert('Ошибка сети!'); }
+                } catch (e) { alert('Ошибка сети!'); }
             }
         };
 
@@ -654,7 +1064,7 @@
             document.getElementById('article-selector').classList.toggle('hidden', t === 'verb');
             document.getElementById('plural-input-group').classList.toggle('hidden', t === 'verb');
             const verbGroup = document.getElementById('verb-forms-group');
-            if(verbGroup) verbGroup.classList.toggle('hidden', t !== 'verb');
+            if (verbGroup) verbGroup.classList.toggle('hidden', t !== 'verb');
         };
 
         document.getElementById('type-noun').onclick = () => setType('noun');
@@ -674,19 +1084,19 @@
         document.getElementById('tab-single').onclick = showSingleTab;
         document.getElementById('tab-bulk').onclick = showBulkTab;
 
-        document.getElementById('add-btn').onclick = () => { 
-            editId = null; document.getElementById('modal-title').innerText = "Новое слово"; document.getElementById('add-form').reset(); 
-            document.getElementById('bulk-folder').value = ''; document.getElementById('bulk-level').value = ''; document.getElementById('bulk-subfolder').value = ''; 
-            const bulkFile = document.getElementById('bulk-file'); if(bulkFile) bulkFile.value = '';
-            const bulkLabel = document.getElementById('bulk-file-label'); if(bulkLabel) bulkLabel.innerText = 'Выбрать CSV файл';
-            setType('noun'); showSingleTab(); selectArticle('der'); modal.classList.remove('hidden'); 
+        document.getElementById('add-btn').onclick = () => {
+            editId = null; document.getElementById('modal-title').innerText = "Новое слово"; document.getElementById('add-form').reset();
+            document.getElementById('bulk-folder').value = ''; document.getElementById('bulk-level').value = ''; document.getElementById('bulk-subfolder').value = '';
+            const bulkFile = document.getElementById('bulk-file'); if (bulkFile) bulkFile.value = '';
+            const bulkLabel = document.getElementById('bulk-file-label'); if (bulkLabel) bulkLabel.innerText = 'Выбрать CSV файл';
+            setType('noun'); showSingleTab(); selectArticle('der'); modal.classList.remove('hidden');
         };
         document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
-        
+
         window.openEdit = (id) => {
-            const w = globalWords.find(x => x.id === id); if(!w) return;
+            const w = globalWords.find(x => x.id === id); if (!w) return;
             editId = w.id; document.getElementById('modal-title').innerText = "Редактировать"; showSingleTab();
-            setType(w.word_type); if(w.word_type === 'noun') selectArticle(w.article || 'der');
+            setType(w.word_type); if (w.word_type === 'noun') selectArticle(w.article || 'der');
             document.getElementById('word-de').value = w.word_de; document.getElementById('word-ru').value = w.word_ru;
             document.getElementById('word-plural').value = w.plural || ""; document.getElementById('word-praeteritum').value = w.praeteritum || "";
             document.getElementById('word-partizip').value = w.partizip || ""; document.getElementById('word-example').value = w.example || "";
@@ -704,58 +1114,83 @@
 
         window.fastAddCourse = (folder) => {
             editId = null; document.getElementById('modal-title').innerText = "Добавить тему / слова"; document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der');
-            document.getElementById('word-folder').value = folder; document.getElementById('word-level').value = ''; document.getElementById('word-subfolder').value = ''; 
-            document.getElementById('bulk-folder').value = folder; document.getElementById('bulk-level').value = ''; document.getElementById('bulk-subfolder').value = ''; 
+            document.getElementById('word-folder').value = folder; document.getElementById('word-level').value = ''; document.getElementById('word-subfolder').value = '';
+            document.getElementById('bulk-folder').value = folder; document.getElementById('bulk-level').value = ''; document.getElementById('bulk-subfolder').value = '';
             modal.classList.remove('hidden'); setTimeout(() => document.getElementById('word-subfolder').focus(), 150);
         };
 
-        window.deleteWord = async (id, event) => { 
-            if (event) event.stopPropagation(); 
-            if (confirm('Удалить слово навсегда?')) { await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); await fetchWords(); renderDict(); } 
+        window.deleteWord = async (id, event) => {
+            if (event) event.stopPropagation();
+            if (confirm('Удалить слово навсегда?')) { await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); await fetchWords(); renderDict(); }
         };
 
         window.deleteFolder = async (f, l, s) => {
-            if (confirm(`Удалить тему "${s}" со всеми словами внутри?`)) { await apiFetch('/words/delete_folder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({folder: f, level: l, subfolder: s}) }); await fetchWords(); renderDict(); }
+            if (confirm(`Удалить тему "${s}" со всеми словами внутри?`)) { await apiFetch('/words/delete_folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) }); await fetchWords(); renderDict(); }
         };
 
         document.getElementById('add-form').onsubmit = async (e) => {
             e.preventDefault();
             const payload = {
-                word_type: currentType, article: currentType==='noun' ? currentArticle : '',
-                word_de: document.getElementById('word-de').value.trim(), plural: currentType==='noun' ? document.getElementById('word-plural').value.trim() : '',
-                praeteritum: currentType==='verb' ? document.getElementById('word-praeteritum').value.trim() : '', partizip: currentType==='verb' ? document.getElementById('word-partizip').value.trim() : '',
+                word_type: currentType, article: currentType === 'noun' ? currentArticle : '',
+                word_de: document.getElementById('word-de').value.trim(), plural: currentType === 'noun' ? document.getElementById('word-plural').value.trim() : '',
+                praeteritum: currentType === 'verb' ? document.getElementById('word-praeteritum').value.trim() : '', partizip: currentType === 'verb' ? document.getElementById('word-partizip').value.trim() : '',
                 word_ru: document.getElementById('word-ru').value.trim(), example: document.getElementById('word-example').value.trim(),
                 folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim()
             };
             const url = editId ? `${API_URL}/${editId}/full` : API_URL;
-            await apiFetch(url, { method: editId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            modal.classList.add('hidden'); searchInp.value = ''; 
+            await apiFetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            modal.classList.add('hidden'); searchInp.value = '';
             const newTopicKey = `${payload.folder}|${payload.level || 'Общее'}|${payload.subfolder}`; collapsedDictTopics[newTopicKey] = false;
             await fetchWords(); renderDict();
         };
 
         document.getElementById('btn-upload-csv').onclick = async () => {
-            const f = new FormData(); 
+            const f = new FormData();
             const folder = document.getElementById('bulk-folder').value.trim(); const level = document.getElementById('bulk-level').value.trim(); const subfolder = document.getElementById('bulk-subfolder').value.trim(); const fileInput = document.getElementById('bulk-file');
             if (!folder || !subfolder || !fileInput.files[0]) return alert("Заполните курс, тему и выберите файл!");
             f.append('folder', folder); f.append('level', level); f.append('subfolder', subfolder); f.append('file', fileInput.files[0]);
             const btn = document.getElementById('btn-upload-csv'); btn.innerHTML = 'Загрузка...'; btn.disabled = true;
             try {
-                await fetch('/upload_csv', { method: 'POST', body: f }); modal.classList.add('hidden'); 
+                await apiFetch('/upload_csv', { method: 'POST', body: f }); modal.classList.add('hidden');
                 const newTopicKey = `${folder}|${level || 'Общее'}|${subfolder}`; collapsedDictTopics[newTopicKey] = false;
                 await fetchWords(); renderDict();
-            } catch(e) { alert("Ошибка загрузки!"); }
+            } catch (e) { alert("Ошибка загрузки!"); }
             finally { btn.innerHTML = 'Загрузить слова'; btn.disabled = false; }
         };
 
-        document.getElementById('bulk-file').onchange = function() {
+        document.getElementById('bulk-file').onchange = function () {
             const label = document.getElementById('bulk-file-label');
-            if(this.files[0]) label.innerText = this.files[0].name; else label.innerText = 'Выбрать CSV файл';
+            if (this.files[0]) label.innerText = this.files[0].name; else label.innerText = 'Выбрать CSV файл';
         };
 
-        window.exportData = () => { window.location.href = `/export_csv`; };
+        window.exportData = async () => {
+            const btn = document.getElementById('btn-trigger-export');
+            const prevText = btn.innerHTML;
+            btn.innerHTML = 'Подготовка...'; btn.disabled = true;
+            try {
+                const res = await apiFetch(`/export_csv`);
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `backup_${currentUser}.csv`;
+                document.body.appendChild(a); a.click(); a.remove();
+            } catch (e) { alert("Ошибка выгрузки!"); }
+            finally { btn.innerHTML = prevText; btn.disabled = false; }
+        };
 
-        let trainList = []; let curIdx = 0;
+        document.getElementById('file-restore').onchange = async function () {
+            if (!this.files[0]) return;
+            const btn = document.getElementById('btn-trigger-restore');
+            btn.innerHTML = 'Восстановление...'; btn.disabled = true;
+            const f = new FormData(); f.append('file', this.files[0]);
+            try {
+                await apiFetch('/restore_backup', { method: 'POST', body: f });
+                document.getElementById('backup-modal').classList.add('hidden');
+                await fetchWords(); renderDict(); switchView('dict');
+            } catch (e) { alert("Ошибка восстановления!"); }
+            finally { btn.innerHTML = 'Восстановить из файла'; btn.disabled = false; this.value = ''; }
+        };
+
+        let trainList = []; let curIdx = 0; let cardTimeout = null;
 
         window.setDirection = (dir) => {
             trainDirection = dir;
@@ -765,7 +1200,7 @@
             document.getElementById('dir-ru-de').className = dir === 'ru-de' ? activeCls : inactiveCls;
             document.getElementById('dir-de-ru').className = dir === 'de-ru' ? activeCls : inactiveCls;
         };
-        
+
         function setupTrainMenu() {
             const container = document.getElementById('train-topics-container');
             try {
@@ -779,7 +1214,7 @@
                     <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-2xl shadow-md text-white flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-lg font-bold">Слова на сегодня</h3>
-                            <p class="text-blue-100 text-[11px] font-medium mt-1">Доступно: ${newWordsCount} ${waitingCount>0?`| Ожидают: ${waitingCount}`:''}</p>
+                            <p class="text-blue-100 text-[11px] font-medium mt-1">Доступно: ${newWordsCount} ${waitingCount > 0 ? `| Ожидают: ${waitingCount}` : ''}</p>
                         </div>
                         <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                     </button>
@@ -811,7 +1246,7 @@
 
                 const groupedTopics = {};
                 globalWords.forEach(w => {
-                    const f = w.folder || 'Без курса'; const key = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`;
+                    const f = w.folder || 'Без курса'; const key = `${w.folder}|${w.level || 'Общее'}|${w.subfolder}`;
                     if (!groupedTopics[f]) groupedTopics[f] = new Set(); groupedTopics[f].add(key);
                 });
 
@@ -820,7 +1255,7 @@
                 for (const folder in groupedTopics) {
                     const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
                     const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
-                    
+
                     let folderActiveHTML = '';
                     if (cWordsCount > 0) {
                         folderActiveHTML += `
@@ -841,11 +1276,11 @@
 
                     groupedTopics[folder].forEach(t => {
                         const [f, l, s] = t.split('|');
-                        const allInTopic = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s);
+                        const allInTopic = globalWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s);
                         const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
                         const waitingCount = allInTopic.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
                         const archivedCount = allInTopic.filter(w => w.score >= MAX_SCORE).length;
-                        
+
                         if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
                             hasMastered = true;
                             folderMasteredHTML += `
@@ -866,7 +1301,7 @@
                                             ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${getLevelColor(l)}">${l}</span>` : ''}
                                             <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">${s}</h3>
                                         </div>
-                                        <p class="text-xs text-gray-500">Слов: ${wordsCount} <span class="opacity-60">${waitingCount>0?`| Ожидают: ${waitingCount}`:''}</span></p>
+                                        <p class="text-xs text-gray-500">Слов: ${wordsCount} <span class="opacity-60">${waitingCount > 0 ? `| Ожидают: ${waitingCount}` : ''}</span></p>
                                     </div>
                                     <div class="text-gray-400"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                                 </button>
@@ -880,73 +1315,76 @@
 
                 container.innerHTML = html + activeTopicsHTML.join('') + (masteredTopicsHTML.length > 0 ? '<div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-4"></div><h2 class="text-sm font-bold text-center text-gray-500 mb-3">Завершенные темы</h2>' + masteredTopicsHTML.join('') : '');
                 document.getElementById('train-setup-block').classList.remove('hidden'); document.getElementById('train-card-block').classList.add('hidden');
-            } catch(err) {}
+            } catch (err) { }
         }
 
         window.startTraining = (sel, forceArchive = false) => {
             let availableWords = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w));
 
-            if (sel === 'all') { trainList = availableWords; } 
+            if (sel === 'all') { trainList = availableWords; }
             else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 2); }
             else if (sel.startsWith('course|')) { const courseName = sel.split('|')[1]; trainList = availableWords.filter(w => (w.folder || 'Без курса') === courseName); }
-            else if (sel === 'mastered' || forceArchive) { 
-                if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = globalWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s); } 
+            else if (sel === 'mastered' || forceArchive) {
+                if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = globalWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
                 else { trainList = globalWords.filter(w => w.score >= MAX_SCORE); }
             }
-            else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => w.folder === f && (w.level||'Общее') === l && w.subfolder === s); }
-            
+            else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
+
             if (!trainList.length) return alert('На сегодня слов нет! Отдыхай.');
             trainList.sort(() => 0.5 - Math.random()); curIdx = 0; sessionStartMs = Date.now();
             document.getElementById('train-setup-block').classList.add('hidden'); document.getElementById('train-card-block').classList.remove('hidden'); renderCard();
         };
 
-        document.getElementById('btn-stop-training').onclick = () => { saveSessionTime(); setupTrainMenu(); };
+        document.getElementById('btn-stop-training').onclick = () => {
+            if (cardTimeout) clearTimeout(cardTimeout);
+            saveSessionTime(); setupTrainMenu();
+        };
 
         function renderCard() {
             const cardBlock = document.getElementById('train-card-block');
-            cardBlock.classList.remove('animate-fold-up'); 
+            cardBlock.classList.remove('animate-fold-up');
 
-            if (curIdx >= trainList.length) { 
-                saveSessionTime(); document.getElementById('main-scroll').scrollTo(0, 0); setupTrainMenu(); return; 
+            if (curIdx >= trainList.length) {
+                saveSessionTime(); document.getElementById('main-scroll').scrollTo(0, 0); setupTrainMenu(); return;
             }
-            
-            const w = trainList[curIdx]; 
+
+            const w = trainList[curIdx];
             const qEl = document.getElementById('train-question'); const exQ = document.getElementById('train-example-q'); const badge = document.getElementById('train-level-badge');
-            
+
             document.getElementById('train-total-cards').innerText = `Осталось: ${trainList.length - curIdx}`;
             document.getElementById('train-card-progress-text').innerText = `Освоено: ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
             document.getElementById('train-card-progress-fill').style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
-            
-            document.getElementById('train-answer-block').classList.add('hidden'); document.getElementById('train-manual-block').classList.add('hidden'); 
+
+            document.getElementById('train-answer-block').classList.add('hidden'); document.getElementById('train-manual-block').classList.add('hidden');
             document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('manual-feedback').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
-            if(exQ) { 
-                exQ.classList.add('hidden'); 
-                exQ.className = "text-sm text-blue-500 dark:text-blue-400 italic mb-5 hidden text-center w-full"; 
+            if (exQ) {
+                exQ.classList.add('hidden');
+                exQ.className = "text-sm text-blue-500 dark:text-blue-400 italic mb-5 hidden text-center w-full";
             }
 
-            const manArt = document.getElementById('manual-article'); const manMain = document.getElementById('manual-main'); 
+            const manArt = document.getElementById('manual-article'); const manMain = document.getElementById('manual-main');
             const manPluralContainer = document.getElementById('manual-plural-container'); const manPlural = document.getElementById('manual-plural');
             const manVerbContainer = document.getElementById('manual-verb-forms-container'); const manPraet = document.getElementById('manual-praeteritum'); const manPart = document.getElementById('manual-partizip');
             const btnCheck = document.getElementById('btn-check-manual'); const umlautBar = document.getElementById('train-umlauts');
             const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer'); const btnMic = document.getElementById('btn-mic');
 
-            if(manArt) manArt.disabled = false; if(manMain) manMain.disabled = false; if(manPlural) manPlural.disabled = false;
-            if(manPraet) manPraet.disabled = false; if(manPart) manPart.disabled = false; if(btnCheck) btnCheck.disabled = false;
+            if (manArt) manArt.disabled = false; if (manMain) manMain.disabled = false; if (manPlural) manPlural.disabled = false;
+            if (manPraet) manPraet.disabled = false; if (manPart) manPart.disabled = false; if (btnCheck) btnCheck.disabled = false;
 
-            const fullGerman = (w.word_type==='noun' ? (w.article||'') + ' ' : '') + (w.word_de||'');
+            const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
             let state = w.score < (MAX_SCORE - 1) ? 'L1' : w.score < MAX_SCORE ? 'L2' : 'Archive';
 
-            if (trainDirection === 'de-ru') currentIsGermanQuestion = true; 
-            else if (trainDirection === 'ru-de') currentIsGermanQuestion = false; 
+            if (trainDirection === 'de-ru') currentIsGermanQuestion = true;
+            else if (trainDirection === 'ru-de') currentIsGermanQuestion = false;
             else currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
 
             if (currentIsGermanQuestion) {
-                if(btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
-                if(btnSpeakAns) btnSpeakAns.classList.add('hidden');
+                if (btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
+                if (btnSpeakAns) btnSpeakAns.classList.add('hidden');
             } else {
-                if(btnSpeakQ) btnSpeakQ.classList.add('hidden');
-                if(btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
+                if (btnSpeakQ) btnSpeakQ.classList.add('hidden');
+                if (btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
             }
 
             if (recognition && btnMic) {
@@ -969,50 +1407,50 @@
             const ansEx = document.getElementById('train-answer-example');
             if (w.example && ansEx) { ansEx.innerText = '"' + extractGermanSentence(w.example) + '"'; ansEx.classList.remove('hidden'); } else if (ansEx) ansEx.classList.add('hidden');
 
-            document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru||'') : fullGerman;
+            document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru || '') : fullGerman;
             if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerText = `мн. ч.: die ${w.plural}`;
             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').innerText = `Формы: ${w.praeteritum || '-'}, ${w.partizip || '-'}`;
 
             if (state === 'L1' || state === 'Archive') {
-                if(badge) { 
-                    if (state === 'Archive') { badge.innerText = "Архив"; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-gray-100 dark:bg-gray-800 text-gray-500"; } 
+                if (badge) {
+                    if (state === 'Archive') { badge.innerText = "Архив"; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-gray-100 dark:bg-gray-800 text-gray-500"; }
                     else { badge.innerText = `Узнавание (${w.score}/${MAX_SCORE})`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"; }
                 }
-                if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||''); 
+                if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
                 document.getElementById('btn-show-answer').classList.remove('hidden');
-                
-                document.getElementById('btn-forgot').onclick = () => updateScoreWithSM2(0); 
-                document.getElementById('btn-remembered').onclick = () => updateScoreWithSM2(4); 
-                
+
+                document.getElementById('btn-forgot').onclick = () => updateScoreWithSM2(0);
+                document.getElementById('btn-remembered').onclick = () => updateScoreWithSM2(4);
+
                 const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor);
                 document.getElementById('sm2-good-time').innerText = goodCalc.interval > 0 ? `${goodCalc.interval} дн` : '1 дн';
 
             } else if (state === 'L2') {
-                if(badge) { badge.innerText = `Письмо (Финал)`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
-                if(qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru||'');
-                if(!currentIsGermanQuestion && w.example && exQ) { 
-                    try { 
+                if (badge) { badge.innerText = `Письмо (Финал)`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
+                if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
+                if (!currentIsGermanQuestion && w.example && exQ) {
+                    try {
                         const deSentence = extractGermanSentence(w.example);
-                        const safeWord = (w.word_de||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
-                        exQ.innerHTML = escapeStr(deSentence).replace(new RegExp(safeWord, 'ig'), '_____'); 
-                    } catch(e) { exQ.innerHTML = escapeStr(w.example); }
-                    exQ.classList.remove('hidden'); 
+                        const safeWord = (w.word_de || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        exQ.innerHTML = escapeStr(deSentence).replace(new RegExp(safeWord, 'ig'), '_____');
+                    } catch (e) { exQ.innerHTML = escapeStr(w.example); }
+                    exQ.classList.remove('hidden');
                 }
-                
+
                 document.getElementById('train-manual-block').classList.remove('hidden');
-                
+
                 if (currentIsGermanQuestion) {
-                    if(manArt) manArt.classList.add('hidden'); 
-                    if(manMain) { manMain.value = ''; manMain.placeholder = "Напишите перевод..."; }
-                    if(manPluralContainer) manPluralContainer.classList.add('hidden'); if(manVerbContainer) manVerbContainer.classList.add('hidden'); if(umlautBar) umlautBar.classList.add('hidden'); 
-                    setTimeout(() => { if(manMain) manMain.focus() }, 150);
+                    if (manArt) manArt.classList.add('hidden');
+                    if (manMain) { manMain.value = ''; manMain.placeholder = "Напишите перевод..."; }
+                    if (manPluralContainer) manPluralContainer.classList.add('hidden'); if (manVerbContainer) manVerbContainer.classList.add('hidden'); if (umlautBar) umlautBar.classList.add('hidden');
+                    setTimeout(() => { if (manMain) manMain.focus() }, 150);
                 } else {
-                    if(manArt) { manArt.classList.remove('hidden'); manArt.classList.toggle('hidden', w.word_type==='verb'); manArt.value = ''; }
-                    if(manMain) { manMain.value = ''; manMain.placeholder = "Слово на немецком..."; }
-                    if (w.word_type === 'noun' && w.plural) { if(manPluralContainer) manPluralContainer.classList.remove('hidden'); if(manPlural) manPlural.value = ''; } else { if(manPluralContainer) manPluralContainer.classList.add('hidden'); }
-                    if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) { if(manVerbContainer) manVerbContainer.classList.remove('hidden'); if(manPraet) manPraet.value = ''; if(manPart) manPart.value = ''; } else { if(manVerbContainer) manVerbContainer.classList.add('hidden'); }
-                    if(umlautBar) umlautBar.classList.remove('hidden'); 
-                    setTimeout(() => { const target = w.word_type==='noun' ? document.getElementById('manual-article') : document.getElementById('manual-main'); if (target) target.focus(); }, 150);
+                    if (manArt) { manArt.classList.remove('hidden'); manArt.classList.toggle('hidden', w.word_type === 'verb'); manArt.value = ''; }
+                    if (manMain) { manMain.value = ''; manMain.placeholder = "Слово на немецком..."; }
+                    if (w.word_type === 'noun' && w.plural) { if (manPluralContainer) manPluralContainer.classList.remove('hidden'); if (manPlural) manPlural.value = ''; } else { if (manPluralContainer) manPluralContainer.classList.add('hidden'); }
+                    if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) { if (manVerbContainer) manVerbContainer.classList.remove('hidden'); if (manPraet) manPraet.value = ''; if (manPart) manPart.value = ''; } else { if (manVerbContainer) manVerbContainer.classList.add('hidden'); }
+                    if (umlautBar) umlautBar.classList.remove('hidden');
+                    setTimeout(() => { const target = w.word_type === 'noun' ? document.getElementById('manual-article') : document.getElementById('manual-main'); if (target) target.focus(); }, 150);
                 }
             }
         }
@@ -1022,14 +1460,14 @@
             cardBlock.classList.add('animate-fold-up');
 
             const w = trainList[curIdx];
-            
+
             // ТУРБО: Если забыл, возвращаем карточку в конец колоды
             if (quality === 0) {
-                trainList.push({...w}); 
+                trainList.push(w);
             }
 
             const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor);
-            
+
             let nextReviewMs = 0;
             if (sm2Result.interval === 0) nextReviewMs = Date.now() + 10 * 60 * 1000;
             else nextReviewMs = Date.now() + sm2Result.interval * 24 * 60 * 60 * 1000;
@@ -1037,50 +1475,56 @@
             let newScore = w.score;
             if (quality >= 3) newScore = Math.min(w.score + 1, MAX_SCORE);
             else newScore = 0;
-            
-            try { 
-                await apiFetch(`${API_URL}/${w.id}/score`, { 
-                    method: 'PUT', headers: {'Content-Type': 'application/json'}, 
+
+            try {
+                await apiFetch(`${API_URL}/${w.id}/score`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ score: newScore, next_review: nextReviewMs, ease_factor: sm2Result.easeFactor, interval: sm2Result.interval, repetitions: sm2Result.repetitions })
-                }); 
-            } catch (e) {}
-            
-            const gwItem = globalWords.find(gw => gw.id === w.id); 
-            if(gwItem) { 
-                gwItem.score = newScore; gwItem.next_review = nextReviewMs; 
+                });
+            } catch (e) { }
+
+            w.score = newScore;
+            w.next_review = nextReviewMs;
+            w.ease_factor = sm2Result.easeFactor;
+            w.interval = sm2Result.interval;
+            w.repetitions = sm2Result.repetitions;
+
+            const gwItem = globalWords.find(gw => gw.id === w.id);
+            if (gwItem && gwItem !== w) {
+                gwItem.score = newScore; gwItem.next_review = nextReviewMs;
                 gwItem.ease_factor = sm2Result.easeFactor; gwItem.interval = sm2Result.interval; gwItem.repetitions = sm2Result.repetitions;
             }
-            
-            localStorage.setItem('offline_words_db', JSON.stringify(globalWords)); 
+
+            localStorage.setItem('offline_words_db', JSON.stringify(globalWords));
             curIdx++; setTimeout(renderCard, 250);
         }
 
-        document.getElementById('btn-show-answer').onclick = () => { 
-            document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden'); 
+        document.getElementById('btn-show-answer').onclick = () => {
+            document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden');
             const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
         };
-        
+
         document.getElementById('btn-check-manual').onclick = () => {
-            const w = trainList[curIdx]; 
-            const art = (document.getElementById('manual-article').value || "").trim().toLowerCase(); 
+            const w = trainList[curIdx];
+            const art = (document.getElementById('manual-article').value || "").trim().toLowerCase();
             const main = (document.getElementById('manual-main').value || "").trim();
             const typedPlural = (document.getElementById('manual-plural').value || "").trim().toLowerCase();
             const typedPraet = (document.getElementById('manual-praeteritum').value || "").trim().toLowerCase();
             const typedPart = (document.getElementById('manual-partizip').value || "").trim().toLowerCase();
-            
+
             const feedback = document.getElementById('manual-feedback'); const btnCheck = document.getElementById('btn-check-manual');
             let isCorrect = false; let correctAnswer = "";
 
             if (!currentIsGermanQuestion) {
                 const expectedArt = (w.article ? w.article.toLowerCase() : ""); const expectedWord = (w.word_de ? w.word_de.toLowerCase() : "");
                 const expectedPlural = (w.plural ? w.plural.toLowerCase() : ""); const expectedPraet = (w.praeteritum ? w.praeteritum.toLowerCase() : ""); const expectedPart = (w.partizip ? w.partizip.toLowerCase() : "");
-                
+
                 if (w.word_type === 'noun') {
-                    if (w.plural) { isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord) && (typedPlural === expectedPlural); correctAnswer = `${w.article} ${w.word_de} (die ${w.plural})`; } 
+                    if (w.plural) { isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord) && (typedPlural === expectedPlural); correctAnswer = `${w.article} ${w.word_de} (die ${w.plural})`; }
                     else { isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord); correctAnswer = `${w.article} ${w.word_de}`; }
                 } else if (w.word_type === 'verb') {
                     let baseCorrect = (main.toLowerCase() === expectedWord); let formsCorrect = true;
-                    if (w.praeteritum || w.partizip) { formsCorrect = (typedPraet === expectedPraet) && (typedPart === expectedPart); correctAnswer = `${w.word_de} (${w.praeteritum}, ${w.partizip})`; } 
+                    if (w.praeteritum || w.partizip) { formsCorrect = (typedPraet === expectedPraet) && (typedPart === expectedPart); correctAnswer = `${w.word_de} (${w.praeteritum}, ${w.partizip})`; }
                     else { correctAnswer = w.word_de; }
                     isCorrect = baseCorrect && formsCorrect;
                 } else { isCorrect = main.toLowerCase() === expectedWord; correctAnswer = w.word_de; }
@@ -1091,10 +1535,10 @@
 
             if (isCorrect) {
                 feedback.classList.add('bg-green-50', 'text-green-600', 'border-green-200', 'dark:bg-green-900/20', 'dark:border-green-800'); feedback.innerText = "Верно!"; feedback.classList.remove('hidden');
-                setTimeout(() => updateScoreWithSM2(4), 1000); 
+                cardTimeout = setTimeout(() => updateScoreWithSM2(4), 1000);
             } else {
                 feedback.classList.add('bg-red-50', 'text-red-600', 'border-red-200', 'dark:bg-red-900/20', 'dark:border-red-800'); feedback.innerText = `Ошибка. Правильно: ${correctAnswer}`; feedback.classList.remove('hidden');
-                setTimeout(() => updateScoreWithSM2(0), 2500); 
+                cardTimeout = setTimeout(() => updateScoreWithSM2(0), 2500);
             }
         };
 
@@ -1105,7 +1549,7 @@
 
         function shuffle(array) {
             let currentIndex = array.length, randomIndex;
-            while (currentIndex != 0) { randomIndex = Math.floor(Math.random() * currentIndex); currentIndex--; [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]; }
+            while (currentIndex != 0) { randomIndex = Math.floor(Math.random() * currentIndex); currentIndex--;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]; }
             return array;
         }
 
@@ -1113,16 +1557,16 @@
             const validWords = globalWords.filter(w => {
                 if (!w.example || (w.word_type !== 'noun' && w.word_type !== 'verb')) return false;
                 let deText = extractGermanSentence(w.example);
-                if (deText.includes(':')) return false; 
+                if (deText.includes(':')) return false;
                 let parts = deText.split(/\s+/).filter(Boolean);
-                return parts.length >= 3 && parts.length <= 8; 
+                return parts.length >= 3 && parts.length <= 8;
             });
 
-            if(validWords.length === 0) return alert("Не найдено подходящих предложений в ваших примерах!");
-            
+            if (validWords.length === 0) return alert("Не найдено подходящих предложений в ваших примерах!");
+
             const randomWord = validWords[Math.floor(Math.random() * validWords.length)];
-            builderTarget = extractGermanSentence(randomWord.example); 
-            
+            builderTarget = extractGermanSentence(randomWord.example);
+
             const cleanText = builderTarget.replace(/[.,?!]/g, '').trim();
             let pool = cleanText.split(/\s+/).filter(Boolean);
 
@@ -1131,15 +1575,15 @@
                 const distractors = availableDistractors.sort(() => 0.5 - Math.random()).slice(0, 2).map(w => w.word_de);
                 pool = pool.concat(distractors);
             }
-            
+
             builderWords = shuffle(pool);
             builderSelected = [];
 
             document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('builder-game').classList.remove('hidden');
-            
+
             document.getElementById('builder-target-word').innerHTML = `Собери оригинальную фразу, содержащую слово:<br><strong class="text-blue-500 text-lg block mt-2">${randomWord.word_ru}</strong>`;
-            
+
             renderBuilder();
         };
 
@@ -1148,7 +1592,7 @@
             const dropzone = document.getElementById('builder-dropzone');
             const btnCheck = document.getElementById('btn-check-builder');
             const feedback = document.getElementById('builder-feedback');
-            
+
             feedback.classList.add('hidden');
             btnCheck.disabled = builderSelected.length === 0;
             btnCheck.className = builderSelected.length === 0 ? "w-full bg-gray-100 dark:bg-gray-800 text-gray-400 font-bold py-3.5 rounded-xl mt-6 transition-all border border-transparent" : "w-full bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-6 shadow-md shadow-blue-500/20 active:scale-95 transition-all";
@@ -1156,7 +1600,7 @@
             pool.innerHTML = builderWords.map((w, i) => {
                 return `<button onclick="builderSelect(${i})" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 shadow-sm rounded-lg font-medium active:scale-95 transition-transform">${w}</button>`;
             }).join('');
-            
+
             dropzone.innerHTML = builderSelected.map((w, i) => `<button onclick="builderDeselect(${i})" class="px-4 py-2 bg-blue-500 text-white shadow-md rounded-lg font-bold active:scale-95 transition-transform animate-in zoom-in duration-200">${w}</button>`).join('');
         }
 
@@ -1168,7 +1612,7 @@
             const targetStr = builderTarget.replace(/[.,?!]/g, '').replace(/\s+/g, '').toLowerCase();
             const feedback = document.getElementById('builder-feedback');
             const btnCheck = document.getElementById('btn-check-builder');
-            
+
             feedback.classList.remove('hidden');
             btnCheck.disabled = true;
 
@@ -1191,7 +1635,7 @@
         window.startVerbTrainer = () => {
             vtQueue = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip).sort(() => 0.5 - Math.random());
             if (vtQueue.length === 0) return alert("Заполните формы Präteritum и Partizip II у глаголов в словаре!");
-            
+
             vtIdx = 0;
             document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('verb-trainer-game').classList.remove('hidden');
@@ -1228,7 +1672,7 @@
         };
 
         window.answerVerb = (remembered) => {
-            if (!remembered) { vtQueue.push({...vtQueue[vtIdx]}); } // Если забыл — кидаем в конец очереди
+            if (!remembered) { vtQueue.push({ ...vtQueue[vtIdx] }); } // Если забыл — кидаем в конец очереди
             vtIdx++;
             renderVerbCard();
         };
@@ -1243,18 +1687,18 @@
         function generateHeatmap(history) {
             let html = '<div class="flex gap-1.5 overflow-x-auto pb-2 scroll-smooth">';
             let cols = []; let currCol = [];
-            for(let i=83; i>=0; i--) {
+            for (let i = 83; i >= 0; i--) {
                 let d = new Date(); d.setDate(d.getDate() - i);
                 let iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
                 let ms = history[iso] || 0; let mins = ms / 60000;
-                
+
                 let color = 'bg-gray-100 dark:bg-gray-800';
-                if(mins > 0) color = 'bg-blue-200 dark:bg-blue-900/40';
-                if(mins >= 5) color = 'bg-blue-400 dark:bg-blue-700/60';
-                if(mins >= DAILY_GOAL_MINUTES) color = 'bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.4)]'; 
-                
+                if (mins > 0) color = 'bg-blue-200 dark:bg-blue-900/40';
+                if (mins >= 5) color = 'bg-blue-400 dark:bg-blue-700/60';
+                if (mins >= DAILY_GOAL_MINUTES) color = 'bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.4)]';
+
                 currCol.push(`<div class="w-3 h-3 rounded-[3px] ${color} transition-colors" title="${iso}: ${Math.round(mins)} мин"></div>`);
-                if(currCol.length === 7 || i === 0) { cols.push(`<div class="flex flex-col gap-1.5">${currCol.join('')}</div>`); currCol = []; }
+                if (currCol.length === 7 || i === 0) { cols.push(`<div class="flex flex-col gap-1.5">${currCol.join('')}</div>`); currCol = []; }
             }
             html += cols.join('') + '</div>';
             return html;
@@ -1283,10 +1727,10 @@
         async function loadStats() {
             const stats = document.getElementById('view-stats');
             try {
-                try { const res = await apiFetch('/history'); serverHistory = await res.json(); } 
-                catch(e) { serverHistory = JSON.parse(localStorage.getItem('studyHistory')) || {}; }
+                try { const res = await apiFetch('/history'); serverHistory = await res.json(); }
+                catch (e) { serverHistory = JSON.parse(localStorage.getItem('studyHistory')) || {}; }
 
-                const total = globalWords.length; 
+                const total = globalWords.length;
                 const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
                 const pctMastery = total === 0 ? 0 : Math.round((mastered / total) * 100);
 
@@ -1296,15 +1740,15 @@
                 if (mastered > 500) statusLevel = "Профи (B2+)";
 
                 const folders = {};
-                globalWords.forEach(w => { 
-                    const k = `${w.folder}|${w.level||'Общее'}|${w.subfolder}`; 
-                    if(!folders[k]) folders[k] = {f:w.folder, l:w.level||'Общее', s:w.subfolder, total:0, done:0}; 
-                    folders[k].total++; if(w.score>=MAX_SCORE) folders[k].done++; 
+                globalWords.forEach(w => {
+                    const k = `${w.folder}|${w.level || 'Общее'}|${w.subfolder}`;
+                    if (!folders[k]) folders[k] = { f: w.folder, l: w.level || 'Общее', s: w.subfolder, total: 0, done: 0 };
+                    folders[k].total++; if (w.score >= MAX_SCORE) folders[k].done++;
                 });
 
                 const sortedFolders = Object.values(folders).sort((a, b) => {
                     const pctA = a.done / a.total; const pctB = b.done / b.total;
-                    if (pctB !== pctA) return pctA - pctB; return a.s.localeCompare(b.s); 
+                    if (pctB !== pctA) return pctA - pctB; return a.s.localeCompare(b.s);
                 });
 
                 let streak = 0;
@@ -1314,7 +1758,7 @@
 
                 const goalMs = DAILY_GOAL_MINUTES * 60000;
                 let checkD = new Date();
-                if ((serverHistory[todayIso] || 0) >= goalMs) {} else if ((serverHistory[yesterdayIso] || 0) >= goalMs) { checkD.setDate(checkD.getDate() - 1); } else { checkD = null; }
+                if ((serverHistory[todayIso] || 0) >= goalMs) { } else if ((serverHistory[yesterdayIso] || 0) >= goalMs) { checkD.setDate(checkD.getDate() - 1); } else { checkD = null; }
                 if (checkD) {
                     while (true) {
                         let iso = new Date(checkD.getTime() - checkD.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -1370,12 +1814,12 @@
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Прогресс по темам</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
                         ${sortedFolders.map(dat => {
-                            const pct = Math.round((dat.done / dat.total) * 100);
-                            const isDone = pct === 100;
-                            const barColor = isDone ? 'bg-green-500' : 'bg-blue-500';
-                            const textColor = isDone ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white';
-                            
-                            return `
+                    const pct = Math.round((dat.done / dat.total) * 100);
+                    const isDone = pct === 100;
+                    const barColor = isDone ? 'bg-green-500' : 'bg-blue-500';
+                    const textColor = isDone ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white';
+
+                    return `
                             <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative flex flex-col justify-between overflow-hidden">
                                 <button onclick="resetFolderStats('${escapeStr(dat.f)}', '${escapeStr(dat.l)}', '${escapeStr(dat.s)}')" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors z-10" title="Сбросить">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -1397,13 +1841,33 @@
                                     </div>
                                 </div>
                             </div>`;
-                        }).join('')}
+                }).join('')}
                     </div>
                 `;
-            } catch(err) {}
+            } catch (err) { }
         }
+
+        window.resetFolderStats = async (f, l, s) => {
+            if (confirm(`Вы уверены, что хотите сбросить прогресс для темы "${s}"?`)) {
+                try {
+                    await apiFetch('/words/reset_folder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) });
+                    await fetchWords(); await loadStats();
+                } catch (e) { alert("Ошибка сброса!"); }
+            }
+        };
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                if (sessionStartMs > 0) saveSessionTime();
+            } else {
+                if (!document.getElementById('train-card-block').classList.contains('hidden')) {
+                    sessionStartMs = Date.now();
+                }
+            }
+        });
 
         switchView('dict');
     </script>
 </body>
+
 </html>
