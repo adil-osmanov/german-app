@@ -319,7 +319,7 @@
                 </button>
 
                 <button onclick="startVerbTrainer()"
-                    class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-orange-500/20 text-white flex justify-between items-center group">
+                    class="w-full text-left bg-gradient-to-br from-orange-400 to-red-500 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-orange-500/20 text-white flex justify-between items-center group mb-4">
                     <div>
                         <span
                             class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Грамматика</span>
@@ -329,6 +329,32 @@
                     <div
                         class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl">
                         ⚔️</div>
+                </button>
+
+                <button onclick="startListeningQuiz()"
+                    class="w-full text-left bg-gradient-to-br from-green-500 to-emerald-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-green-500/20 text-white flex justify-between items-center group mb-4">
+                    <div>
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Восприятие</span>
+                        <h3 class="text-xl font-bold">Аудирование</h3>
+                        <p class="text-green-100 text-[11px] font-medium mt-1">Тренировка понимания на слух.</p>
+                    </div>
+                    <div
+                        class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl flex-shrink-0">
+                        🎧</div>
+                </button>
+
+                <button onclick="startSprint()"
+                    class="w-full text-left bg-gradient-to-br from-purple-500 to-fuchsia-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-purple-500/20 text-white flex justify-between items-center group">
+                    <div>
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Скорость</span>
+                        <h3 class="text-xl font-bold">Спринт</h3>
+                        <p class="text-purple-100 text-[11px] font-medium mt-1">Быстрый перевод слов (на время).</p>
+                    </div>
+                    <div
+                        class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl flex-shrink-0">
+                        ⚡</div>
                 </button>
             </div>
 
@@ -406,6 +432,51 @@
                 </div>
             </div>
 
+            <div id="listening-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
+                <div
+                    class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 text-center relative flex flex-col transition-all">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Аудирование</span>
+                        <button onclick="closePractice()"
+                            class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
+                    </div>
+                    <div class="mb-8 flex flex-col items-center">
+                        <span id="listening-counter"
+                            class="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-6 block">Осталось:
+                            0</span>
+                        <button onclick="playListeningWord()"
+                            class="w-24 h-24 bg-green-500 hover:bg-green-600 rounded-full text-white text-5xl flex items-center justify-center shadow-lg shadow-green-500/30 transform active:scale-95 transition-all">
+                            ▶️
+                        </button>
+                        <p class="text-xs text-gray-400 mt-4 font-medium">Нажмите, чтобы прослушать</p>
+                    </div>
+                    <div id="listening-options" class="grid grid-cols-1 gap-3 w-full"></div>
+                </div>
+            </div>
+
+            <div id="sprint-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
+                <div
+                    class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 text-center relative flex flex-col transition-all">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Спринт</span>
+                        <button onclick="closePractice()"
+                            class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
+                    </div>
+                    <div class="mb-8">
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden mb-6">
+                            <div id="sprint-progress"
+                                class="bg-purple-500 h-full transition-all duration-1000 ease-linear"
+                                style="width: 100%"></div>
+                        </div>
+                        <span id="sprint-score"
+                            class="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-2 block">Счет:
+                            0</span>
+                        <h2 id="sprint-word"
+                            class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-tight"></h2>
+                    </div>
+                    <div id="sprint-options" class="grid grid-cols-1 gap-3 w-full"></div>
+                </div>
+            </div>
         </section>
 
         <section id="view-stats" class="hidden pb-10 pt-4"></section>
@@ -1693,7 +1764,177 @@
             document.getElementById('practice-menu').classList.remove('hidden');
             document.getElementById('builder-game').classList.add('hidden');
             document.getElementById('verb-trainer-game').classList.add('hidden');
+            document.getElementById('listening-game').classList.add('hidden');
+            document.getElementById('sprint-game').classList.add('hidden');
+            if (sprintTimer) clearInterval(sprintTimer);
         };
+
+        // --- МИНИ-ИГРА 3: АУДИРОВАНИЕ ---
+        let listQueue = [];
+        let listIdx = 0;
+        let listCurrentWord = null;
+
+        window.startListeningQuiz = () => {
+            if (globalWords.length < 4) return alert("Нужно минимум 4 слова в базе!");
+            listQueue = globalWords.slice().sort(() => 0.5 - Math.random()).slice(0, 20); // 20 words per run
+            listIdx = 0;
+            document.getElementById('practice-menu').classList.add('hidden');
+            document.getElementById('listening-game').classList.remove('hidden');
+            nextListeningWord();
+        };
+
+        window.playListeningWord = () => {
+            if (!listCurrentWord) return;
+            speakWord(listCurrentWord.word_de);
+        };
+
+        function nextListeningWord() {
+            if (listIdx >= listQueue.length) {
+                alert("Ура! Аудирование завершено.");
+                closePractice();
+                return;
+            }
+            listCurrentWord = listQueue[listIdx];
+            document.getElementById('listening-counter').innerText = `Слово: ${listIdx + 1} из ${listQueue.length}`;
+
+            // Generate options
+            let options = [listCurrentWord];
+            let pool = globalWords.filter(w => w.id !== listCurrentWord.id);
+            pool = pool.sort(() => 0.5 - Math.random());
+            options.push(pool[0], pool[1], pool[2]);
+            options = options.sort(() => 0.5 - Math.random()); // shuffle
+
+            const block = document.getElementById('listening-options');
+            block.innerHTML = '';
+
+            options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm font-medium flex justify-between items-center hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors border border-gray-100 dark:border-gray-700 active:scale-95";
+                btn.innerHTML = `<span>${opt.word_ru}</span><span class="text-[10px] text-gray-400 font-black border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded ml-2">${idx + 1}</span>`;
+                btn.onclick = () => checkListening(opt.id, btn);
+                block.appendChild(btn);
+            });
+
+            setTimeout(playListeningWord, 500);
+        }
+
+        function checkListening(id, btn) {
+            if (id === listCurrentWord.id) {
+                btn.className = "p-4 bg-green-500 shadow-md shadow-green-500/30 rounded-xl text-sm font-bold text-white transition-all border border-green-600 transform scale-[1.02]";
+                setTimeout(() => { listIdx++; nextListeningWord(); }, 800);
+            } else {
+                btn.className = "p-4 bg-red-500 rounded-xl text-sm font-bold text-white transition-all border border-red-600";
+                setTimeout(() => { btn.className = "p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm font-medium transition-colors border border-gray-100 dark:border-gray-700"; }, 800);
+            }
+        }
+
+        // --- МИНИ-ИГРА 4: СПРИНТ ---
+        let sprintScore = 0;
+        let sprintTimer = null;
+        let sprintCurrentWord = null;
+        let sprintTimeLeft = 60; // 60 seconds
+
+        window.startSprint = () => {
+            if (globalWords.length < 4) return alert("Нужно минимум 4 слова в базе!");
+            sprintScore = 0;
+            sprintTimeLeft = 60;
+            document.getElementById('sprint-score').innerText = `Счет: 0`;
+            document.getElementById('practice-menu').classList.add('hidden');
+            document.getElementById('sprint-game').classList.remove('hidden');
+            document.getElementById('sprint-progress').style.width = `100%`;
+
+            nextSprintWord();
+
+            sprintTimer = setInterval(() => {
+                sprintTimeLeft--;
+                document.getElementById('sprint-progress').style.width = `${(sprintTimeLeft / 60) * 100}%`;
+                if (sprintTimeLeft <= 0) {
+                    clearInterval(sprintTimer);
+                    alert(`Спринт окончен! Ваш счет: ${sprintScore}. Так держать ⚡`);
+                    closePractice();
+                }
+            }, 1000);
+        };
+
+        function nextSprintWord() {
+            let pool = globalWords.slice();
+            pool = pool.sort(() => 0.5 - Math.random());
+            sprintCurrentWord = pool[0];
+
+            document.getElementById('sprint-word').innerText = sprintCurrentWord.word_ru;
+
+            let options = [sprintCurrentWord, pool[1], pool[2], pool[3]];
+            options = options.sort(() => 0.5 - Math.random());
+
+            const block = document.getElementById('sprint-options');
+            block.innerHTML = '';
+
+            options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm font-bold flex justify-between items-center hover:bg-purple-50 hover:text-purple-700 dark:hover:bg-purple-900/30 dark:hover:text-purple-400 transition-colors border border-gray-200 dark:border-gray-700 active:scale-95";
+                btn.innerHTML = `<span>${opt.word_de}</span><span class="text-[10px] text-gray-400 font-black border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded ml-2">${idx + 1}</span>`;
+                btn.onclick = () => checkSprint(opt.id, btn);
+                block.appendChild(btn);
+            });
+        }
+
+        function checkSprint(id, btn) {
+            if (id === sprintCurrentWord.id) {
+                sprintScore++;
+                document.getElementById('sprint-score').innerText = `Счет: ${sprintScore}`;
+                btn.className = "p-4 bg-purple-500 shadow-md shadow-purple-500/30 rounded-xl text-sm font-bold text-white transition-all border border-purple-600 transform scale-[1.02]";
+                setTimeout(() => nextSprintWord(), 300);
+            } else {
+                sprintTimeLeft -= 5; // penalty
+                if (sprintTimeLeft < 0) sprintTimeLeft = 0;
+                document.getElementById('sprint-progress').style.width = `${(sprintTimeLeft / 60) * 100}%`;
+                btn.className = "p-4 bg-red-500 rounded-xl text-sm font-bold text-white transition-all border border-red-600";
+            }
+        }
+
+        // --- KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', (e) => {
+            // Flashcards Shortcuts
+            if (!document.getElementById('view-train').classList.contains('hidden') && !document.getElementById('train-card-block').classList.contains('hidden')) {
+                // Showing answer
+                if (!document.getElementById('btn-show-answer').classList.contains('hidden')) {
+                    if (e.code === 'Space' || e.code === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('btn-show-answer').click();
+                        return;
+                    }
+                } else if (!document.getElementById('train-answer-block').classList.contains('hidden')) {
+                    if (e.code === 'Digit1') {
+                        e.preventDefault();
+                        document.getElementById('btn-forgot').click();
+                        return;
+                    } else if (e.code === 'Digit2' || e.code === 'Space' || e.code === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('btn-remembered').click();
+                        return;
+                    }
+                }
+            }
+
+            // Sprint Game Shortcuts
+            if (!document.getElementById('sprint-game').classList.contains('hidden')) {
+                const buttons = document.getElementById('sprint-options').querySelectorAll('button');
+                if (e.code === 'Digit1' && buttons[0]) { e.preventDefault(); buttons[0].click(); }
+                if (e.code === 'Digit2' && buttons[1]) { e.preventDefault(); buttons[1].click(); }
+                if (e.code === 'Digit3' && buttons[2]) { e.preventDefault(); buttons[2].click(); }
+                if (e.code === 'Digit4' && buttons[3]) { e.preventDefault(); buttons[3].click(); }
+            }
+
+            // Listening Game Shortcuts
+            if (!document.getElementById('listening-game').classList.contains('hidden')) {
+                if (e.code === 'Space') { e.preventDefault(); playListeningWord(); return; }
+                const buttons = document.getElementById('listening-options').querySelectorAll('button');
+                if (e.code === 'Digit1' && buttons[0]) { e.preventDefault(); buttons[0].click(); }
+                if (e.code === 'Digit2' && buttons[1]) { e.preventDefault(); buttons[1].click(); }
+                if (e.code === 'Digit3' && buttons[2]) { e.preventDefault(); buttons[2].click(); }
+                if (e.code === 'Digit4' && buttons[3]) { e.preventDefault(); buttons[3].click(); }
+            }
+        });
 
         // --- СТАТИСТИКА И ТЕПЛОВАЯ КАРТА ---
         function generateHeatmap(history) {
