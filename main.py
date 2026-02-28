@@ -20,29 +20,8 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_rgLF4vIjyqH1@ep-sparkling-truth-aiwf28f5-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require")
 
-try:
-    connection_pool = pool.SimpleConnectionPool(1, 20, DATABASE_URL, cursor_factory=RealDictCursor)
-except Exception as e:
-    connection_pool = None
-
-class DBConnection:
-    def __init__(self):
-        self.conn = connection_pool.getconn() if connection_pool else psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-        self.is_pooled = connection_pool is not None
-    def cursor(self, *args, **kwargs):
-        return self.conn.cursor(*args, **kwargs)
-    def commit(self):
-        self.conn.commit()
-    def rollback(self):
-        self.conn.rollback()
-    def close(self):
-        if self.is_pooled:
-            connection_pool.putconn(self.conn)
-        else:
-            self.conn.close()
-
 def get_db_connection():
-    return DBConnection()
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def fetch_example_sentence(word_de: str) -> str:
     try:

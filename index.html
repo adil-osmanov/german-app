@@ -336,21 +336,6 @@
                     <p class="text-gray-500 text-sm leading-relaxed">Инструменты для отработки сложных навыков.</p>
                 </div>
 
-                <button onclick="startReader()"
-                    class="w-full text-left bg-gradient-to-br from-teal-500 to-cyan-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-teal-500/20 text-white flex justify-between items-center group mb-4">
-                    <div>
-                        <span
-                            class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Чтение</span>
-                        <h3 class="text-xl font-bold">Умная читалка</h3>
-                        <p class="text-teal-100 text-[11px] font-medium mt-1">Читай тексты и переводи слова в один клик.
-                        </p>
-                    </div>
-                    <div
-                        class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl flex-shrink-0">
-                        📖
-                    </div>
-                </button>
-
                 <button onclick="startBuilder()"
                     class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-blue-500/20 text-white flex justify-between items-center group">
                     <div>
@@ -402,6 +387,40 @@
                         class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl flex-shrink-0">
                         ⚡</div>
                 </button>
+
+                <button onclick="startMatchGame()"
+                    class="w-full text-left bg-gradient-to-br from-indigo-500 to-blue-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-indigo-500/20 text-white flex justify-between items-center group mb-2">
+                    <div>
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Реакция</span>
+                        <h3 class="text-xl font-bold">Подбор пар</h3>
+                        <p class="text-indigo-100 text-[11px] font-medium mt-1">Соедини слово и перевод на время.</p>
+                    </div>
+                    <div
+                        class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl flex-shrink-0">
+                        🔗</div>
+                </button>
+            </div>
+
+            <div id="match-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
+                <div
+                    class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 relative">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Подбор пар</span>
+                        <div class="flex items-center gap-3">
+                            <span id="match-timer"
+                                class="font-mono text-lg font-bold text-gray-700 dark:text-gray-300">0.0с</span>
+                            <button onclick="closePractice()"
+                                class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
+                        </div>
+                    </div>
+                    <div id="match-grid" class="grid grid-cols-2 gap-3 mb-6 min-h-[300px]"></div>
+                    <button id="btn-match-retry" onclick="startMatchGame()"
+                        class="hidden w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 active:scale-95">Играть
+                        снова</button>
+                    <p id="match-feedback" class="text-center font-bold text-lg mt-4 hidden animate-in fade-in zoom-in">
+                    </p>
+                </div>
             </div>
 
             <div id="builder-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
@@ -473,32 +492,6 @@
                                 помню</button>
                             <button onclick="answerVerb(true)"
                                 class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-4 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all">Помню</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="reader-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
-                <div
-                    class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 relative flex flex-col transition-all">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Умная читалка</span>
-                        <button onclick="closePractice()"
-                            class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
-                    </div>
-
-                    <div id="reader-setup">
-                        <textarea id="reader-input" rows="8"
-                            class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-base text-gray-900 dark:text-white outline-none focus:ring-2 ring-teal-500/50 resize-none font-medium leading-relaxed"
-                            placeholder="Вставьте сюда любой текст на немецком языке. Например, из новостей, книг или переписки..."></textarea>
-                        <button onclick="processReaderText()"
-                            class="w-full bg-teal-500 text-white font-bold py-3.5 rounded-xl mt-3 shadow-md shadow-teal-500/20 active:scale-95 transition-all text-sm">Читать
-                            текст</button>
-                    </div>
-
-                    <div id="reader-view" class="hidden">
-                        <div id="reader-content"
-                            class="text-lg leading-relaxed text-gray-800 dark:text-gray-200 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                         </div>
                     </div>
                 </div>
@@ -838,12 +831,28 @@
         let recognition = null;
         if (SpeechRecognition) { recognition = new SpeechRecognition(); recognition.interimResults = false; recognition.maxAlternatives = 1; }
 
-        function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5) {
+        function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5, currentScore = 0) {
+            if (repetitions === 0 && currentScore > 0) {
+                repetitions = currentScore;
+                if (interval === 0) {
+                    if (currentScore === 1) interval = 1;
+                    else if (currentScore === 2) interval = 4;
+                    else if (currentScore === 3) interval = 12;
+                    else interval = 36;
+                }
+            }
             if (quality < 3) { repetitions = 0; interval = 0; }
             else { if (repetitions === 0) interval = 1; else if (repetitions === 1) interval = 4; else interval = Math.round(interval * easeFactor * 1.2); repetitions++; }
             easeFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
             if (easeFactor < 1.3) easeFactor = 1.3;
             return { repetitions, interval, easeFactor };
+        }
+
+        function formatInterval(days) {
+            if (!days || days <= 0) return '1 дн';
+            if (days < 30) return `${days} дн`;
+            if (days < 365) return `${(days / 30).toFixed(1).replace('.0', '')} мес`;
+            return `${(days / 365).toFixed(1).replace('.0', '')} г`;
         }
 
         let currentUser = localStorage.getItem('appUser');
@@ -1605,16 +1614,16 @@
             const container = document.getElementById('train-topics-container');
             try {
                 container.innerHTML = '';
-                const newWordsCount = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
+                const availableCount = globalWords.filter(w => isWordDue(w)).length;
                 const masteredCount = globalWords.filter(w => w.score >= MAX_SCORE).length;
-                const waitingCount = globalWords.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
+                const waitingCount = globalWords.filter(w => !isWordDue(w)).length;
                 const weakWordsCount = globalWords.filter(w => w.score < 2 && isWordDue(w)).length;
 
                 let html = `
                     <button onclick="startTraining('all')" class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-2xl shadow-md text-white flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-lg font-bold">Слова на сегодня</h3>
-                            <p class="text-blue-100 text-[11px] font-medium mt-1">Доступно: ${newWordsCount} ${waitingCount > 0 ? `| Ожидают: ${waitingCount}` : ''}</p>
+                            <p class="text-blue-100 text-[11px] font-medium mt-1">Доступно: ${availableCount} ${waitingCount > 0 ? `| Ожидают: ${waitingCount}` : ''}</p>
                         </div>
                         <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                     </button>
@@ -1654,7 +1663,7 @@
 
                 for (const folder in groupedTopics) {
                     const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
-                    const cWordsCount = courseWords.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
+                    const cWordsCount = courseWords.filter(w => isWordDue(w)).length;
 
                     let folderActiveHTML = '';
                     if (cWordsCount > 0) {
@@ -1677,8 +1686,8 @@
                     groupedTopics[folder].forEach(t => {
                         const [f, l, s] = t.split('|');
                         const allInTopic = globalWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s);
-                        const wordsCount = allInTopic.filter(w => w.score < MAX_SCORE && isWordDue(w)).length;
-                        const waitingCount = allInTopic.filter(w => w.score < MAX_SCORE && !isWordDue(w)).length;
+                        const wordsCount = allInTopic.filter(w => isWordDue(w)).length;
+                        const waitingCount = allInTopic.filter(w => !isWordDue(w)).length;
                         const archivedCount = allInTopic.filter(w => w.score >= MAX_SCORE).length;
 
                         if (wordsCount === 0 && waitingCount === 0 && archivedCount > 0) {
@@ -1719,7 +1728,7 @@
         }
 
         window.startTraining = (sel, forceArchive = false) => {
-            let availableWords = globalWords.filter(w => w.score < MAX_SCORE && isWordDue(w));
+            let availableWords = globalWords.filter(w => isWordDue(w));
 
             if (sel === 'all') { trainList = availableWords; }
             else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 2); }
@@ -1822,8 +1831,8 @@
                 document.getElementById('btn-forgot').onclick = () => updateScoreWithSM2(0);
                 document.getElementById('btn-remembered').onclick = () => updateScoreWithSM2(4);
 
-                const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor);
-                document.getElementById('sm2-good-time').innerText = goodCalc.interval > 0 ? `${goodCalc.interval} дн` : '1 дн';
+                const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
+                document.getElementById('sm2-good-time').innerText = formatInterval(goodCalc.interval);
 
             } else if (state === 'L2') {
                 if (badge) { badge.innerText = `Письмо (Финал)`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
@@ -1866,7 +1875,7 @@
                 trainList.push(w);
             }
 
-            const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor);
+            const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor, w.score);
 
             let nextReviewMs = 0;
             if (sm2Result.interval === 0) nextReviewMs = Date.now() + 10 * 60 * 1000;
@@ -1934,8 +1943,9 @@
             feedback.className = "w-full text-center py-3 rounded-xl font-medium text-sm mb-3 transition-all animate-in fade-in zoom-in duration-200 border";
 
             if (isCorrect) {
-                feedback.classList.add('bg-green-50', 'text-green-600', 'border-green-200', 'dark:bg-green-900/20', 'dark:border-green-800'); feedback.innerText = "Верно!"; feedback.classList.remove('hidden');
-                cardTimeout = setTimeout(() => updateScoreWithSM2(4), 1000);
+                const nextCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
+                feedback.classList.add('bg-green-50', 'text-green-600', 'border-green-200', 'dark:bg-green-900/20', 'dark:border-green-800'); feedback.innerText = `Верно! Следующий повтор через: ${formatInterval(nextCalc.interval)}`; feedback.classList.remove('hidden');
+                cardTimeout = setTimeout(() => updateScoreWithSM2(4), 1200);
             } else {
                 feedback.classList.add('bg-red-50', 'text-red-600', 'border-red-200', 'dark:bg-red-900/20', 'dark:border-red-800'); feedback.innerText = `Ошибка. Правильно: ${correctAnswer}`; feedback.classList.remove('hidden');
                 cardTimeout = setTimeout(() => updateScoreWithSM2(0), 2500);
@@ -1979,6 +1989,7 @@
             builderWords = shuffle(pool);
             builderSelected = [];
 
+            sessionStartMs = Date.now();
             document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('builder-game').classList.remove('hidden');
 
@@ -2037,6 +2048,7 @@
             if (vtQueue.length === 0) return alert("Заполните формы Präteritum и Partizip II у глаголов в словаре!");
 
             vtIdx = 0;
+            sessionStartMs = Date.now();
             document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('verb-trainer-game').classList.remove('hidden');
             renderVerbCard();
@@ -2077,88 +2089,110 @@
             renderVerbCard();
         };
 
+        // --- МИНИ-ИГРА: ПОДБОР ПАР (MATCH) ---
+        let matchCards = [];
+        let matchSelectedIds = [];
+        let matchStartTime = 0;
+        let matchPairsLeft = 0;
+
+        window.startMatchGame = () => {
+            const validWords = globalWords.filter(w => w.word_de && w.word_ru).sort(() => 0.5 - Math.random());
+            if (validWords.length < 6) return alert("Недостаточно слов для игры (минимум 6).");
+
+            const selectedWords = validWords.slice(0, 6);
+            matchCards = [];
+
+            selectedWords.forEach(w => {
+                const de = (w.word_type === 'noun' && w.article ? w.article + ' ' : '') + w.word_de;
+                matchCards.push({ id: w.id, text: de, lang: 'de' });
+                matchCards.push({ id: w.id, text: w.word_ru, lang: 'ru' });
+            });
+
+            matchCards.sort(() => 0.5 - Math.random());
+            matchSelectedIds = [];
+            matchPairsLeft = 6;
+            matchStartTime = Date.now();
+            sessionStartMs = Date.now();
+
+            document.getElementById('practice-menu').classList.add('hidden');
+            document.getElementById('match-game').classList.remove('hidden');
+
+            document.getElementById('btn-match-retry').classList.add('hidden');
+            document.getElementById('match-feedback').classList.add('hidden');
+
+            if (window.matchTimerInt) clearInterval(window.matchTimerInt);
+            window.matchTimerInt = setInterval(() => {
+                const elapsed = (Date.now() - matchStartTime) / 1000;
+                document.getElementById('match-timer').innerText = elapsed.toFixed(1) + 'с';
+            }, 100);
+
+            renderMatchGrid();
+        };
+
+        function renderMatchGrid() {
+            const grid = document.getElementById('match-grid');
+            grid.innerHTML = matchCards.map((c, i) => {
+                const isSelected = matchSelectedIds.includes(i);
+                let btnClass = isSelected
+                    ? "bg-indigo-100 dark:bg-indigo-900/40 border-indigo-500 text-indigo-700 dark:text-indigo-300 scale-95"
+                    : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20";
+
+                if (c.matched) btnClass = "opacity-0 pointer-events-none scale-90";
+
+                return `<button onclick="matchSelect(${i})" class="relative p-3 sm:p-4 rounded-xl border-2 font-medium text-xs sm:text-sm flex items-center justify-center text-center transition-all duration-200 active:scale-95 min-h-[80px] ${btnClass}">
+                    ${c.text}
+                </button>`;
+            }).join('');
+        }
+
+        window.matchSelect = (index) => {
+            if (matchCards[index].matched || matchSelectedIds.includes(index) || matchSelectedIds.length >= 2) return;
+
+            matchSelectedIds.push(index);
+            renderMatchGrid();
+
+            if (matchSelectedIds.length === 2) {
+                const [i1, i2] = matchSelectedIds;
+                const c1 = matchCards[i1];
+                const c2 = matchCards[i2];
+
+                if (c1.id === c2.id && c1.lang !== c2.lang) {
+                    setTimeout(() => {
+                        matchCards[i1].matched = true;
+                        matchCards[i2].matched = true;
+                        matchSelectedIds = [];
+                        matchPairsLeft--;
+                        renderMatchGrid();
+
+                        if (matchPairsLeft === 0) {
+                            clearInterval(window.matchTimerInt);
+                            const finalTime = ((Date.now() - matchStartTime) / 1000).toFixed(1);
+                            document.getElementById('btn-match-retry').classList.remove('hidden');
+                            const fb = document.getElementById('match-feedback');
+                            fb.className = "text-center py-4 rounded-xl font-bold mt-4 transition-all bg-green-50 text-green-600 border border-green-200 dark:bg-green-900/20 dark:border-green-800 animate-in fade-in zoom-in";
+                            fb.innerHTML = `Победа! 🎉 <br><span class="text-sm font-medium mt-1">Твое время: ${finalTime}с</span>`;
+                            fb.classList.remove('hidden');
+                        }
+                    }, 300);
+                } else {
+                    setTimeout(() => {
+                        matchSelectedIds = [];
+                        renderMatchGrid();
+                    }, 500);
+                }
+            }
+        };
+
         window.closePractice = () => {
+            saveSessionTime();
             document.getElementById('practice-menu').classList.remove('hidden');
+            document.getElementById('match-game').classList.add('hidden');
             document.getElementById('builder-game').classList.add('hidden');
             document.getElementById('verb-trainer-game').classList.add('hidden');
             document.getElementById('listening-game').classList.add('hidden');
             document.getElementById('sprint-game').classList.add('hidden');
-            document.getElementById('reader-game').classList.add('hidden');
             if (sprintTimer) clearInterval(sprintTimer);
-        };
-
-        // --- МИНИ-ИГРА 0: ЧИТАЛКА ---
-        window.startReader = () => {
-            document.getElementById('practice-menu').classList.add('hidden');
-            document.getElementById('reader-game').classList.remove('hidden');
-            document.getElementById('reader-setup').classList.remove('hidden');
-            document.getElementById('reader-view').classList.add('hidden');
-        };
-
-        window.processReaderText = () => {
-            const rawText = document.getElementById('reader-input').value;
-            if (!rawText.trim()) return;
-
-            const tokens = rawText.match(/[\p{L}\p{M}]+|[^\p{L}\p{M}]+/gu) || [];
-
-            const contentDiv = document.getElementById('reader-content');
-            contentDiv.innerHTML = '';
-
-            const frag = document.createDocumentFragment();
-            tokens.forEach(token => {
-                if (/^[\p{L}\p{M}]+$/u.test(token)) {
-                    const span = document.createElement('span');
-                    span.innerText = token;
-                    span.className = "cursor-pointer hover:bg-teal-100 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 rounded transition-colors pb-0.5 border-b border-transparent hover:border-teal-300 dark:hover:border-teal-700 active:bg-teal-200 dark:active:bg-teal-800";
-                    span.onclick = (e) => showReaderWord(token, e);
-                    frag.appendChild(span);
-                } else {
-                    const node = document.createTextNode(token);
-                    frag.appendChild(node);
-                }
-            });
-            contentDiv.appendChild(frag);
-
-            document.getElementById('reader-setup').classList.add('hidden');
-            document.getElementById('reader-view').classList.remove('hidden');
-        };
-
-        let oldOnSubmitAdd = null;
-        window.showReaderWord = async (word, event) => {
-            editId = null;
-            document.getElementById('modal-title').innerText = "Легкий перевод";
-            document.getElementById('add-form').reset();
-            setType('noun'); showSingleTab();
-
-            const wordDeInput = document.getElementById('word-de');
-            const wordRuInput = document.getElementById('word-ru');
-
-            wordDeInput.value = word;
-            wordRuInput.value = '';
-
-            checkDuplicate();
-
-            const lastFolder = localStorage.getItem('last_reader_folder') || 'Читалка';
-            document.getElementById('word-folder').value = lastFolder;
-            document.getElementById('word-level').value = '';
-            document.getElementById('word-subfolder').value = 'Тексты';
-
-            modal.classList.remove('hidden');
-
-            setTimeout(() => {
-                wordDeInput.focus();
-                // dispatch blur to trigger auto translation
-                wordDeInput.dispatchEvent(new Event('blur'));
-            }, 100);
-
-            if (!oldOnSubmitAdd) {
-                oldOnSubmitAdd = document.getElementById('add-form').onsubmit;
-            }
-
-            document.getElementById('add-form').onsubmit = async (e) => {
-                localStorage.setItem('last_reader_folder', document.getElementById('word-folder').value.trim());
-                if (oldOnSubmitAdd) await oldOnSubmitAdd(e);
-            };
+            if (window.matchTimerInt) clearInterval(window.matchTimerInt);
         };
 
         // --- МИНИ-ИГРА 3: АУДИРОВАНИЕ ---
@@ -2170,6 +2204,7 @@
             if (globalWords.length < 4) return alert("Нужно минимум 4 слова в базе!");
             listQueue = globalWords.slice().sort(() => 0.5 - Math.random()).slice(0, 20); // 20 words per run
             listIdx = 0;
+            sessionStartMs = Date.now();
             document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('listening-game').classList.remove('hidden');
             nextListeningWord();
@@ -2228,11 +2263,12 @@
         let sprintMistakes = 0;
 
         window.startSprint = () => {
-            if (globalWords.length < 4) return alert("Нужно минимум 4 слова в базе!");
+            if (globalWords.length < 5) return alert("Для спринта нужно минимум 5 слов!");
             sprintScore = 0;
-            sprintTimeLeft = 60;
+            sprintTimeLeft = 60; // Reset sprintTimeLeft
             sprintMistakes = 0;
             document.getElementById('sprint-score').innerText = `Счет: 0`;
+            sessionStartMs = Date.now();
             document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('sprint-game').classList.remove('hidden');
             document.getElementById('sprint-progress').style.width = `100%`;
