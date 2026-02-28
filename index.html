@@ -16,12 +16,43 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: { extend: { colors: { der: '#3b82f6', die: '#ef4444', das: '#10b981' } } }
+            theme: {
+                extend: {
+                    colors: {
+                        der: '#3b82f6', die: '#ef4444', das: '#10b981',
+                        blue: {
+                            50: 'rgb(var(--ac-50) / <alpha-value>)',
+                            100: 'rgb(var(--ac-100) / <alpha-value>)',
+                            200: 'rgb(var(--ac-200) / <alpha-value>)',
+                            300: 'rgb(var(--ac-300) / <alpha-value>)',
+                            400: 'rgb(var(--ac-400) / <alpha-value>)',
+                            500: 'rgb(var(--ac-500) / <alpha-value>)',
+                            600: 'rgb(var(--ac-600) / <alpha-value>)',
+                            700: 'rgb(var(--ac-700) / <alpha-value>)',
+                            800: 'rgb(var(--ac-800) / <alpha-value>)',
+                            900: 'rgb(var(--ac-900) / <alpha-value>)',
+                        }
+                    }
+                }
+            }
         };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
-        if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => { }); });
+        if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js?v=6').catch(() => { }); });
     </script>
     <style>
+        :root {
+            --ac-50: 239 246 255;
+            --ac-100: 219 234 254;
+            --ac-200: 191 219 254;
+            --ac-300: 147 197 253;
+            --ac-400: 96 165 250;
+            --ac-500: 59 130 246;
+            --ac-600: 37 99 235;
+            --ac-700: 29 78 216;
+            --ac-800: 30 64 175;
+            --ac-900: 30 58 138;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
             -webkit-tap-highlight-color: transparent;
@@ -305,6 +336,21 @@
                     <p class="text-gray-500 text-sm leading-relaxed">Инструменты для отработки сложных навыков.</p>
                 </div>
 
+                <button onclick="startReader()"
+                    class="w-full text-left bg-gradient-to-br from-teal-500 to-cyan-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-teal-500/20 text-white flex justify-between items-center group mb-4">
+                    <div>
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest mb-1 block opacity-80">Чтение</span>
+                        <h3 class="text-xl font-bold">Умная читалка</h3>
+                        <p class="text-teal-100 text-[11px] font-medium mt-1">Читай тексты и переводи слова в один клик.
+                        </p>
+                    </div>
+                    <div
+                        class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm text-xl flex-shrink-0">
+                        📖
+                    </div>
+                </button>
+
                 <button onclick="startBuilder()"
                     class="w-full text-left bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-[0.98] transition-all p-5 rounded-[2rem] shadow-md shadow-blue-500/20 text-white flex justify-between items-center group">
                     <div>
@@ -427,6 +473,32 @@
                                 помню</button>
                             <button onclick="answerVerb(true)"
                                 class="flex-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold py-4 rounded-xl border border-green-100 dark:border-green-900/30 active:scale-95 transition-all">Помню</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reader-game" class="hidden mt-4 animate-in slide-in-from-bottom-4 duration-300">
+                <div
+                    class="bg-white dark:bg-gray-900 p-5 rounded-[1.5rem] shadow-lg border border-gray-100 dark:border-gray-800 relative flex flex-col transition-all">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Умная читалка</span>
+                        <button onclick="closePractice()"
+                            class="text-gray-400 hover:text-gray-600 bg-gray-50 dark:bg-gray-800 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors">×</button>
+                    </div>
+
+                    <div id="reader-setup">
+                        <textarea id="reader-input" rows="8"
+                            class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-base text-gray-900 dark:text-white outline-none focus:ring-2 ring-teal-500/50 resize-none font-medium leading-relaxed"
+                            placeholder="Вставьте сюда любой текст на немецком языке. Например, из новостей, книг или переписки..."></textarea>
+                        <button onclick="processReaderText()"
+                            class="w-full bg-teal-500 text-white font-bold py-3.5 rounded-xl mt-3 shadow-md shadow-teal-500/20 active:scale-95 transition-all text-sm">Читать
+                            текст</button>
+                    </div>
+
+                    <div id="reader-view" class="hidden">
+                        <div id="reader-content"
+                            class="text-lg leading-relaxed text-gray-800 dark:text-gray-200 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                         </div>
                     </div>
                 </div>
@@ -606,6 +678,8 @@
                             <input type="text" id="word-de" placeholder="Слово на немецком..." required
                                 autocomplete="off"
                                 class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all text-sm">
+                            <span id="translate-loader-de"
+                                class="text-[10px] text-blue-500 mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
                             <span id="duplicate-warning"
                                 class="text-[10px] text-red-500 mt-1 ml-2 hidden font-medium flex items-center gap-1"></span>
                         </div>
@@ -622,8 +696,13 @@
                             <input type="text" id="word-partizip" placeholder="Partizip II..." autocomplete="off"
                                 class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white transition-all min-w-0 text-sm">
                         </div>
-                        <input type="text" id="word-ru" placeholder="Перевод на русский..." required autocomplete="off"
-                            class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition-all text-sm">
+                        <div class="flex flex-col w-full">
+                            <input type="text" id="word-ru" placeholder="Перевод на русский..." required
+                                autocomplete="off"
+                                class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition-all text-sm">
+                            <span id="translate-loader-ru"
+                                class="text-[10px] text-blue-500 mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
+                        </div>
                         <input type="text" id="word-example" placeholder="Пример использования (необязательно)..."
                             class="w-full bg-gray-50 dark:bg-gray-800 rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white transition-all">
                         <div class="flex w-full gap-2">
@@ -775,13 +854,108 @@
             document.getElementById('profile-close-btn').classList.remove('hidden');
         }
 
+        // --- INDEXED DB OFFLINE OFFLINE-SYNC ---
+        const dbPromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open('worterbuch_idb', 1);
+            request.onupgradeneeded = e => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('words')) db.createObjectStore('words', { keyPath: 'id' });
+                if (!db.objectStoreNames.contains('sync_queue')) db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+
+        async function idbGetWords() {
+            try {
+                const db = await dbPromise;
+                return new Promise(res => {
+                    const tx = db.transaction('words', 'readonly');
+                    const req = tx.objectStore('words').getAll();
+                    req.onsuccess = () => res(req.result || []);
+                });
+            } catch (e) { return []; }
+        }
+
+        async function idbSaveWords(wordsList) {
+            try {
+                const db = await dbPromise;
+                return new Promise(res => {
+                    const tx = db.transaction('words', 'readwrite');
+                    tx.objectStore('words').clear();
+                    wordsList.forEach(w => tx.objectStore('words').put(w));
+                    tx.oncomplete = () => res();
+                });
+            } catch (e) { }
+        }
+
+        async function queueOfflineUpdate(endpoint, method, payload) {
+            try {
+                const db = await dbPromise;
+                return new Promise(res => {
+                    const tx = db.transaction('sync_queue', 'readwrite');
+                    tx.objectStore('sync_queue').put({ endpoint, method, payload, timestamp: Date.now() });
+                    tx.oncomplete = () => res();
+                });
+            } catch (e) { }
+        }
+
+        async function processSyncQueue() {
+            if (!navigator.onLine) return;
+            try {
+                const db = await dbPromise;
+                const items = await new Promise(res => {
+                    const tx = db.transaction('sync_queue', 'readonly');
+                    const req = tx.objectStore('sync_queue').getAll();
+                    req.onsuccess = () => res(req.result || []);
+                });
+
+                if (items.length > 0) {
+                    console.log(`Syncing ${items.length} offline operations...`);
+                    for (let item of items) {
+                        const ok = await apiFetch(item.endpoint, { method: item.method, headers: { 'Content-Type': 'application/json' }, body: item.payload && JSON.stringify(item.payload), _isSync: true }).then(() => true).catch(() => false);
+                        if (ok) {
+                            await new Promise(res => {
+                                const tx = db.transaction('sync_queue', 'readwrite');
+                                tx.objectStore('sync_queue').delete(item.id);
+                                tx.oncomplete = () => res();
+                            });
+                        }
+                    }
+                    console.log('Sync complete');
+                    fetchWords();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        window.addEventListener('online', () => {
+            setTimeout(processSyncQueue, 1500);
+        });
+
         async function apiFetch(url, options = {}) {
             if (!currentUser) currentUser = 'osman';
-            options.headers = options.headers || {};
+            if (!options.headers) options.headers = {};
             options.headers['x-user'] = currentUser;
-            const res = await fetch(url, options);
-            if (!res.ok) throw new Error('Network Error');
-            return res;
+
+            const isScoreUpdate = url.includes('/score') && options.method === 'PUT';
+
+            if (!navigator.onLine && isScoreUpdate && !options._isSync) {
+                // Mock success for offline score update
+                await queueOfflineUpdate(url, options.method, JSON.parse(options.body));
+                return { ok: true, json: async () => ({ status: 'queued offline' }) };
+            }
+
+            try {
+                const res = await fetch(url, options);
+                if (!res.ok) throw new Error('Network Error');
+                return res;
+            } catch (e) {
+                if (isScoreUpdate && !options._isSync) {
+                    await queueOfflineUpdate(url, options.method, JSON.parse(options.body));
+                    return { ok: true, json: async () => ({ status: 'queued offline' }) };
+                }
+                throw e;
+            }
         }
 
         function loadAvatars() {
@@ -894,15 +1068,32 @@
         const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), practice: document.getElementById('nav-practice'), stats: document.getElementById('nav-stats') };
         const isWordDue = (w) => Date.now() >= (w.next_review || 0);
 
-        async function fetchWords() {
+        window.fetchWords = async () => {
             try {
+                if (!navigator.onLine) throw new Error('Offline mode');
                 const res = await apiFetch(API_URL); const data = await res.json();
                 if (Array.isArray(data)) {
                     globalWords = data.map(w => ({ ...w, ease_factor: w.ease_factor || 2.5, interval: w.interval || 0, repetitions: w.repetitions || 0 }));
-                    localStorage.setItem('offline_words_db', JSON.stringify(globalWords));
+                    await idbSaveWords(globalWords);
                 }
+                setTimeout(processSyncQueue, 500);
             } catch (e) {
-                try { const saved = localStorage.getItem('offline_words_db'); if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) globalWords = parsed; } } catch (err) { }
+                try {
+                    const offDb = await idbGetWords();
+                    if (offDb && offDb.length > 0) {
+                        globalWords = offDb;
+                        console.log("Loaded words from IndexedDB.");
+                    } else {
+                        const saved = localStorage.getItem('offline_words_db');
+                        if (saved) {
+                            const parsed = JSON.parse(saved);
+                            if (Array.isArray(parsed)) {
+                                globalWords = parsed;
+                                await idbSaveWords(globalWords);
+                            }
+                        }
+                    }
+                } catch (err) { }
             }
             if (!Array.isArray(globalWords)) globalWords = [];
             try {
@@ -910,7 +1101,7 @@
                 document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(Boolean))].map(l => `<option value="${escapeStr(l)}">`).join('');
                 document.getElementById('subfolder-list').innerHTML = [...new Set(globalWords.map(w => w.subfolder))].filter(Boolean).map(s => `<option value="${escapeStr(s)}">`).join('');
             } catch (e) { }
-        }
+        };
 
         async function switchView(target) {
             if (target !== 'train' && target !== 'practice') saveSessionTime();
@@ -1184,6 +1375,132 @@
         }
 
         document.getElementById('word-de').addEventListener('input', checkDuplicate);
+
+        // --- АВТОМАТИЧЕСКИЙ ПЕРЕВОД И ПОДСТАНОВКА АРТИКЛЕЙ ---
+        async function autoTranslate(sourceInput, targetInput, isSourceRu) {
+            const query = sourceInput.value.trim();
+            if (!query) return;
+            // Если целевое поле уже заполнено - не перезаписываем (уважаем ручной ввод)
+            if (targetInput.value.trim().length > 0) return;
+
+            const loaderId = isSourceRu ? 'translate-loader-de' : 'translate-loader-ru';
+            const loader = document.getElementById(loaderId);
+            if (loader) loader.classList.remove('hidden');
+
+            try {
+                // Прямой перевод через Google Translate (неофициальный, но работающий endpoint)
+                const sl = isSourceRu ? 'ru' : 'de';
+                const tl = isSourceRu ? 'de' : 'ru';
+                const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(query)}`;
+
+                const res = await fetch(translateUrl);
+                const data = await res.json();
+                let translated = data[0][0][0];
+                targetInput.value = translated;
+
+                // Если мы перевели на немецкий (или с немецкого), попытаемся узнать род и множественное число
+                let deWord = isSourceRu ? translated : query;
+                if (deWord) {
+                    try {
+                        const wikUrl = `https://de.wiktionary.org/w/api.php?origin=*&action=query&prop=revisions&rvprop=content&titles=${encodeURIComponent(deWord)}&format=json`;
+                        const wikRes = await fetch(wikUrl, { headers: { 'User-Agent': 'OsmanovDictTool/1.0 (osmanov@example.com)' } });
+                        const wikData = await wikRes.json();
+                        const pages = wikData.query.pages;
+                        const pageId = Object.keys(pages)[0];
+
+                        // По умолчанию ставим der, если не найдем ничего
+                        let genus = 'der';
+                        let plural = '';
+
+                        if (pageId !== '-1') {
+                            const content = pages[pageId].revisions[0]['*'];
+
+                            // 1. Ищем род (Genus)
+                            const genusMatch = content.match(/\{\{Genus\|([mfn])\}\}/) || content.match(/\{\{([mfn])\}\}/);
+                            if (genusMatch) {
+                                const g = genusMatch[1];
+                                if (g === 'm') genus = 'der';
+                                else if (g === 'f') genus = 'die';
+                                else if (g === 'n') genus = 'das';
+                            } else {
+                                if (content.includes('{{m}}')) genus = 'der';
+                                else if (content.includes('{{f}}')) genus = 'die';
+                                else if (content.includes('{{n}}')) genus = 'das';
+                                else if (deWord.endsWith('chen') || deWord.endsWith('lein') || deWord.endsWith('ment') || deWord.endsWith('um')) genus = 'das';
+                                else if (deWord.endsWith('ung') || deWord.endsWith('keit') || deWord.endsWith('heit') || deWord.endsWith('schaft') || deWord.endsWith('tion') || deWord.endsWith('tät') || deWord.endsWith('ik') || deWord.endsWith('ie') || deWord.endsWith('ur') || deWord.endsWith('enz') || deWord.endsWith('anz')) genus = 'die';
+                                else if (deWord.endsWith('er') || deWord.endsWith('ig') || deWord.endsWith('ling') || deWord.endsWith('ismus')) genus = 'der';
+                            }
+                            selectArticle(genus);
+
+                            // 2. Ищем множественное число (Plural)
+                            const pMatch = content.match(/Nominativ Plural\s*=\s*([^<\n\|\}]+)/);
+                            if (pMatch) {
+                                plural = pMatch[1].trim();
+                                if (plural.startsWith('die ')) plural = plural.substring(4);
+                                const pluralInput = document.getElementById('word-plural');
+                                if (pluralInput && !pluralInput.value) {
+                                    pluralInput.value = plural;
+                                }
+                            }
+
+                            // 3. Ищем формы глаголов (Präteritum, Partizip II)
+                            const praetMatch = content.match(/Präteritum_ich=([^<\n\|\}]+)/);
+                            const partMatch = content.match(/Partizip II=([^<\n\|\}]+)/);
+
+                            if (praetMatch || partMatch) {
+                                // Это глагол!
+                                setType('verb');
+                                if (praetMatch) {
+                                    const praetInput = document.getElementById('word-praeteritum');
+                                    if (praetInput && !praetInput.value) praetInput.value = praetMatch[1].trim();
+                                }
+                                if (partMatch) {
+                                    const partInput = document.getElementById('word-partizip');
+                                    if (partInput && !partInput.value) partInput.value = partMatch[1].trim();
+                                }
+                            } else {
+                                // Если нет форм глагола, то скорее всего это существительное или др. оставим noun
+                                setType('noun');
+                                selectArticle(genus);
+                            }
+
+                            // 4. Пытаемся вытащить пример использования (Beispiel)
+                            const examplesBlock = content.split('{{Beispiele}}')[1] || content.split('==== Beispiele ====\n')[1];
+                            if (examplesBlock) {
+                                const lines = examplesBlock.split('\n');
+                                for (let line of lines) {
+                                    if (line.match(/^:\[\d+\]\s/)) {
+                                        let text = line.replace(/^:\[\d+\]\s*/, '');
+                                        text = text.replace(/\{\{[^}]+\}\}/g, '').trim();
+                                        text = text.replace(/'''/g, '');
+                                        text = text.replace(/''/g, '');
+                                        text = text.replace(/<ref.*?<\/ref>/g, '');
+                                        const exampleInput = document.getElementById('word-example');
+                                        if (exampleInput && !exampleInput.value) exampleInput.value = text.trim();
+                                        break;
+                                    }
+                                    if (line.includes('{{Wortbildung}}') || line.includes('{{Übersetzungen}}')) break;
+                                }
+                            }
+                        }
+                    } catch (e) { console.log('Wiktionary error', e); }
+                }
+
+                checkDuplicate(); // Обновим проверку дубликатов
+            } catch (err) {
+                console.error("Translation error:", err);
+            } finally {
+                if (loader) loader.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('word-ru').addEventListener('blur', () => {
+            autoTranslate(document.getElementById('word-ru'), document.getElementById('word-de'), true);
+        });
+
+        document.getElementById('word-de').addEventListener('blur', () => {
+            autoTranslate(document.getElementById('word-de'), document.getElementById('word-ru'), false);
+        });
 
         window.fastAdd = (folder, level, subfolder) => {
             editId = null; document.getElementById('modal-title').innerText = "Быстрое добавление"; document.getElementById('add-form').reset(); setType('noun'); showSingleTab(); selectArticle('der');
@@ -1578,7 +1895,7 @@
                 gwItem.ease_factor = sm2Result.easeFactor; gwItem.interval = sm2Result.interval; gwItem.repetitions = sm2Result.repetitions;
             }
 
-            localStorage.setItem('offline_words_db', JSON.stringify(globalWords));
+            idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
             curIdx++; setTimeout(renderCard, 250);
         }
 
@@ -1766,7 +2083,82 @@
             document.getElementById('verb-trainer-game').classList.add('hidden');
             document.getElementById('listening-game').classList.add('hidden');
             document.getElementById('sprint-game').classList.add('hidden');
+            document.getElementById('reader-game').classList.add('hidden');
             if (sprintTimer) clearInterval(sprintTimer);
+        };
+
+        // --- МИНИ-ИГРА 0: ЧИТАЛКА ---
+        window.startReader = () => {
+            document.getElementById('practice-menu').classList.add('hidden');
+            document.getElementById('reader-game').classList.remove('hidden');
+            document.getElementById('reader-setup').classList.remove('hidden');
+            document.getElementById('reader-view').classList.add('hidden');
+        };
+
+        window.processReaderText = () => {
+            const rawText = document.getElementById('reader-input').value;
+            if (!rawText.trim()) return;
+
+            const tokens = rawText.match(/[\p{L}\p{M}]+|[^\p{L}\p{M}]+/gu) || [];
+
+            const contentDiv = document.getElementById('reader-content');
+            contentDiv.innerHTML = '';
+
+            const frag = document.createDocumentFragment();
+            tokens.forEach(token => {
+                if (/^[\p{L}\p{M}]+$/u.test(token)) {
+                    const span = document.createElement('span');
+                    span.innerText = token;
+                    span.className = "cursor-pointer hover:bg-teal-100 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 rounded transition-colors pb-0.5 border-b border-transparent hover:border-teal-300 dark:hover:border-teal-700 active:bg-teal-200 dark:active:bg-teal-800";
+                    span.onclick = (e) => showReaderWord(token, e);
+                    frag.appendChild(span);
+                } else {
+                    const node = document.createTextNode(token);
+                    frag.appendChild(node);
+                }
+            });
+            contentDiv.appendChild(frag);
+
+            document.getElementById('reader-setup').classList.add('hidden');
+            document.getElementById('reader-view').classList.remove('hidden');
+        };
+
+        let oldOnSubmitAdd = null;
+        window.showReaderWord = async (word, event) => {
+            editId = null;
+            document.getElementById('modal-title').innerText = "Легкий перевод";
+            document.getElementById('add-form').reset();
+            setType('noun'); showSingleTab();
+
+            const wordDeInput = document.getElementById('word-de');
+            const wordRuInput = document.getElementById('word-ru');
+
+            wordDeInput.value = word;
+            wordRuInput.value = '';
+
+            checkDuplicate();
+
+            const lastFolder = localStorage.getItem('last_reader_folder') || 'Читалка';
+            document.getElementById('word-folder').value = lastFolder;
+            document.getElementById('word-level').value = '';
+            document.getElementById('word-subfolder').value = 'Тексты';
+
+            modal.classList.remove('hidden');
+
+            setTimeout(() => {
+                wordDeInput.focus();
+                // dispatch blur to trigger auto translation
+                wordDeInput.dispatchEvent(new Event('blur'));
+            }, 100);
+
+            if (!oldOnSubmitAdd) {
+                oldOnSubmitAdd = document.getElementById('add-form').onsubmit;
+            }
+
+            document.getElementById('add-form').onsubmit = async (e) => {
+                localStorage.setItem('last_reader_folder', document.getElementById('word-folder').value.trim());
+                if (oldOnSubmitAdd) await oldOnSubmitAdd(e);
+            };
         };
 
         // --- МИНИ-ИГРА 3: АУДИРОВАНИЕ ---
@@ -1833,11 +2225,13 @@
         let sprintTimer = null;
         let sprintCurrentWord = null;
         let sprintTimeLeft = 60; // 60 seconds
+        let sprintMistakes = 0;
 
         window.startSprint = () => {
             if (globalWords.length < 4) return alert("Нужно минимум 4 слова в базе!");
             sprintScore = 0;
             sprintTimeLeft = 60;
+            sprintMistakes = 0;
             document.getElementById('sprint-score').innerText = `Счет: 0`;
             document.getElementById('practice-menu').classList.add('hidden');
             document.getElementById('sprint-game').classList.remove('hidden');
@@ -1850,7 +2244,13 @@
                 document.getElementById('sprint-progress').style.width = `${(sprintTimeLeft / 60) * 100}%`;
                 if (sprintTimeLeft <= 0) {
                     clearInterval(sprintTimer);
-                    alert(`Спринт окончен! Ваш счет: ${sprintScore}. Так держать ⚡`);
+                    if (sprintMistakes === 0 && sprintScore >= 10) {
+                        let ps = parseInt(localStorage.getItem('perfectSprints') || '0', 10);
+                        localStorage.setItem('perfectSprints', ps + 1);
+                        alert(`Спринт окончен! Ваш счет: ${sprintScore}. Вы получили значок "Идеальный Спринт"! ⚡`);
+                    } else {
+                        alert(`Спринт окончен! Ваш счет: ${sprintScore}. Так держать ⚡`);
+                    }
                     closePractice();
                 }
             }, 1000);
@@ -1885,6 +2285,7 @@
                 btn.className = "p-4 bg-purple-500 shadow-md shadow-purple-500/30 rounded-xl text-sm font-bold text-white transition-all border border-purple-600 transform scale-[1.02]";
                 setTimeout(() => nextSprintWord(), 300);
             } else {
+                sprintMistakes++;
                 sprintTimeLeft -= 5; // penalty
                 if (sprintTimeLeft < 0) sprintTimeLeft = 0;
                 document.getElementById('sprint-progress').style.width = `${(sprintTimeLeft / 60) * 100}%`;
@@ -1976,58 +2377,88 @@
             `;
         }
 
-        function getAchievementHTML(title, current, tiersParams) {
-            let trIdx = tiersParams.thresholds.findIndex(t => current < t);
-            if (trIdx === -1) trIdx = tiersParams.thresholds.length; // Maxed out
 
-            const max = trIdx < tiersParams.thresholds.length ? tiersParams.thresholds[trIdx] : tiersParams.thresholds[tiersParams.thresholds.length - 1];
-
-            const tierNames = ['Бронза', 'Серебро', 'Золото', 'Платина', 'Бриллиант'];
-            const tierColors = [
-                'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 border-orange-200 dark:border-orange-800', // Bronze
-                'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600', // Silver
-                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700', // Gold
-                'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400 border-cyan-300 dark:border-cyan-700', // Platinum
-                'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700'  // Diamond
-            ];
-            const tierIcons = ['🥉', '🥈', '🥇', '🏆', '💎'];
-
-            const realIdx = Math.min(trIdx, tierNames.length - 1);
-            const rankName = tierNames[realIdx];
-            const rankColor = tierColors[realIdx];
-            const rankIcon = tierIcons[realIdx];
-
-            const isMaxed = current >= tiersParams.thresholds[tiersParams.thresholds.length - 1];
-            const pct = isMaxed ? 100 : Math.min(100, (current / max) * 100);
-
-            return `
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="flex items-center gap-4 relative z-10">
-                    <div class="${rankColor} border-2 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-inner transform group-hover:scale-105 transition-transform">
-                        ${rankIcon}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-center mb-1">
-                            <h4 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider truncate mr-2">${title}</h4>
-                            <span class="text-[10px] font-bold ${rankColor} border px-2 py-0.5 rounded-full uppercase tracking-wider">${rankName}</span>
-                        </div>
-                        <div class="flex justify-between items-end mb-1">
-                            <span class="text-xs font-bold text-gray-500 truncate">${tiersParams.desc}</span>
-                            <span class="text-xs font-black text-gray-900 dark:text-gray-300 whitespace-nowrap ml-2">${isMaxed ? 'MAX' : current + ' / ' + max}</span>
-                        </div>
-                        <div class="w-full bg-gray-100 dark:bg-gray-700 h-2.5 rounded-full overflow-hidden shadow-inner">
-                            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        }
 
         async function loadStats() {
             const stats = document.getElementById('view-stats');
             try {
                 try { const res = await apiFetch('/history'); serverHistory = await res.json(); }
                 catch (e) { serverHistory = JSON.parse(localStorage.getItem('studyHistory')) || {}; }
+
+                let leaderboardHtml = '';
+                try {
+                    const lbRes = await fetch('/leaderboard', { headers: { 'x-user': currentUser } });
+                    if (lbRes.ok) {
+                        const lbData = await lbRes.json();
+                        const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+                        const todayStr = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
+                        const yesterdayStr = (new Date(Date.now() - tzoffset - 86400000)).toISOString().slice(0, 10);
+
+                        lbData.forEach(user => {
+                            let streak = 0;
+                            if (user.history && user.history.length > 0) {
+                                const dates = user.history.sort((a, b) => b.localeCompare(a));
+                                if (dates[0] === todayStr || dates[0] === yesterdayStr) {
+                                    let currDate = new Date(dates[0]);
+                                    for (let d of dates) {
+                                        if (d === currDate.toISOString().slice(0, 10)) {
+                                            streak++;
+                                            currDate.setDate(currDate.getDate() - 1);
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            user.streak = streak;
+                        });
+
+                        lbData.sort((a, b) => b.total_ms - a.total_ms);
+
+                        leaderboardHtml = '<h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-2 mt-2">Рейтинг (По времени)</h3><div class="space-y-3 mb-8">';
+
+                        const avatars = {
+                            'osman': localStorage.getItem('avatar_osman'),
+                            'girlfriend': localStorage.getItem('avatar_girlfriend')
+                        };
+
+                        lbData.forEach((user, index) => {
+                            const isMe = user.username === currentUser;
+                            const avatarUrl = avatars[user.username] || '';
+                            const initials = user.username === 'osman' ? 'О' : (user.username === 'girlfriend' ? 'Д' : user.username[0].toUpperCase());
+                            const name = user.username === 'osman' ? 'Adil Osmanov' : (user.username === 'girlfriend' ? 'Ewelin Osmanov' : user.username);
+
+                            const totalMinutes = Math.floor((user.total_ms || 0) / 60000);
+                            const hours = Math.floor(totalMinutes / 60);
+                            const mins = totalMinutes % 60;
+                            const timeStr = hours > 0 ? `${hours}ч ${mins}м` : `${mins}м`;
+
+                            const pbgColor = index === 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
+                                (index === 1 ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800');
+                            const troColor = index === 0 ? 'text-yellow-500' : (index === 1 ? 'text-gray-400' : 'text-orange-500');
+
+                            leaderboardHtml += `
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4 transition-all hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <div class="w-8 h-8 rounded-full ${pbgColor} flex items-center justify-center font-bold text-sm border flex-shrink-0 ${troColor}">${index + 1}</div>
+                                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 bg-cover bg-center flex items-center justify-center text-lg font-bold text-gray-400 flex-shrink-0" style="${avatarUrl ? `background-image: url(${avatarUrl})` : ''}">
+                                        ${!avatarUrl ? initials : ''}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-base text-gray-900 dark:text-white truncate flex items-center gap-2">
+                                            ${name} ${isMe ? '<span class="text-[9px] bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Вы</span>' : ''}
+                                        </h3>
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 font-medium mt-1">
+                                            <span class="flex items-center gap-1" title="Время обучения"><span class="text-purple-500">⏳</span> ${timeStr}</span>
+                                            <span class="flex items-center gap-1" title="Ударный режим"><span class="text-orange-500">🔥</span> ${user.streak} дн.</span>
+                                            <span class="flex items-center gap-1" title="Опыт"><span class="text-blue-500">🏆</span> ${user.total_xp} XP</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        leaderboardHtml += '</div>';
+                    }
+                } catch (e) { }
 
                 const total = globalWords.length;
                 const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
@@ -2040,7 +2471,7 @@
 
                 const folders = {};
                 globalWords.forEach(w => {
-                    const k = `${w.folder}|${w.level || 'Общее'}|${w.subfolder}`;
+                    const k = `${w.folder}| ${w.level || 'Общее'}| ${w.subfolder} `;
                     if (!folders[k]) folders[k] = { f: w.folder, l: w.level || 'Общее', s: w.subfolder, total: 0, done: 0 };
                     folders[k].total++; if (w.score >= MAX_SCORE) folders[k].done++;
                 });
@@ -2069,12 +2500,15 @@
                 const pctMinutes = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
                 const isGoalMet = minutesToday >= DAILY_GOAL_MINUTES;
 
-                let achievementsHtml = `
-                    ${getAchievementHTML('Словарный запас', mastered, { thresholds: [50, 150, 400, 1000, 3000], desc: 'Выучено слов' })}
-                    ${getAchievementHTML('База знаний', total, { thresholds: [100, 300, 800, 1500, 5000], desc: 'Слов в словаре' })}
-                    ${getAchievementHTML('Регулярность', streak, { thresholds: [3, 7, 14, 30, 90], desc: 'Дней подряд' })}
-                    ${getAchievementHTML('Концентрация', minutesToday, { thresholds: [15, 30, 60, 120, 240], desc: 'Минут за сегодня' })}
-                `;
+                let learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= MAX_SCORE).length;
+                let has100Verbs = learnedVerbs >= 100;
+                let hasWeekStreak = streak >= 7;
+                let perfectSprints = parseInt(localStorage.getItem('perfectSprints') || '0', 10);
+                let hasPerfectSprint = perfectSprints > 0;
+
+                let badgesHtml = ``;
+
+
 
                 stats.innerHTML = `
                     <div class="bg-gradient-to-br from-blue-600 to-indigo-800 p-6 rounded-[2rem] shadow-lg mb-8 relative overflow-hidden text-center text-white border border-blue-500/30">
@@ -2121,6 +2555,9 @@
                             <p class="text-2xl font-black text-blue-500 leading-none">${pctMastery}%</p>
                         </div>
                     </div>
+                    
+
+                    ${leaderboardHtml}
 
                     <div class="bg-white dark:bg-gray-800 p-5 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-700 mb-8 overflow-hidden">
                         <div class="flex justify-between items-center mb-5">
@@ -2131,10 +2568,7 @@
                         </div>
                     </div>
                     
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-2">Награды и Цели</h3>
-                    <div class="grid grid-cols-1 gap-3 mb-8">
-                        ${achievementsHtml}
-                    </div>
+
 
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-2">Детализация по курсам</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
@@ -2173,7 +2607,7 @@
         }
 
         window.resetFolderStats = async (f, l, s) => {
-            if (confirm(`Вы уверены, что хотите сбросить прогресс для темы "${s}"?`)) {
+            if (confirm(`Вы уверены, что хотите сбросить прогресс для темы "${s}" ?`)) {
                 try {
                     await apiFetch('/words/reset_folder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) });
                     await fetchWords(); await loadStats();

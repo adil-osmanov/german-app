@@ -9,6 +9,10 @@ from psycopg2.extras import RealDictCursor
 import os
 import csv
 import io
+import urllib.request
+import urllib.parse
+import json
+import re
 
 app = FastAPI()
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -39,6 +43,30 @@ class DBConnection:
 
 def get_db_connection():
     return DBConnection()
+
+def fetch_example_sentence(word_de: str) -> str:
+    try:
+        url = f"https://de.wiktionary.org/w/api.php?action=parse&page={urllib.parse.quote(word_de)}&format=json&prop=wikitext"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=3) as response:
+            data = json.loads(response.read())
+            if "parse" in data and "wikitext" in data["parse"]:
+                text = data["parse"]["wikitext"]["*"]
+                match = re.search(r'{{Beispiele}}\n:\[1\]([^\n]+)', text)
+                if not match:
+                    match = re.search(r'{{Beispiele}}\n:([^\n]+)', text)
+                if match:
+                    example = match.group(1).replace("{{", "").replace("}}", "").replace("[[", "").replace("]]", "").strip()
+                    example = re.sub(r'<ref.*?</ref>', '', example)
+                    example = re.sub(r"''", '', example).strip()
+                    if example.startswith('[') and ']' in example:
+                        example = example[example.find(']')+1:].strip()
+                    if example.startswith('(') and ')' in example:
+                        example = example[example.find(')')+1:].strip()
+                    return example
+    except Exception:
+        pass
+    return ""
 
 def init_db():
     conn = get_db_connection()
@@ -163,6 +191,58 @@ def update_history(data: HistoryUpdate, x_user: str = Header("osman")):
     conn.close()
     return {"status": "success"}
 
+@app.get("/leaderboard")
+def get_leaderboard():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT 
+            username,
+            SUM(score) as total_xp,
+            COUNT(*) as all_words,
+            SUM(CASE WHEN score >= 4 THEN 1 ELSE 0 END) as learned_words
+        FROM words
+        GROUP BY username
+    """)
+    word_stats = cur.fetchall()
+    
+    cur.execute("""
+        SELECT 
+            username,
+            SUM(ms_spent) as total_ms,
+            MAX(date_str) as last_active
+        FROM study_history
+        GROUP BY username
+    """)
+    history_stats = cur.fetchall()
+
+    cur.execute("SELECT username, date_str FROM study_history ORDER BY username, date_str DESC")
+    all_history = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    from collections import defaultdict
+    user_history = defaultdict(list)
+    for row in all_history:
+        user_history[row['username']].append(row['date_str'])
+        
+    stats_map = {}
+    for w in word_stats:
+        u = w['username']
+        stats_map[u] = dict(w)
+        stats_map[u]['total_xp'] = stats_map[u]['total_xp'] or 0
+        stats_map[u]['total_ms'] = 0
+        stats_map[u]['history'] = list(set(user_history[u]))
+        
+    for h in history_stats:
+        u = h['username']
+        if u not in stats_map:
+            stats_map[u] = {'username': u, 'total_xp': 0, 'all_words': 0, 'learned_words': 0, 'history': list(set(user_history[u]))}
+        stats_map[u]['total_ms'] = h['total_ms']
+        
+    return list(stats_map.values())
+
 @app.get("/words")
 def get_words(x_user: str = Header("osman")):
     conn = get_db_connection()
@@ -175,6 +255,11 @@ def get_words(x_user: str = Header("osman")):
 
 @app.post("/words")
 def add_word(word: WordCreate, x_user: str = Header("osman")):
+    if not word.example and word.word_de:
+        example = fetch_example_sentence(word.word_de.strip())
+        if example:
+            word.example = example
+
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -188,6 +273,11 @@ def add_word(word: WordCreate, x_user: str = Header("osman")):
 
 @app.put("/words/{word_id}/full")
 def edit_word(word_id: int, word: WordCreate, x_user: str = Header("osman")):
+    if not word.example and word.word_de:
+        example = fetch_example_sentence(word.word_de.strip())
+        if example:
+            word.example = example
+
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
@@ -351,7 +441,8 @@ def restore_backup(file: UploadFile = File(...), x_user: str = Header("osman")):
     return {"status": "success", "restored": words_added}
 
 @app.get("/")
-def serve_html(): return FileResponse("index.html")
+def serve_html():
+    return FileResponse("index.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
 
 @app.get("/{filename}")
 def serve_files(filename: str):

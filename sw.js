@@ -1,4 +1,4 @@
-const CACHE_NAME = 'woerterbuch-v2';
+const CACHE_NAME = 'woerterbuch-v3';
 
 const STATIC_ASSETS = [
     '/',
