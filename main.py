@@ -13,6 +13,8 @@ import urllib.request
 import urllib.parse
 import json
 import re
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 app = FastAPI()
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -31,21 +33,43 @@ def fetch_example_sentence(word_de: str) -> str:
             data = json.loads(response.read())
             if "parse" in data and "wikitext" in data["parse"]:
                 text = data["parse"]["wikitext"]["*"]
-                match = re.search(r'{{Beispiele}}\n:\[1\]([^\n]+)', text)
-                if not match:
-                    match = re.search(r'{{Beispiele}}\n:([^\n]+)', text)
-                if match:
-                    example = match.group(1).replace("{{", "").replace("}}", "").replace("[[", "").replace("]]", "").strip()
-                    example = re.sub(r'<ref.*?</ref>', '', example)
-                    example = re.sub(r"''", '', example).strip()
-                    if example.startswith('[') and ']' in example:
-                        example = example[example.find(']')+1:].strip()
-                    if example.startswith('(') and ')' in example:
-                        example = example[example.find(')')+1:].strip()
-                    return example
+                # Найти блок Beispiele
+                beispiele_match = re.search(r'{{Beispiele}}\n((?::.+\n?)+)', text)
+                if beispiele_match:
+                    examples_block = beispiele_match.group(1)
+                    # Извлечь все примеры
+                    examples_raw = re.findall(r':(?:\[\d+\])?(.+)', examples_block)
+                    valid_examples = []
+                    for ex in examples_raw:
+                        ex = ex.replace("{{", "").replace("}}", "").replace("[[", "").replace("]]", "").strip()
+                        ex = re.sub(r'<ref.*?</ref>', '', ex)
+                        ex = re.sub(r"''", '', ex).strip()
+                        ex = re.sub(r'\{\{[^}]+\}\}', '', ex).strip()
+                        if ex.startswith('[') and ']' in ex:
+                            ex = ex[ex.find(']')+1:].strip()
+                        if ex.startswith('(') and ')' in ex:
+                            ex = ex[ex.find(')')+1:].strip()
+                        if len(ex) > 5 and len(ex.split()) >= 3:
+                            valid_examples.append(ex)
+                    
+                    if valid_examples:
+                        # Сортировать по длине и взять самый короткий
+                        valid_examples.sort(key=len)
+                        return valid_examples[0]
     except Exception:
         pass
     return ""
+
+@app.get("/tts")
+def get_tts(text: str, lang: str = "de"):
+    url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={urllib.parse.quote(text)}&tl={lang}&client=tw-ob"
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        response = urllib.request.urlopen(req)
+        return StreamingResponse(io.BytesIO(response.read()), media_type="audio/mpeg")
+    except Exception as e:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 def init_db():
     conn = get_db_connection()
@@ -84,6 +108,14 @@ def init_db():
     """)
     conn.commit()
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            username TEXT PRIMARY KEY,
+            avatar_base64 TEXT
+        )
+    """)
+    conn.commit()
+
     # Миграция: добавление username в старые таблицы
     try:
         cur.execute("ALTER TABLE words ADD COLUMN username TEXT DEFAULT 'osman'")
@@ -97,6 +129,12 @@ def init_db():
         # Если колонка добавилась, надо обновить PRIMARY KEY
         cur.execute("ALTER TABLE study_history DROP CONSTRAINT IF EXISTS study_history_pkey CASCADE")
         cur.execute("ALTER TABLE study_history ADD PRIMARY KEY (date_str, username)")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
+    try:
+        cur.execute("UPDATE words SET level = 'A1' WHERE level = 'а1'")
         conn.commit()
     except Exception:
         conn.rollback()
@@ -145,6 +183,34 @@ class HistoryUpdate(BaseModel):
     date_str: str
     ms_spent: int
 
+class AvatarUpdate(BaseModel):
+    avatar_base64: str
+
+@app.get("/profiles")
+def get_profiles():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT username, avatar_base64 FROM user_profiles")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return {row['username']: row['avatar_base64'] for row in rows}
+
+@app.post("/profile/avatar")
+def update_avatar(data: AvatarUpdate, x_user: str = Header("osman")):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO user_profiles (username, avatar_base64) 
+        VALUES (%s, %s) 
+        ON CONFLICT (username) 
+        DO UPDATE SET avatar_base64 = EXCLUDED.avatar_base64
+    """, (x_user, data.avatar_base64))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success"}
+
 @app.get("/history")
 def get_history(x_user: str = Header("osman")):
     conn = get_db_connection()
@@ -185,14 +251,20 @@ def get_leaderboard():
     """)
     word_stats = cur.fetchall()
     
+    from datetime import datetime, timedelta
+    now = datetime.now()
+    monday = (now - timedelta(days=now.weekday())).date()
+    monday_str = monday.isoformat()
+
     cur.execute("""
         SELECT 
             username,
             SUM(ms_spent) as total_ms,
             MAX(date_str) as last_active
         FROM study_history
+        WHERE date_str >= %s
         GROUP BY username
-    """)
+    """, (monday_str,))
     history_stats = cur.fetchall()
 
     cur.execute("SELECT username, date_str FROM study_history ORDER BY username, date_str DESC")
