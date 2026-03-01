@@ -790,9 +790,8 @@
     </div>
 
     <nav class="fixed bottom-0 left-0 right-0 w-full z-30 px-3"
-        style="background: rgba(15, 20, 35, 0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 1px solid rgba(212, 175, 55, 0.15);">
-        <div class="flex justify-around items-center max-w-md mx-auto"
-            style="height: 55px; padding-bottom: env(safe-area-inset-bottom, 0px);">
+        style="background: rgba(15, 20, 35, 0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: env(safe-area-inset-bottom, 0px);">
+        <div class="flex justify-around items-center max-w-md mx-auto" style="height: 55px;">
             <button id="nav-dict"
                 class="flex flex-col items-center justify-center gap-1 transition-all text-gray-500 hover:text-gray-100 dark:hover:text-white group w-1/3 h-full relative">
                 <div
@@ -1958,6 +1957,9 @@
         function renderCard() {
             const cardBlock = document.getElementById('train-card-block');
             cardBlock.classList.remove('animate-fold-up');
+            // If card was hidden by swipe, keep it invisible during content swap
+            // and fade it in after rendering is complete
+            const needsFadeIn = (cardBlock.style.opacity === '0');
 
             if (curIdx >= trainList.length) {
                 saveSessionTime(); document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' }); setupTrainMenu(); triggerPremiumReward(); return;
@@ -2068,6 +2070,17 @@
                     if (umlautBar) umlautBar.classList.remove('hidden');
                     setTimeout(() => { const target = w.word_type === 'noun' ? document.getElementById('manual-article') : document.getElementById('manual-main'); if (target) target.focus(); }, 150);
                 }
+            }
+            // Fade card in smoothly if it was hidden by a swipe
+            if (needsFadeIn) {
+                requestAnimationFrame(() => {
+                    cardBlock.style.transition = 'opacity 0.18s ease-out';
+                    cardBlock.style.opacity = '1';
+                    setTimeout(() => {
+                        cardBlock.style.opacity = '';
+                        cardBlock.style.transition = '';
+                    }, 200);
+                });
             }
         }
 
@@ -2591,19 +2604,16 @@
                 });
             }, { passive: true });
 
-            // After card flies off screen, hide it INSTANTLY (no flash),
-            // then renderCard() will show the next card with its own entrance animation.
+            // After card flies off screen, hide it without any flash.
+            // renderCard() will fade the card back in after updating content.
             const resetCard = () => {
                 card.style.transition = 'none';
                 card.style.transform = '';
-                card.style.opacity = '0';
+                card.style.opacity = '0'; // stay hidden — renderCard will reveal
                 indRight.style.opacity = '0';
                 indLeft.style.opacity = '0';
-                // Force reflow so the instant-reset is flushed before next paint
-                void card.offsetHeight;
-                // Re-enable opacity for next card render
-                card.style.opacity = '';
-                card.style.transition = '';
+                void card.offsetHeight; // force reflow
+                // Do NOT restore opacity here — renderCard handles it
             };
 
             card.addEventListener('touchend', () => {
