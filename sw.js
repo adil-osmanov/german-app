@@ -1,4 +1,4 @@
-const CACHE_NAME = 'de-dict-premium-v4';
+const CACHE_NAME = 'kraft-v5';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -17,7 +17,7 @@ self.addEventListener('install', event => {
                 // Ignore failure on optional CDNs, focus on core files
                 return Promise.allSettled(urlsToCache.map(url => {
                     return fetch(url).then(r => {
-                        if(r.ok) cache.put(url, r.clone());
+                        if (r.ok) cache.put(url, r.clone());
                     }).catch(err => {
                         console.log('SW Cache Failed for', url, err);
                     });
@@ -44,7 +44,7 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
-    
+
     event.respondWith(
         fetch(event.request)
             .then(response => {
