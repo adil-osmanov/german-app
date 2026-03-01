@@ -162,6 +162,22 @@
             animation: pulseGlow 3s ease-in-out infinite;
         }
 
+        @keyframes heartFloat {
+            0% {
+                transform: translateY(0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+
+            60% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-110vh) scale(0.7) rotate(calc(var(--r, 0) * 30deg));
+                opacity: 0;
+            }
+        }
+
         @keyframes floatTitle {
 
             0%,
@@ -294,7 +310,7 @@
         }
     </style>
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- confetti removed: using hearts animation instead -->
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -773,9 +789,10 @@
         </div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 w-full z-30 pb-[calc(env(safe-area-inset-bottom,0px))] px-3"
+    <nav class="fixed bottom-0 left-0 right-0 w-full z-30 px-3"
         style="background: rgba(15, 20, 35, 0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-top: 1px solid rgba(212, 175, 55, 0.15);">
-        <div class="flex justify-around items-center max-w-md mx-auto h-[55px]">
+        <div class="flex justify-around items-center max-w-md mx-auto"
+            style="height: 55px; padding-bottom: env(safe-area-inset-bottom, 0px);">
             <button id="nav-dict"
                 class="flex flex-col items-center justify-center gap-1 transition-all text-gray-500 hover:text-gray-100 dark:hover:text-white group w-1/3 h-full relative">
                 <div
@@ -855,14 +872,28 @@
         const triggerPremiumReward = () => {
             playSound('success');
             triggerVibration([50, 50, 50]);
-            if (typeof confetti === 'function') {
-                const colors = ['#D4AF37', '#AA7C11', '#FDE08B'];
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: colors
-                });
+            // Animate floating hearts
+            const heartCount = 24;
+            const colors = ['#ff4d6d', '#ff758f', '#ff85a1', '#ff6b8a', '#e63660', '#ffb3c1'];
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.innerHTML = '❤';
+                const size = 18 + Math.random() * 28;
+                heart.style.cssText = [
+                    'position:fixed',
+                    `left:${10 + Math.random() * 80}vw`,
+                    'bottom:-60px',
+                    `font-size:${size}px`,
+                    `color:${colors[Math.floor(Math.random() * colors.length)]}`,
+                    'pointer-events:none',
+                    'z-index:9999',
+                    `animation:heartFloat ${1.8 + Math.random() * 1.8}s ease-out forwards`,
+                    `animation-delay:${Math.random() * 0.7}s`,
+                    'will-change:transform,opacity',
+                    `filter:drop-shadow(0 0 6px ${colors[Math.floor(Math.random() * colors.length)]}88)`
+                ].join(';');
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 4500);
             }
         };
 
@@ -1684,20 +1715,31 @@
             if (confirm(`Удалить тему "${s}" со всеми словами внутри?`)) { await apiFetch('/words/delete_folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) }); await fetchWords(); renderDict(); }
         };
 
+        let _formSubmitting = false;
         document.getElementById('add-form').onsubmit = async (e) => {
             e.preventDefault();
-            const payload = {
-                word_type: currentType, article: currentType === 'noun' ? currentArticle : '',
-                word_de: document.getElementById('word-de').value.trim(), plural: currentType === 'noun' ? document.getElementById('word-plural').value.trim() : '',
-                praeteritum: currentType === 'verb' ? document.getElementById('word-praeteritum').value.trim() : '', partizip: currentType === 'verb' ? document.getElementById('word-partizip').value.trim() : '',
-                word_ru: document.getElementById('word-ru').value.trim(), example: document.getElementById('word-example').value.trim(),
-                folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim()
-            };
-            const url = editId ? `${API_URL}/${editId}/full` : API_URL;
-            await apiFetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            modal.classList.add('hidden'); searchInp.value = '';
-            const newTopicKey = `${payload.folder}|${payload.level || 'Общее'}|${payload.subfolder}`; collapsedDictTopics[newTopicKey] = false;
-            await fetchWords(); renderDict();
+            if (_formSubmitting) return; // Prevent double submission
+            _formSubmitting = true;
+            const saveBtn = document.getElementById('btn-save');
+            // Disable immediately and synchronously before any await
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.6'; saveBtn.innerText = 'Сохраняю...'; }
+            try {
+                const payload = {
+                    word_type: currentType, article: currentType === 'noun' ? currentArticle : '',
+                    word_de: document.getElementById('word-de').value.trim(), plural: currentType === 'noun' ? document.getElementById('word-plural').value.trim() : '',
+                    praeteritum: currentType === 'verb' ? document.getElementById('word-praeteritum').value.trim() : '', partizip: currentType === 'verb' ? document.getElementById('word-partizip').value.trim() : '',
+                    word_ru: document.getElementById('word-ru').value.trim(), example: document.getElementById('word-example').value.trim(),
+                    folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim()
+                };
+                const url = editId ? `${API_URL}/${editId}/full` : API_URL;
+                await apiFetch(url, { method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                modal.classList.add('hidden'); searchInp.value = '';
+                const newTopicKey = `${payload.folder}|${payload.level || 'Общее'}|${payload.subfolder}`; collapsedDictTopics[newTopicKey] = false;
+                await fetchWords(); renderDict();
+            } finally {
+                _formSubmitting = false;
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.innerText = editId ? 'Сохранить' : 'Сохранить'; }
+            }
         };
 
         document.getElementById('btn-upload-csv').onclick = async () => {
@@ -2029,9 +2071,13 @@
             }
         }
 
+        let _swipeInProgress = false;
+
         async function updateScoreWithSM2(quality) {
             const cardBlock = document.getElementById('train-card-block');
-            cardBlock.classList.add('animate-fold-up');
+            if (!_swipeInProgress) {
+                cardBlock.classList.add('animate-fold-up');
+            }
 
             const w = trainList[curIdx];
 
@@ -2070,7 +2116,7 @@
             }
 
             idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
-            curIdx++; setTimeout(renderCard, 250);
+            curIdx++; _swipeInProgress = false; setTimeout(renderCard, 250);
         }
 
         document.getElementById('btn-show-answer').onclick = () => {
@@ -2491,15 +2537,22 @@
             const indLeft = document.getElementById('swipe-indicator-left');
             if (!card) return;
 
+            // Prepare card for GPU compositing from the start
+            card.style.willChange = 'transform';
+
             let startX = 0;
             let currentX = 0;
             let isDragging = false;
+            let swipeHandled = false; // Prevent double-fire on touchend
+            let rafId = null;
 
             card.addEventListener('touchstart', (e) => {
                 if (document.getElementById('train-answer-block').classList.contains('hidden')) return;
                 startX = e.touches[0].clientX;
                 currentX = startX;
                 isDragging = true;
+                swipeHandled = false;
+                // Remove transition immediately so drag feels instant
                 card.style.transition = 'none';
                 indRight.style.opacity = '0';
                 indLeft.style.opacity = '0';
@@ -2509,66 +2562,93 @@
                 if (!isDragging || document.getElementById('train-answer-block').classList.contains('hidden')) return;
                 currentX = e.touches[0].clientX;
                 const diffX = currentX - startX;
-                const rotate = diffX * 0.05;
-                card.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
 
-                // Update indicators opacity based on drag distance
-                let scaleVal = 1;
-                if (diffX > 20) {
-                    const ratio = Math.min((diffX - 20) / 100, 1);
-                    indRight.style.opacity = ratio.toString();
-                    indLeft.style.opacity = '0';
-                    scaleVal = 0.5 + (ratio * 0.3);
-                    indRight.style.transform = `translateY(-50%) rotate(-15deg) scale(${scaleVal})`;
-                } else if (diffX < -20) {
-                    const ratio = Math.min((Math.abs(diffX) - 20) / 100, 1);
-                    indLeft.style.opacity = ratio.toString();
-                    indRight.style.opacity = '0';
-                    scaleVal = 0.5 + (ratio * 0.3);
-                    indLeft.style.transform = `translateY(-50%) rotate(15deg) scale(${scaleVal})`;
-                } else {
-                    indRight.style.opacity = '0';
-                    indLeft.style.opacity = '0';
-                    indRight.style.transform = `translateY(-50%) rotate(-15deg) scale(0.5)`;
-                    indLeft.style.transform = `translateY(-50%) rotate(15deg) scale(0.5)`;
-                }
+                // Use rAF to batch DOM writes → no jitter
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    const rotate = diffX * 0.045;
+                    card.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
+
+                    let scaleVal;
+                    if (diffX > 20) {
+                        const ratio = Math.min((diffX - 20) / 80, 1);
+                        indRight.style.opacity = ratio.toString();
+                        indLeft.style.opacity = '0';
+                        scaleVal = 0.6 + (ratio * 0.4);
+                        indRight.style.transform = `translateY(-50%) rotate(-15deg) scale(${scaleVal})`;
+                    } else if (diffX < -20) {
+                        const ratio = Math.min((Math.abs(diffX) - 20) / 80, 1);
+                        indLeft.style.opacity = ratio.toString();
+                        indRight.style.opacity = '0';
+                        scaleVal = 0.6 + (ratio * 0.4);
+                        indLeft.style.transform = `translateY(-50%) rotate(15deg) scale(${scaleVal})`;
+                    } else {
+                        indRight.style.opacity = '0';
+                        indLeft.style.opacity = '0';
+                        indRight.style.transform = 'translateY(-50%) rotate(-15deg) scale(0.6)';
+                        indLeft.style.transform = 'translateY(-50%) rotate(15deg) scale(0.6)';
+                    }
+                });
             }, { passive: true });
 
-            card.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                const diffX = currentX - startX;
-                card.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            // After card flies off screen, hide it INSTANTLY (no flash),
+            // then renderCard() will show the next card with its own entrance animation.
+            const resetCard = () => {
+                card.style.transition = 'none';
+                card.style.transform = '';
+                card.style.opacity = '0';
+                indRight.style.opacity = '0';
+                indLeft.style.opacity = '0';
+                // Force reflow so the instant-reset is flushed before next paint
+                void card.offsetHeight;
+                // Re-enable opacity for next card render
+                card.style.opacity = '';
+                card.style.transition = '';
+            };
 
-                if (diffX > 100) {
-                    // Swiped Right - Remembered
-                    card.style.transform = `translateX(150%) rotate(30deg)`;
+            card.addEventListener('touchend', () => {
+                if (!isDragging || swipeHandled) return;
+                isDragging = false;
+                if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+                const diffX = currentX - startX;
+
+                if (diffX > 80) {
+                    // Swiped Right — Remembered
+                    swipeHandled = true;
+                    card.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.25s ease';
+                    card.style.transform = `translateX(110vw) rotate(28deg)`;
+                    card.style.opacity = '0';
                     indRight.style.opacity = '1';
                     triggerVibration(10);
                     setTimeout(() => {
+                        indRight.style.opacity = '0';
+                        resetCard();
+                        _swipeInProgress = true;
                         const btn = document.getElementById('btn-remembered');
                         if (btn) btn.click();
-                        card.style.transform = 'none';
-                        card.style.transition = '';
-                        indRight.style.opacity = '0';
-                    }, 300);
-                } else if (diffX < -100) {
-                    // Swiped Left - Forgot
-                    card.style.transform = `translateX(-150%) rotate(-30deg)`;
+                    }, 320);
+                } else if (diffX < -80) {
+                    // Swiped Left — Forgot
+                    swipeHandled = true;
+                    card.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.25s ease';
+                    card.style.transform = `translateX(-110vw) rotate(-28deg)`;
+                    card.style.opacity = '0';
                     indLeft.style.opacity = '1';
                     triggerVibration([10, 20]);
                     setTimeout(() => {
+                        indLeft.style.opacity = '0';
+                        resetCard();
+                        _swipeInProgress = true;
                         const btn = document.getElementById('btn-forgot');
                         if (btn) btn.click();
-                        card.style.transform = 'none';
-                        card.style.transition = '';
-                        indLeft.style.opacity = '0';
-                    }, 300);
+                    }, 320);
                 } else {
-                    // Snap back
-                    card.style.transform = 'none';
+                    // Snap back with spring feel
+                    card.style.transition = 'transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    card.style.transform = 'translateX(0) rotate(0deg)';
                     indRight.style.opacity = '0';
                     indLeft.style.opacity = '0';
+                    setTimeout(() => { card.style.transition = 'none'; }, 380);
                 }
             });
         };
