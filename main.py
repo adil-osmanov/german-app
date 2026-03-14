@@ -139,6 +139,12 @@ def init_db():
     except Exception:
         conn.rollback()
 
+    try:
+        cur.execute("ALTER TABLE words ADD COLUMN target_lang TEXT DEFAULT 'de'")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
     cur.close()
     conn.close()
 
@@ -156,6 +162,7 @@ class WordCreate(BaseModel):
     example: str = ""
     praeteritum: str = ""
     partizip: str = ""
+    target_lang: str = "de"
 
 class ScoreUpdate(BaseModel):
     score: int
@@ -314,8 +321,8 @@ def add_word(word: WordCreate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, %s)", 
-        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, x_user)
+        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, target_lang, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, %s, %s)", 
+        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word.target_lang, x_user)
     )
     conn.commit()
     cur.close()
@@ -332,8 +339,8 @@ def edit_word(word_id: int, word: WordCreate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s WHERE id=%s AND username=%s
-    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word_id, x_user))
+        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s, target_lang=%s WHERE id=%s AND username=%s
+    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word.target_lang, word_id, x_user))
     conn.commit()
     cur.close()
     conn.close()
@@ -361,7 +368,7 @@ def rename_subfolder(data: SubfolderRename, x_user: str = Header("osman")):
     return {"status": "success"}
 
 @app.post("/upload_csv")
-def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), file: UploadFile = File(...), x_user: str = Header("osman")):
+def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str = Form(...), target_lang: str = Form("de"), file: UploadFile = File(...), x_user: str = Header("osman")):
     content = file.file.read()
     try: text_data = content.decode("utf-8-sig")
     except UnicodeDecodeError: text_data = content.decode("cp1251", errors="replace")
@@ -387,8 +394,8 @@ def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str =
         ex = row[7].strip()
         
         cur.execute(
-            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, ease_factor, interval, repetitions, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, 2.5, 0, 0, %s)", 
-            (w_type, article, word_de, plural, word_ru, folder, level, subfolder, ex, praeteritum, partizip, x_user)
+            "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, target_lang, ease_factor, interval, repetitions, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, %s, 2.5, 0, 0, %s)", 
+            (w_type, article, word_de, plural, word_ru, folder, level, subfolder, ex, praeteritum, partizip, target_lang, x_user)
         )
         words_added += 1
         
