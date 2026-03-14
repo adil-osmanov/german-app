@@ -44,8 +44,9 @@
         };
         // Enforce dark theme since it is a premium Navy look
         document.documentElement.classList.add('dark');
-        if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js?v=6').catch(() => { }); });
+        if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js?v=7').catch(() => { }); });
     </script>
+
     <style>
         :root {
             --ac-50: 253 250 237;
@@ -399,7 +400,7 @@
             </div>
 
             <div id="train-card-block"
-                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all mt-auto mb-auto overflow-hidden touch-pan-y -translate-y-8" style="touch-action: pan-y;">
+                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all mt-auto mb-auto overflow-hidden touch-pan-y -translate-y-24" style="touch-action: pan-y;">
                 <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0">
                 </div>
                 <!-- Swipe Indicators -->
@@ -488,62 +489,14 @@
                             </button>
                         </div>
                     </div>
-
-                    <div id="train-manual-block" class="hidden w-full mt-3">
-                        <div class="flex gap-2 mb-2 w-full">
-                            <input type="text" id="manual-article" placeholder="der" autocomplete="off"
-                                class="w-[60px] bg-[#172A45] dark:bg-[#172A45] rounded-lg py-3 px-1 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm"
-                                style="text-align-last: center;">
-                            <div class="flex-1 relative flex items-center min-w-0">
-                                <input type="text" id="manual-main" placeholder="Впишите слово..." autocomplete="off"
-                                    class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-lg py-3 pl-3 pr-10 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
-                                <button id="btn-mic" type="button"
-                                    class="absolute right-1 p-2 text-gray-500 hover:text-[#D4AF37] transition-colors rounded-md active:scale-90"
-                                    title="Голосовой ввод"><svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
-                                        </path>
-                                    </svg></button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 mb-2 w-full hidden" id="manual-plural-container">
-                            <div
-                                class="bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] rounded-lg py-3 px-1 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">
-                                die (pl)</div>
-                            <input type="text" id="manual-plural" placeholder="Форма мн. числа..." autocomplete="off"
-                                class="flex-1 bg-[#172A45] dark:bg-[#172A45] rounded-lg py-3 px-3 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white font-medium transition-all disabled:opacity-50 min-w-0 text-sm">
-                        </div>
-                        <div class="flex gap-2 mb-2 w-full hidden" id="manual-verb-forms-container">
-                            <input type="text" id="manual-praeteritum" placeholder="Präteritum" autocomplete="off"
-                                class="flex-1 bg-[#172A45] dark:bg-[#172A45] rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
-                            <input type="text" id="manual-partizip" placeholder="Partizip II" autocomplete="off"
-                                class="flex-1 bg-[#172A45] dark:bg-[#172A45] rounded-lg py-3 px-2 text-center outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white font-medium transition-all disabled:opacity-50 min-w-0 text-xs">
-                        </div>
-                        <div id="manual-feedback"
-                            class="hidden w-full text-center py-3 rounded-lg font-medium text-sm mb-3 transition-all">
-                        </div>
-
-                        <div id="train-umlauts" class="flex justify-center gap-2 mb-4">
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ä', event)"
-                                class="bg-[#172A45] dark:bg-[#172A45] w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 active:scale-95">ä</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ö', event)"
-                                class="bg-[#172A45] dark:bg-[#172A45] w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 active:scale-95">ö</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ü', event)"
-                                class="bg-[#172A45] dark:bg-[#172A45] w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 active:scale-95">ü</button>
-                            <button type="button" tabindex="-1" onmousedown="insertChar('ß', event)"
-                                class="bg-[#172A45] dark:bg-[#172A45] w-10 h-10 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 active:scale-95">ß</button>
-                        </div>
-                        <button id="btn-check-manual"
-                            class="w-full bg-[#5A7B9C] text-white font-bold py-3.5 rounded-xl active:scale-95 transition-all disabled:opacity-50 text-sm shadow-md shadow-black/40 hover:bg-blue-600">Проверить</button>
-                    </div>
                 </div>
             </div>
 
             <div id="verb-trainer-game" class="hidden w-full relative pt-2 animate-in fade-in zoom-in duration-300">
-                <div class="mb-4 w-full px-1">
+                <div class="mb-4 w-full px-1 flex justify-between">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest text-center mb-1 drop-shadow-sm" id="vt-count-text">Формы</p>
                     <p id="vt-counter"
-                        class="text-xs font-bold text-gray-500 uppercase tracking-widest text-center mb-1">Осталось:
+                        class="text-xs font-bold text-[#D4AF37] uppercase tracking-widest text-center mb-1 drop-shadow-sm">Осталось:
                         0
                     </p>
                 </div>
@@ -556,23 +509,28 @@
                         II</button>
                 </div>
                 <div
-                    class="bg-gradient-to-b from-[#172A45] to-[#112240] border border-[#D4AF37]/20 p-8 rounded-[2rem] shadow-xl relative min-h-[220px] flex flex-col items-center justify-center text-center">
-                    <h2 id="vt-ru" class="text-[#D4AF37] text-sm uppercase font-black tracking-widest mb-3 opacity-80">
+                    class="glass-card card-gradient-border p-8 rounded-[2rem] shadow-[0_5px_30px_rgba(212,175,55,0.08)] relative min-h-[300px] flex flex-col items-center justify-center text-center bg-[#172A45] dark:bg-[#132039]/90 backdrop-blur-xl transition-all">
+                    <div class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#D4AF37]/5 pointer-events-none z-0 rounded-[2rem]"></div>
+                    <h2 id="vt-ru" class="text-[#D4AF37] dark:text-[#FDE08B] text-[10px] uppercase font-black tracking-widest mb-4 opacity-90 z-10 drop-shadow-sm bg-[#112240] py-1 px-3 rounded-full border border-[#D4AF37]/30">
                         Перевод</h2>
-                    <h3 id="vt-inf" class="text-3xl font-bold text-white mb-6 leading-tight">Infinitiv
+                    <h3 id="vt-inf" class="text-4xl font-black text-white mb-8 leading-tight tracking-tight z-10 drop-shadow-lg filter drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">Infinitiv
                     </h3>
 
                     <button id="vt-btn-show" onclick="showVTAnswer()"
-                        class="mt-auto w-full bg-[#112240] backdrop-blur-md border border-[#D4AF37]/50 text-[#D4AF37] font-bold py-3.5 rounded-xl hover:bg-[#ffc300] hover:text-[#112240] transition-colors shadow-md">Вспомнить</button>
+                        class="mt-auto w-full premium-glow-btn bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] text-[#0f172a] font-black py-4 rounded-xl active:scale-95 transition-all text-base border-t border-[#FDE08B]/80 shadow-[0_4px_20px_rgba(212,175,55,0.3)] hover:shadow-[0_4px_25px_rgba(212,175,55,0.4)] z-10 translate-y-0 hover:-translate-y-1 tracking-wide">Вспомнить</button>
 
                     <div id="vt-answer-block"
-                        class="hidden w-full mt-4 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2">
-                        <p id="vt-answer" class="text-2xl font-bold text-green-400 mb-6 drop-shadow-md">Ответ</p>
+                        class="hidden w-full mt-2 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 z-10">
+                        <div class="bg-[#112240]/60 p-5 rounded-2xl border border-[#D4AF37]/30 w-full mb-6 relative overflow-hidden flex flex-col items-center justify-center shadow-lg transform transition-all">
+                             <div class="absolute inset-0 bg-gradient-to-r from-green-500/10 via-transparent to-transparent pointer-events-none"></div>
+                             <p class="text-[9px] text-[#D4AF37]/80 uppercase tracking-widest font-black mb-1.5 px-2 py-0.5 bg-[#172A45] rounded border border-[#D4AF37]/20">Ответ</p>
+                             <p id="vt-answer" class="text-3xl font-black text-green-400 drop-shadow-md tracking-tight filter drop-shadow-[0_0_10px_rgba(74,222,128,0.2)]">Ответ</p>
+                        </div>
                         <div class="flex gap-3 w-full">
                             <button onclick="answerVerb(false)"
-                                class="flex-1 bg-transparent border border-red-400/50 text-red-300 py-3 rounded-xl font-bold hover:bg-red-400/10 transition-colors">Забыл</button>
+                                class="flex-1 bg-[#1A1A1A]/40 border border-red-500/40 text-red-400 py-3.5 rounded-xl font-bold hover:bg-red-500/10 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md">Забыл</button>
                             <button onclick="answerVerb(true)"
-                                class="flex-1 bg-green-500/20 border border-green-500/50 text-green-400 py-3 rounded-xl font-bold hover:bg-green-500/30 transition-colors shadow-md shadow-green-900/20">Помню</button>
+                                class="flex-1 bg-green-500/10 border border-green-500/50 text-green-400 py-3.5 rounded-xl font-bold hover:bg-green-500/20 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md shadow-green-900/40">Помню</button>
                         </div>
                     </div>
                 </div>
@@ -1285,9 +1243,12 @@
         };
         const handleEnter = (e) => {
             if (e.key === 'Enter') {
-                const btnCheck = document.getElementById('btn-check-manual'); const btnNext = document.getElementById('btn-show-answer');
-                if (btnCheck && !btnCheck.disabled && !document.getElementById('train-manual-block').classList.contains('hidden')) { e.preventDefault(); btnCheck.click(); }
-                else if (btnNext && !btnNext.classList.contains('hidden')) { e.preventDefault(); btnNext.click(); }
+                const btnNext = document.getElementById('btn-show-answer');
+                if (btnNext && !btnNext.classList.contains('hidden')) { e.preventDefault(); btnNext.click(); }
+            } else if (e.key === '2' && !document.getElementById('train-card-block').classList.contains('hidden')) {
+                const bRem = document.getElementById('btn-remembered'); if (!bRem.classList.contains('hidden')) bRem.click();
+            } else if (e.key === '1' && !document.getElementById('train-card-block').classList.contains('hidden')) {
+                const bFor = document.getElementById('btn-forgot'); if (!bFor.classList.contains('hidden')) bFor.click();
             }
         };
         document.addEventListener('keydown', handleEnter);
@@ -1902,11 +1863,13 @@
                 const waitingCount = globalWords.filter(w => !isWordDue(w)).length;
                 const weakWordsCount = globalWords.filter(w => w.score < 2 && isWordDue(w)).length;
 
+                const verbAvailableCount = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip).length;
+
                 let html = `
                     <button onclick="startTraining('all')" class="w-full text-left bg-[#172A45] border border-[#D4AF37]/30 hover:scale-[0.98] transition-all p-5 rounded-2xl shadow-md text-white flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-lg font-bold">Слова на сегодня</h3>
-                            <p class="text-yellow-100/70 text-[11px] font-medium mt-1">Доступно: ${availableCount} ${waitingCount > 0 ? `| Ожидают: ${waitingCount}` : ''}</p>
+                            <p class="text-yellow-100/70 text-[11px] font-medium mt-1"><span class="notranslate">${t('Доступно:')}</span> ${availableCount} ${waitingCount > 0 ? `<span class="opacity-60">|</span> <span class="notranslate">${t('Ожидают:')}</span> ${waitingCount}` : ''}</p>
                         </div>
                         <div class="bg-[#112240] backdrop-blur-md bg-opacity-80/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                     </button>
@@ -1914,7 +1877,7 @@
                     <button onclick="startVerbTrainer()" class="w-full text-left bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-sm font-bold text-white flex items-center gap-2">Формы глаголов</h3>
-                            <p class="text-gray-500 text-[10px] font-medium mt-0.5">Тренировка Präteritum и Partizip II</p>
+                            <p class="text-gray-500 text-[10px] font-medium mt-0.5"><span class="notranslate">${t('Доступно:')}</span> ${verbAvailableCount} <span class="opacity-60">|</span> Тренировка Präteritum и Partizip II</p>
                         </div>
                         <div class="text-[#D4AF37]"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
                     </button>` : ''}
@@ -1925,7 +1888,7 @@
                         <button onclick="startTraining('weak')" class="w-full text-left bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 hover:scale-[0.98] transition-all p-4 rounded-xl flex justify-between items-center group mb-3">
                             <div>
                                 <h3 class="text-orange-700 dark:text-orange-400 text-sm font-bold">Слабые места</h3>
-                                <p class="text-orange-600/70 dark:text-orange-500/70 text-[10px] font-medium mt-0.5">Новые или забытые: ${weakWordsCount}</p>
+                                <p class="text-orange-600/70 dark:text-orange-500/70 text-[10px] font-medium mt-0.5"><span class="notranslate">${t('Новые или забытые:')}</span> ${weakWordsCount}</p>
                             </div>
                             <div class="text-orange-400"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
                         </button>
@@ -1937,7 +1900,7 @@
                         <button onclick="startTraining('mastered')" class="w-full text-left bg-[#172A45] dark:bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
                             <div>
                                 <h3 class="text-sm font-bold text-white flex items-center gap-2"> Повторить архив</h3>
-                                <p class="text-gray-500 text-[10px] font-medium mt-0.5">Изучено: ${masteredCount}</p>
+                                <p class="text-gray-500 text-[10px] font-medium mt-0.5"><span class="notranslate">${t('Изучено:')}</span> ${masteredCount}</p>
                             </div>
                             <div class="text-gray-500"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
                         </button>
@@ -1963,13 +1926,13 @@
                                 <summary class="flex justify-between items-center p-4 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
                                     <h3 class="text-sm font-bold text-white notranslate">${folder}</h3>
                                     <div class="flex items-center gap-3">
-                                        <span class="text-[11px] text-gray-500 font-medium">Доступно: ${cWordsCount}</span>
+                                        <span class="text-[11px] text-gray-500 font-medium"><span class="notranslate">${t('Доступно:')}</span> ${cWordsCount}</span>
                                         <svg class="w-4 h-4 text-gray-500 transition-transform duration-300 transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7 7"/></svg>
                                     </div>
                                 </summary>
                                 <div class="px-2 pb-2 space-y-1 relative">
                                     <button onclick="startTraining('course|${escapeStr(folder)}')" class="w-[calc(100%-16px)] mx-auto ml-2 mb-2 text-left bg-blue-900/20 hover:bg-blue-900/40 transition-all p-3 rounded-lg border border-blue-800/50 flex justify-between items-center group">
-                                        <h3 class="text-sm font-bold text-blue-400">Тренировать весь курс</h3>
+                                        <h3 class="text-sm font-bold text-blue-400"><span class="notranslate">${t('Тренировать весь курс')}</span></h3>
                                         <div class="text-blue-400"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></div>
                                     </button>
                         `;
@@ -2005,7 +1968,7 @@
                                             ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${getLevelColor(l)}">${l}</span>` : ''}
                                             <h3 class="text-sm font-medium text-gray-100 dark:text-gray-100 notranslate">${s}</h3>
                                         </div>
-                                        <p class="text-[11px] text-gray-500">Слов: ${wordsCount} <span class="opacity-60">${waitingCount > 0 ? `| Ожидают: ${waitingCount}` : ''}</span></p>
+                                        <p class="text-[11px] text-gray-500"><span class="notranslate">${t('Доступно:')}</span> ${wordsCount} <span class="opacity-60">${waitingCount > 0 ? `| <span class="notranslate">${t('Ожидают:')}</span> ${waitingCount}` : ''}</span></p>
                                     </div>
                                     <div class="text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                                 </button>
@@ -2060,26 +2023,19 @@
             const w = trainList[curIdx];
             const qEl = document.getElementById('train-question'); const exQ = document.getElementById('train-example-q'); const badge = document.getElementById('train-level-badge');
 
-            document.getElementById('train-total-cards').innerText = `Осталось: ${trainList.length - curIdx}`;
-            document.getElementById('train-card-progress-text').innerText = `Освоено: ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
+            document.getElementById('train-total-cards').innerText = `${t('Осталось:')} ${trainList.length - curIdx}`;
+            document.getElementById('train-card-progress-text').innerText = `${t('Освоено:')} ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
             document.getElementById('train-card-progress-fill').style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
 
-            document.getElementById('train-answer-block').classList.add('hidden'); document.getElementById('train-manual-block').classList.add('hidden');
-            document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('manual-feedback').classList.add('hidden');
+            document.getElementById('train-answer-block').classList.add('hidden');
+            document.getElementById('btn-show-answer').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
             if (exQ) {
                 exQ.classList.add('hidden');
                 exQ.className = "text-sm text-[#D4AF37] dark:text-[#FDE08B] italic mb-5 hidden text-center w-full";
             }
 
-            const manArt = document.getElementById('manual-article'); const manMain = document.getElementById('manual-main');
-            const manPluralContainer = document.getElementById('manual-plural-container'); const manPlural = document.getElementById('manual-plural');
-            const manVerbContainer = document.getElementById('manual-verb-forms-container'); const manPraet = document.getElementById('manual-praeteritum'); const manPart = document.getElementById('manual-partizip');
-            const btnCheck = document.getElementById('btn-check-manual'); const umlautBar = document.getElementById('train-umlauts');
-            const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer'); const btnMic = document.getElementById('btn-mic');
-
-            if (manArt) manArt.disabled = false; if (manMain) manMain.disabled = false; if (manPlural) manPlural.disabled = false;
-            if (manPraet) manPraet.disabled = false; if (manPart) manPart.disabled = false; if (btnCheck) btnCheck.disabled = false;
+            const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer'); 
 
             const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
             let state = w.score < (MAX_SCORE - 1) ? 'L1' : w.score < MAX_SCORE ? 'L2' : 'Archive';
@@ -2097,23 +2053,6 @@
                 if (btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
             }
 
-            if (recognition && btnMic) {
-                btnMic.classList.remove('hidden');
-                btnMic.onclick = () => {
-                    recognition.lang = currentIsGermanQuestion ? 'ru-RU' : 'de-DE'; recognition.start();
-                    btnMic.classList.add('text-[#9C5A5A]', 'animate-pulse'); btnMic.classList.remove('text-gray-500');
-                };
-                recognition.onresult = (event) => {
-                    let transcript = event.results[0][0].transcript.replace(/[.,!?]$/, '').trim();
-                    if (!currentIsGermanQuestion && w.word_type === 'noun') {
-                        const parts = transcript.split(' '); const art = parts[0].toLowerCase();
-                        if (['der', 'die', 'das'].includes(art)) { manArt.value = art; manMain.value = parts.slice(1).join(' '); } else manMain.value = transcript;
-                    } else manMain.value = transcript;
-                };
-                recognition.onend = () => { btnMic.classList.remove('text-[#9C5A5A]', 'animate-pulse'); btnMic.classList.add('text-gray-500'); };
-                recognition.onerror = () => { btnMic.classList.remove('text-[#9C5A5A]', 'animate-pulse'); btnMic.classList.add('text-gray-500'); };
-            } else if (btnMic) { btnMic.classList.add('hidden'); }
-
             const ansEx = document.getElementById('train-answer-example');
             if (w.example && ansEx) { ansEx.innerText = '"' + extractGermanSentence(w.example) + '"'; ansEx.classList.remove('hidden'); } else if (ansEx) ansEx.classList.add('hidden');
 
@@ -2121,10 +2060,10 @@
             if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerText = `мн. ч.: die ${w.plural}`;
             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').innerText = `Формы: ${w.praeteritum || '-'}, ${w.partizip || '-'}`;
 
-            if (state === 'L1' || state === 'Archive') {
+            if (state === 'L1' || state === 'L2' || state === 'Archive') {
                 if (badge) {
-                    if (state === 'Archive') { badge.innerText = "Архив"; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] text-gray-500"; }
-                    else { badge.innerText = `Узнавание (${w.score}/${MAX_SCORE})`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"; }
+                    if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] text-gray-500"; }
+                    else { badge.innerText = `${t('Узнавание')} (${w.score}/${MAX_SCORE})`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"; }
                 }
                 if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
                 document.getElementById('btn-show-answer').classList.remove('hidden');
@@ -2134,34 +2073,6 @@
 
                 const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
                 document.getElementById('sm2-good-time').innerText = formatInterval(goodCalc.interval);
-
-            } else if (state === 'L2') {
-                if (badge) { badge.innerText = `Письмо (Финал)`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"; }
-                if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
-                if (!currentIsGermanQuestion && w.example && exQ) {
-                    try {
-                        const deSentence = extractGermanSentence(w.example);
-                        const safeWord = (w.word_de || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        exQ.innerHTML = escapeStr(deSentence).replace(new RegExp(safeWord, 'ig'), '_____');
-                    } catch (e) { exQ.innerHTML = escapeStr(w.example); }
-                    exQ.classList.remove('hidden');
-                }
-
-                document.getElementById('train-manual-block').classList.remove('hidden');
-
-                if (currentIsGermanQuestion) {
-                    if (manArt) manArt.classList.add('hidden');
-                    if (manMain) { manMain.value = ''; manMain.placeholder = "Напишите перевод..."; }
-                    if (manPluralContainer) manPluralContainer.classList.add('hidden'); if (manVerbContainer) manVerbContainer.classList.add('hidden'); if (umlautBar) umlautBar.classList.add('hidden');
-                    setTimeout(() => { if (manMain) manMain.focus() }, 150);
-                } else {
-                    if (manArt) { manArt.classList.remove('hidden'); manArt.classList.toggle('hidden', w.word_type === 'verb'); manArt.value = ''; }
-                    if (manMain) { manMain.value = ''; manMain.placeholder = "Изучаемое слово..."; }
-                    if (w.word_type === 'noun' && w.plural) { if (manPluralContainer) manPluralContainer.classList.remove('hidden'); if (manPlural) manPlural.value = ''; } else { if (manPluralContainer) manPluralContainer.classList.add('hidden'); }
-                    if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) { if (manVerbContainer) manVerbContainer.classList.remove('hidden'); if (manPraet) manPraet.value = ''; if (manPart) manPart.value = ''; } else { if (manVerbContainer) manVerbContainer.classList.add('hidden'); }
-                    if (umlautBar) umlautBar.classList.remove('hidden');
-                    setTimeout(() => { const target = w.word_type === 'noun' ? document.getElementById('manual-article') : document.getElementById('manual-main'); if (target) target.focus(); }, 150);
-                }
             }
             // Fade card in smoothly if it was hidden by a swipe
             if (needsFadeIn) {
@@ -2245,50 +2156,6 @@
             }, 150);
         };
 
-        document.getElementById('btn-check-manual').onclick = () => {
-            const w = trainList[curIdx];
-            const art = (document.getElementById('manual-article').value || "").trim().toLowerCase();
-            const main = (document.getElementById('manual-main').value || "").trim();
-            const typedPlural = (document.getElementById('manual-plural').value || "").trim().toLowerCase();
-            const typedPraet = (document.getElementById('manual-praeteritum').value || "").trim().toLowerCase();
-            const typedPart = (document.getElementById('manual-partizip').value || "").trim().toLowerCase();
-
-            const feedback = document.getElementById('manual-feedback'); const btnCheck = document.getElementById('btn-check-manual');
-            let isCorrect = false; let correctAnswer = "";
-
-            if (!currentIsGermanQuestion) {
-                const expectedArt = (w.article ? w.article.toLowerCase() : ""); const expectedWord = (w.word_de ? w.word_de.toLowerCase() : "");
-                const expectedPlural = (w.plural ? w.plural.toLowerCase() : ""); const expectedPraet = (w.praeteritum ? w.praeteritum.toLowerCase() : ""); const expectedPart = (w.partizip ? w.partizip.toLowerCase() : "");
-
-                if (w.word_type === 'noun') {
-                    if (w.plural) { isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord) && (typedPlural === expectedPlural); correctAnswer = `${w.article} ${w.word_de} (die ${w.plural})`; }
-                    else { isCorrect = (art === expectedArt) && (main.toLowerCase() === expectedWord); correctAnswer = `${w.article} ${w.word_de}`; }
-                } else if (w.word_type === 'verb') {
-                    let baseCorrect = (main.toLowerCase() === expectedWord); let formsCorrect = true;
-                    if (w.praeteritum || w.partizip) { formsCorrect = (typedPraet === expectedPraet) && (typedPart === expectedPart); correctAnswer = `${w.word_de} (${w.praeteritum}, ${w.partizip})`; }
-                    else { correctAnswer = w.word_de; }
-                    isCorrect = baseCorrect && formsCorrect;
-                } else { isCorrect = main.toLowerCase() === expectedWord; correctAnswer = w.word_de; }
-            } else { const expectedWord = (w.word_ru ? w.word_ru.toLowerCase() : ""); isCorrect = main.toLowerCase() === expectedWord; correctAnswer = w.word_ru; }
-
-            document.getElementById('manual-article').disabled = true; document.getElementById('manual-main').disabled = true; document.getElementById('manual-plural').disabled = true; document.getElementById('manual-praeteritum').disabled = true; document.getElementById('manual-partizip').disabled = true; btnCheck.disabled = true;
-            feedback.className = "w-full text-center py-3 rounded-xl font-medium text-sm mb-3 transition-all animate-in fade-in zoom-in duration-200 border";
-
-            if (isCorrect) {
-                const nextCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
-                feedback.classList.add('bg-green-50', 'text-[#5A9C78]', 'border-green-200', 'dark:bg-green-900/20', 'dark:border-green-800'); feedback.innerText = `Верно! Следующий повтор через: ${formatInterval(nextCalc.interval)}`; feedback.classList.remove('hidden');
-                cardTimeout = setTimeout(() => updateScoreWithSM2(4), 1200);
-            } else {
-                feedback.classList.add('bg-red-50', 'text-[#9C5A5A]', 'border-red-200', 'dark:bg-red-900/20', 'dark:border-red-800'); feedback.innerText = `Ошибка. Правильно: ${correctAnswer}`; feedback.classList.remove('hidden');
-                cardTimeout = setTimeout(() => updateScoreWithSM2(0), 2500);
-            }
-
-            if (!currentIsGermanQuestion) {
-                const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
-                setTimeout(() => speakWord(fullGerman), 100);
-            }
-        };
-
         // --- МИНИ-ИГРА 1: КОНСТРУКТОР ФРАЗ ---
         let builderTarget = "";
         let builderWords = [];
@@ -2354,7 +2221,7 @@
                 return;
             }
             const w = vtQueue[vtIdx];
-            document.getElementById('vt-counter').innerText = `Осталось: ${vtQueue.length - vtIdx}`;
+            document.getElementById('vt-counter').innerText = `${t('Осталось:')} ${vtQueue.length - vtIdx}`;
             document.getElementById('vt-ru').innerText = w.word_ru;
             document.getElementById('vt-inf').innerText = w.word_de;
 
@@ -2366,7 +2233,7 @@
             triggerVibration(15);
             const w = vtQueue[vtIdx];
             document.getElementById('vt-answer').innerText = vtMode === 'praet' ? w.praeteritum : w.partizip;
-            const container = document.getElementById('verb-trainer-game').querySelector('.bg-gradient-to-b');
+            const container = document.getElementById('verb-trainer-game').querySelector('.glass-card');
             container.classList.add('perspective-1000', 'transform-style-3d');
             container.style.transform = 'rotateY(90deg)';
             container.style.transition = 'transform 0.15s ease-in';
@@ -2379,6 +2246,7 @@
         };
 
         window.answerVerb = (remembered) => {
+            if (remembered) playTone(800, 'sine', 0.3); else playTone(200, 'sawtooth', 0.2);
             if (!remembered) { vtQueue.push({ ...vtQueue[vtIdx] }); }
             vtIdx++;
             renderVerbCard();
@@ -2800,6 +2668,14 @@
             "Удалить слово навсегда?": {en: "Delete word forever?", de: "Wort für immer löschen?"},
             "Изучаемое слово...": {en: "Word to learn...", de: "Zu lernendes Wort..."},
             "Род / Мн.ч. (опционально)...": {en: "Gender / Plural (optional)...", de: "Genus / Plural (optional)..."},
+            "Инфинитив": {en: "Infinitive", de: "Infinitiv"},
+            "Перевод": {en: "Translation", de: "Übersetzung"},
+            "Вспомнить": {en: "Recall", de: "Erinnern"},
+            "Забыл": {en: "Forgot", de: "Vergessen"},
+            "Следующий повтор через:": {en: "Next review in:", de: "Nächste Wiederholung in:"},
+            "Следующий повтор через: ": {en: "Next review in: ", de: "Nächste Wiederholung in: "},
+            "Напишите перевод...": {en: "Write translation...", de: "Übersetzung schreiben..."},
+            "Формы глаголов": {en: "Verb Forms", de: "Verbformen"},
             
             "Слово на английском...": {en: "Word (English)...", de: "Englisches Wort..."},
             "Слово на русском...": {en: "Word (Russian)...", de: "Russisches Wort..."},
