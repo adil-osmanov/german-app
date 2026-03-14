@@ -1940,8 +1940,8 @@
 
                     let hasActive = false;
 
-                    groupedTopics[folder].forEach(t => {
-                        const [f, l, s] = t.split('|');
+                    groupedTopics[folder].forEach(topicKey => {
+                        const [f, l, s] = topicKey.split('|');
                         const allInTopic = globalWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s);
                         const wordsCount = allInTopic.filter(w => isWordDue(w)).length;
                         const waitingCount = allInTopic.filter(w => !isWordDue(w)).length;
@@ -1962,7 +1962,7 @@
                             }
                             hasActive = true;
                             folderActiveHTML += `
-                                <button onclick="startTraining('${escapeStr(t)}')" class="w-[calc(100%-12px)] mx-auto ml-1.5 text-left bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#233554] hover:bg-[#2A3B5E] transition-all p-2.5 rounded-lg flex justify-between items-center group mb-1">
+                                <button onclick="startTraining('${escapeStr(topicKey)}')" class="w-[calc(100%-12px)] mx-auto ml-1.5 text-left bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#233554] hover:bg-[#2A3B5E] transition-all p-2.5 rounded-lg flex justify-between items-center group mb-1">
                                     <div>
                                         <div class="flex items-center gap-2 mb-0.5">
                                             ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${getLevelColor(l)}">${l}</span>` : ''}
@@ -1984,7 +1984,9 @@
 
                 container.innerHTML = html + activeTopicsHTML.join('');
                 document.getElementById('train-setup-block').classList.remove('hidden'); document.getElementById('train-card-block').classList.add('hidden');
-            } catch (err) { }
+            } catch (err) {
+                console.error("Error in setupTrainMenu:", err);
+            }
         }
 
         window.startTraining = (sel, forceArchive = false) => {
