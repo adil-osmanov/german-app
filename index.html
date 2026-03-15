@@ -341,7 +341,9 @@
                 class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] premium-title origin-left drop-shadow-md">
                 Словарь</h1>
             <div class="flex items-center gap-3">
-                <select id="ui-language" class="bg-[#112240] text-[#D4AF37] border border-[#D4AF37]/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer" onchange="changeUILanguage()">
+                <select id="ui-language"
+                    class="bg-[#112240] text-[#D4AF37] border border-[#D4AF37]/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer"
+                    onchange="changeUILanguage()">
                     <option value="ru">🇷🇺 RU</option>
                     <option value="en">🇬🇧 EN</option>
                     <option value="de">🇩🇪 DE</option>
@@ -367,12 +369,20 @@
             <div class="mb-4">
                 <div class="relative group">
                     <input type="text" id="search-input" placeholder="Поиск слов..." autocomplete="off"
-                        class="w-full bg-[#112240] border border-white/10 rounded-xl py-3 pl-10 shadow-sm outline-none focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all text-white text-sm">
+                        class="w-full bg-[#112240] border border-white/10 rounded-xl py-3 pl-10 pr-10 shadow-sm outline-none focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all text-white text-sm">
                     <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-500 group-focus-within:text-[#D4AF37] transition-colors"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
+                    <button id="search-clear-btn"
+                        class="absolute right-3 top-3 text-gray-500 hover:text-white hidden transition-colors"
+                        onclick="document.getElementById('search-input').value=''; document.getElementById('search-input').dispatchEvent(new Event('input'))">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -400,7 +410,8 @@
             </div>
 
             <div id="train-card-block"
-                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all mt-auto mb-auto overflow-hidden touch-pan-y -translate-y-24" style="touch-action: pan-y;">
+                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all my-auto -translate-y-20 overflow-hidden touch-pan-y"
+                style="touch-action: pan-y;">
                 <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0">
                 </div>
                 <!-- Swipe Indicators -->
@@ -408,23 +419,26 @@
                 <div id="swipe-indicator-left" class="swipe-indicator swipe-left-indicator">Не помню</div>
 
                 <div class="relative z-10">
-                    <button id="btn-stop-training"
-                        class="absolute top-0 right-0 text-gray-500 hover:text-white bg-white/5 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all shadow-sm border border-white/10 hover:bg-red-500/20 hover:border-red-500/50">×</button>
-
-                    <div class="mb-3"><span id="train-level-badge"
-                            class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]">Узнавание</span>
+                    <!-- Top header row: badge + progress + close -->
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"></span>
+                        <div class="flex items-center gap-2">
+                            <span class="flex items-center gap-1 text-[10px] font-medium text-gray-500 uppercase tracking-wider">
+                                <span id="train-remaining-label"></span>
+                                <span id="train-total-cards" class="text-[#D4AF37] font-bold">0</span>
+                            </span>
+                            <button id="btn-stop-training"
+                                class="text-gray-500 hover:text-white bg-white/5 backdrop-blur-md w-7 h-7 rounded-full flex items-center justify-center font-bold transition-all shadow-sm border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 flex-shrink-0">×</button>
+                        </div>
                     </div>
 
-                    <div class="mb-5 w-full px-1">
-                        <div
-                            class="flex justify-between text-[10px] font-medium text-gray-500 mb-1.5 uppercase tracking-wider">
-                            <span id="train-card-progress-text">Уровень: 0/4</span>
-                            <span id="train-total-cards">Осталось: 0</span>
+                    <!-- Progress dots + bar -->
+                    <div class="mb-4 w-full">
+                        <div class="flex justify-start mb-1.5">
+                            <span id="train-card-progress-text" class="text-[11px] text-gray-600"></span>
                         </div>
-                        <div
-                            class="w-full bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] h-1.5 rounded-full overflow-hidden relative">
-                            <div id="train-card-progress-fill" class="bg-[#5A7B9C] h-full transition-all duration-500"
-                                style="width: 0%"></div>
+                        <div class="w-full bg-[#112240] dark:bg-[#172A45] h-1 rounded-full overflow-hidden">
+                            <div id="train-card-progress-fill" class="bg-[#5A7B9C] h-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -432,7 +446,6 @@
                         <div class="flex items-center justify-center gap-2 mb-2">
                             <h2 id="train-question"
                                 class="text-3xl font-bold break-words px-4 leading-tight text-white notranslate">
-                                Вопрос
                             </h2>
                             <button id="btn-speak-question"
                                 class="text-gray-500 hover:text-[#D4AF37] transition-all p-2 bg-[#112240] rounded-full hidden"
@@ -446,7 +459,8 @@
                         </div>
 
                         <div id="train-example-q"
-                            class="text-sm text-[#D4AF37] dark:text-[#FDE08B] italic hidden text-center w-full notranslate"></div>
+                            class="text-sm text-[#D4AF37] dark:text-[#FDE08B] italic hidden text-center w-full notranslate">
+                        </div>
                     </div>
                     <button id="btn-show-answer"
                         class="w-full bg-[#172A45] dark:bg-[#172A45] text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">Показать
@@ -457,8 +471,8 @@
                             class="flex flex-col justify-center items-center mb-6 bg-[#172A45] dark:bg-[#172A45]/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                             <div class="flex items-center justify-center gap-2 mb-3">
                                 <p id="train-de-word"
-                                    class="text-3xl font-bold text-white break-words px-2 leading-tight">
-                                    Ответ</p>
+                                    class="text-3xl font-bold text-white break-words px-2 leading-tight notranslate">
+                                </p>
                                 <button id="btn-speak-answer"
                                     class="text-gray-500 hover:text-[#D4AF37] transition-all p-2 bg-[#112240] rounded-full hidden"
                                     title="Прослушать">
@@ -479,8 +493,8 @@
                         <div class="flex gap-2" id="sm2-buttons-block">
                             <button id="btn-forgot"
                                 class="flex-1 bg-transparent border-2 border-slate-500 text-slate-400 font-bold py-3 rounded-xl active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-slate-500/10">
-                                <span class="mb-0.5">Не помню</span><span
-                                    class="text-[10px] font-medium opacity-70">Снова</span>
+                                <span class="mb-0.5">Не помню</span><span class="text-[10px] font-medium opacity-70"
+                                    data-orig-ru="Снова">Снова</span>
                             </button>
                             <button id="btn-remembered"
                                 class="flex-1 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] font-bold py-3 rounded-xl active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-[#ffc300]/10">
@@ -494,11 +508,11 @@
 
             <div id="verb-trainer-game" class="hidden w-full relative pt-2 animate-in fade-in zoom-in duration-300">
                 <div class="mb-4 w-full px-1 flex justify-between">
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest text-center mb-1 drop-shadow-sm" id="vt-count-text">Формы</p>
-                    <p id="vt-counter"
-                        class="text-xs font-bold text-[#D4AF37] uppercase tracking-widest text-center mb-1 drop-shadow-sm">Осталось:
-                        0
-                    </p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest text-center mb-1 drop-shadow-sm"
+                        id="vt-count-text">Формы глаголов</p>
+                    <p
+                        class="text-xs font-bold text-[#D4AF37] uppercase tracking-widest text-center mb-1 drop-shadow-sm">
+                        <span id="vt-remaining-label"></span> <span id="vt-counter">0</span></p>
                 </div>
                 <div
                     class="flex bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45]/50 p-1 rounded-xl mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
@@ -510,27 +524,40 @@
                 </div>
                 <div
                     class="glass-card card-gradient-border p-8 rounded-[2rem] shadow-[0_5px_30px_rgba(212,175,55,0.08)] relative min-h-[300px] flex flex-col items-center justify-center text-center bg-[#172A45] dark:bg-[#132039]/90 backdrop-blur-xl transition-all">
-                    <div class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#D4AF37]/5 pointer-events-none z-0 rounded-[2rem]"></div>
-                    <h2 id="vt-ru" class="text-[#D4AF37] dark:text-[#FDE08B] text-[10px] uppercase font-black tracking-widest mb-4 opacity-90 z-10 drop-shadow-sm bg-[#112240] py-1 px-3 rounded-full border border-[#D4AF37]/30">
-                        Перевод</h2>
-                    <h3 id="vt-inf" class="text-4xl font-black text-white mb-8 leading-tight tracking-tight z-10 drop-shadow-lg filter drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">Infinitiv
-                    </h3>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#D4AF37]/5 pointer-events-none z-0 rounded-[2rem]">
+                    </div>
+                    <p class="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-3 z-10"
+                        data-orig-ru="Глагол">Глагол</p>
+                    <!-- German infinitive = PRIMARY (big) -->
+                    <h2 id="vt-inf" class="text-4xl font-black text-white mb-2 z-10 leading-tight notranslate"></h2>
+                    <!-- Russian translation = secondary (small) -->
+                    <h3 id="vt-ru" class="text-sm font-medium text-gray-400 z-10 mb-8 notranslate"></h3>
 
                     <button id="vt-btn-show" onclick="showVTAnswer()"
-                        class="mt-auto w-full premium-glow-btn bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] text-[#0f172a] font-black py-4 rounded-xl active:scale-95 transition-all text-base border-t border-[#FDE08B]/80 shadow-[0_4px_20px_rgba(212,175,55,0.3)] hover:shadow-[0_4px_25px_rgba(212,175,55,0.4)] z-10 translate-y-0 hover:-translate-y-1 tracking-wide">Вспомнить</button>
+                        class="mt-auto w-full border border-[#D4AF37]/50 text-[#D4AF37] font-semibold py-3 rounded-xl active:scale-95 transition-all text-sm z-10 hover:bg-[#D4AF37]/10 tracking-wide bg-[#112240]/60"
+                        data-orig-ru="Показать форму">Показать форму</button>
 
                     <div id="vt-answer-block"
                         class="hidden w-full mt-2 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 z-10">
-                        <div class="bg-[#112240]/60 p-5 rounded-2xl border border-[#D4AF37]/30 w-full mb-6 relative overflow-hidden flex flex-col items-center justify-center shadow-lg transform transition-all">
-                             <div class="absolute inset-0 bg-gradient-to-r from-green-500/10 via-transparent to-transparent pointer-events-none"></div>
-                             <p class="text-[9px] text-[#D4AF37]/80 uppercase tracking-widest font-black mb-1.5 px-2 py-0.5 bg-[#172A45] rounded border border-[#D4AF37]/20">Ответ</p>
-                             <p id="vt-answer" class="text-3xl font-black text-green-400 drop-shadow-md tracking-tight filter drop-shadow-[0_0_10px_rgba(74,222,128,0.2)]">Ответ</p>
+                        <div
+                            class="bg-[#112240]/60 p-5 rounded-2xl border border-[#D4AF37]/30 w-full mb-6 relative overflow-hidden flex flex-col items-center justify-center shadow-lg transform transition-all">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-r from-green-500/10 via-transparent to-transparent pointer-events-none">
+                            </div>
+                            <p class="text-[9px] text-[#D4AF37]/80 uppercase tracking-widest font-black mb-1.5 px-2 py-0.5 bg-[#172A45] rounded border border-[#D4AF37]/20"
+                                data-orig-ru="Ответ">Ответ</p>
+                            <p id="vt-answer"
+                                class="text-2xl font-semibold text-green-400 drop-shadow-md tracking-wide notranslate">
+                            </p>
                         </div>
                         <div class="flex gap-3 w-full">
                             <button onclick="answerVerb(false)"
-                                class="flex-1 bg-[#1A1A1A]/40 border border-red-500/40 text-red-400 py-3.5 rounded-xl font-bold hover:bg-red-500/10 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md">Забыл</button>
+                                class="flex-1 bg-[#1A1A1A]/40 border border-red-500/40 text-red-400 py-3.5 rounded-xl font-bold hover:bg-red-500/10 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md"><span
+                                    data-orig-ru="Забыл">Забыл</span></button>
                             <button onclick="answerVerb(true)"
-                                class="flex-1 bg-green-500/10 border border-green-500/50 text-green-400 py-3.5 rounded-xl font-bold hover:bg-green-500/20 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md shadow-green-900/40">Помню</button>
+                                class="flex-1 bg-green-500/10 border border-green-500/50 text-green-400 py-3.5 rounded-xl font-bold hover:bg-green-500/20 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md shadow-green-900/40"><span
+                                    data-orig-ru="Помню">Помню</span></button>
                         </div>
                     </div>
                 </div>
@@ -568,9 +595,15 @@
             class="bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#112240] backdrop-blur-md bg-opacity-80 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
             <h2 class="text-xl font-bold mb-4">Изучаемый язык</h2>
             <div class="flex gap-2 mb-6 w-full" id="language-switcher-container">
-                <button onclick="setStudyLanguage('de')" id="lang-btn-de" class="flex-1 py-3 bg-[#112240] rounded-xl font-bold text-white border-2 border-[#D4AF37] hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span class="text-lg">🇩🇪</span> DE</button>
-                <button onclick="setStudyLanguage('en')" id="lang-btn-en" class="flex-1 py-3 bg-[#172A45] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span class="text-lg">🇬🇧</span> EN</button>
-                <button onclick="setStudyLanguage('ru')" id="lang-btn-ru" class="flex-1 py-3 bg-[#172A45] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span class="text-lg">🇷🇺</span> RU</button>
+                <button onclick="setStudyLanguage('de')" id="lang-btn-de"
+                    class="flex-1 py-3 bg-[#112240] rounded-xl font-bold text-white border-2 border-[#D4AF37] hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
+                        class="text-lg">🇩🇪</span> DE</button>
+                <button onclick="setStudyLanguage('en')" id="lang-btn-en"
+                    class="flex-1 py-3 bg-[#172A45] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
+                        class="text-lg">🇬🇧</span> EN</button>
+                <button onclick="setStudyLanguage('ru')" id="lang-btn-ru"
+                    class="flex-1 py-3 bg-[#172A45] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
+                        class="text-lg">🇷🇺</span> RU</button>
             </div>
 
             <h2 class="text-xl font-bold mb-4">Кто учит слова?</h2>
@@ -647,9 +680,11 @@
                 <div id="modal-tabs"
                     class="flex bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] p-1 rounded-xl mb-4">
                     <button id="tab-single"
-                        class="flex-1 py-2 text-sm font-medium rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white">Одно слово</button>
+                        class="flex-1 py-2 text-sm font-medium rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white">Одно
+                        слово</button>
                     <button id="tab-bulk"
-                        class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком (CSV)</button>
+                        class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком
+                        (CSV)</button>
                 </div>
 
                 <div id="form-single">
@@ -671,8 +706,7 @@
                                 class="flex-1 py-2 rounded-lg border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] text-gray-500 font-medium transition-all text-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">das</button>
                         </div>
                         <div class="flex flex-col w-full">
-                            <input type="text" id="word-de" placeholder="Изучаемое слово..." required
-                                autocomplete="off"
+                            <input type="text" id="word-de" placeholder="Изучаемое слово..." required autocomplete="off"
                                 class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all text-sm">
                             <span id="translate-loader-de"
                                 class="text-[10px] text-[#D4AF37] mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
@@ -750,7 +784,8 @@
                         </div>
                     </div>
                     <button id="btn-upload-csv"
-                        class="w-full bg-[#5A9C78] text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-green-600 shadow-md shadow-black/40">Загрузить слова</button>
+                        class="w-full bg-[#5A9C78] text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-green-600 shadow-md shadow-black/40">Загрузить
+                        слова</button>
                 </div>
             </div>
         </div>
@@ -804,7 +839,7 @@
     <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
 
     <script>
-                const t = (str) => {
+        const t = (str) => {
             if (currentLang === 'ru') return str;
             if (window.i18nDict[str] && window.i18nDict[str][currentLang]) return window.i18nDict[str][currentLang];
             return str;
@@ -917,7 +952,7 @@
             currentStudyLang = lang;
             localStorage.setItem('studyLanguage', lang);
             updateProfileUI();
-            
+
             if (typeof setupAddWordModal === 'function') setupAddWordModal();
 
             if (!skipFetch) {
@@ -938,7 +973,7 @@
             if (plInp) plInp.style.display = currentStudyLang === 'de' && currentType === 'noun' ? 'flex' : 'none';
             const verbGrp = document.getElementById('verb-forms-group');
             if (verbGrp) verbGrp.style.display = currentStudyLang === 'de' && currentType === 'verb' ? 'flex' : 'none';
-            
+
             const wordDeInput = document.getElementById('word-de');
             if (wordDeInput) {
                 if (currentStudyLang === 'de') wordDeInput.placeholder = t('По-немецки...');
@@ -979,7 +1014,7 @@
             const dn = window.i18nDict && window.i18nDict['дн'] && currentLang !== 'ru' ? window.i18nDict['дн'][currentLang] : 'дн';
             const mes = window.i18nDict && window.i18nDict['мес'] && currentLang !== 'ru' ? window.i18nDict['мес'][currentLang] : 'мес';
             const g = window.i18nDict && window.i18nDict['г'] && currentLang !== 'ru' ? window.i18nDict['г'][currentLang] : 'г';
-            
+
             if (!days || days <= 0) return `1 ${dn}`;
             if (days < 30) return `${days} ${dn}`;
             if (days < 365) return `${(days / 30).toFixed(1).replace('.0', '')} ${mes}`;
@@ -1170,7 +1205,7 @@
             document.getElementById('profile-btn-osman').className = currentUser === 'osman' ? "w-full flex items-center p-4 rounded-xl border-2 border-[#5A7B9C] bg-[#5A7B9C]/10 dark:bg-blue-900/20 transition-all text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] transition-all hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 text-white";
             document.getElementById('profile-btn-girlfriend').className = currentUser === 'girlfriend' ? "w-full flex items-center p-4 rounded-xl border-2 border-pink-500 bg-pink-50 dark:bg-pink-900/20 transition-all text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] transition-all hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 text-white";
             loadAvatars();
-            
+
             ['de', 'en', 'ru'].forEach(l => {
                 const btn = document.getElementById('lang-btn-' + l);
                 if (btn) {
@@ -1205,11 +1240,12 @@
 
         const updateIcons = () => { };
 
-        
+
         const playTone = (freq, type, duration) => {
             try {
-                const ac = new (window.AudioContext || window.webkitAudioContext)();
-                if (ac.state === 'suspended') ac.resume();
+                if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (_audioCtx.state === 'suspended') _audioCtx.resume();
+                const ac = _audioCtx;
                 const osc = ac.createOscillator();
                 const gain = ac.createGain();
                 osc.type = type; osc.frequency.setValueAtTime(freq, ac.currentTime);
@@ -1217,7 +1253,7 @@
                 gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
                 osc.connect(gain); gain.connect(ac.destination);
                 osc.start(); osc.stop(ac.currentTime + duration);
-            } catch (e) {}
+            } catch (e) { }
         };
 
         window.speakWord = (text, event, langOverride) => {
@@ -1386,7 +1422,12 @@
         }
 
         const searchInp = document.getElementById('search-input');
-        searchInp.oninput = () => { if (searchInp.value.trim().length > 0) collapsedDictTopics = {}; renderDict(searchInp.value.toLowerCase()); };
+        searchInp.oninput = () => {
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (searchInp.value.length > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden');
+            if (searchInp.value.trim().length > 0) collapsedDictTopics = {};
+            renderDict(searchInp.value.toLowerCase());
+        };
         window.toggleTopic = (topicKey) => { collapsedDictTopics[topicKey] = !collapsedDictTopics[topicKey]; renderDict(searchInp.value.toLowerCase()); };
 
         function renderDict(query = searchInp.value.toLowerCase()) {
@@ -1537,10 +1578,10 @@
             currentType = t;
             document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
             document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
-            
+
             // Base visibility overrides for types
             document.getElementById('plural-input-group').style.display = t === 'verb' ? 'none' : 'flex';
-            
+
             // Defer to language-specific setup
             if (typeof setupAddWordModal === 'function') setupAddWordModal();
         };
@@ -1876,8 +1917,8 @@
                     ${currentStudyLang === 'de' ? `
                     <button onclick="startVerbTrainer()" class="w-full text-left bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
                         <div>
-                            <h3 class="text-sm font-bold text-white flex items-center gap-2">Формы глаголов</h3>
-                            <p class="text-gray-500 text-[10px] font-medium mt-0.5"><span class="notranslate">${t('Доступно:')}</span> ${verbAvailableCount} <span class="opacity-60">|</span> Тренировка Präteritum и Partizip II</p>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">${t('Формы глаголов')}</h3>
+                            <p class="text-gray-500 text-[10px] font-medium mt-0.5">${t('Тренировка Präteritum и Partizip II')}: <span class="notranslate">${verbAvailableCount}</span></p>
                         </div>
                         <div class="text-[#D4AF37]"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
                     </button>` : ''}
@@ -1983,6 +2024,8 @@
                 }
 
                 container.innerHTML = html + activeTopicsHTML.join('');
+                // Instantly translate all dynamically injected text
+                if (typeof translateNode === 'function') translateNode(container);
                 document.getElementById('train-setup-block').classList.remove('hidden'); document.getElementById('train-card-block').classList.add('hidden');
             } catch (err) {
                 console.error("Error in setupTrainMenu:", err);
@@ -2025,19 +2068,24 @@
             const w = trainList[curIdx];
             const qEl = document.getElementById('train-question'); const exQ = document.getElementById('train-example-q'); const badge = document.getElementById('train-level-badge');
 
-            document.getElementById('train-total-cards').innerText = `${t('Осталось:')} ${trainList.length - curIdx}`;
-            document.getElementById('train-card-progress-text').innerText = `${t('Освоено:')} ${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}`;
+            document.getElementById('train-total-cards').innerText = trainList.length - curIdx;
+            // Progress dots instead of text label
+            const progressDots = Array.from({ length: MAX_SCORE }, (_, i) => i < Math.min(w.score, MAX_SCORE) ? '●' : '○').join('');
+            document.getElementById('train-card-progress-text').innerHTML = `<span class="text-[#D4AF37] tracking-widest">${progressDots}</span>`;
             document.getElementById('train-card-progress-fill').style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
 
             document.getElementById('train-answer-block').classList.add('hidden');
             document.getElementById('btn-show-answer').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
+            // Set remaining label using t() to correctly translate
+            const remLabel = document.getElementById('train-remaining-label');
+            if (remLabel) remLabel.innerText = t('Осталось:');
             if (exQ) {
                 exQ.classList.add('hidden');
                 exQ.className = "text-sm text-[#D4AF37] dark:text-[#FDE08B] italic mb-5 hidden text-center w-full";
             }
 
-            const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer'); 
+            const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer');
 
             const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
             let state = w.score < (MAX_SCORE - 1) ? 'L1' : w.score < MAX_SCORE ? 'L2' : 'Archive';
@@ -2059,13 +2107,32 @@
             if (w.example && ansEx) { ansEx.innerText = '"' + extractGermanSentence(w.example) + '"'; ansEx.classList.remove('hidden'); } else if (ansEx) ansEx.classList.add('hidden');
 
             document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru || '') : fullGerman;
-            if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerText = `мн. ч.: die ${w.plural}`;
-            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').innerText = `Формы: ${w.praeteritum || '-'}, ${w.partizip || '-'}`;
+            if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-400 font-medium mr-1 notranslate">die</span><span class="text-gray-400 notranslate">${escapeStr(w.plural)}</span>`;
+            else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
+                // Determine auxiliary verb (haben/sein) - common sein verbs
+                const seinVerbs = ['gehen','fahren','laufen','fliegen','kommen','ankommen','werden','sein','bleiben','passieren','fallen','steigen','aufstehen','einschlafen','aufwachen','wachsen','entstehen','sterben'];
+                const inf = (w.word_de || '').toLowerCase();
+                const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
+                // Only add aux if partizip doesn't already start with 'hat' or 'ist' or 'haben'/'sein'
+                const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
+                const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
+                const partizipDisplay = w.partizip
+                    ? (alreadyHasAux
+                        ? escapeStr(w.partizip)
+                        : `<span class="text-gray-500 text-[9px] mr-1">${aux}</span>${escapeStr(w.partizip)}`)
+                    : '-';
+                document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-400 notranslate">${escapeStr(w.praeteritum) || '-'}</span><span class="text-gray-600 mx-2">·</span><span class="text-gray-400 notranslate">${partizipDisplay}</span>`;
+            }
 
             if (state === 'L1' || state === 'L2' || state === 'Archive') {
                 if (badge) {
-                    if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] text-gray-500"; }
-                    else { badge.innerText = `${t('Узнавание')} (${w.score}/${MAX_SCORE})`; badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"; }
+                    if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] dark:bg-[#172A45] text-gray-500"; }
+                    else {
+                        // Show word type label
+                        const typeLabel = w.word_type === 'verb' ? (currentStudyLang === 'de' ? 'Verb' : t('Глагол')) : (w.word_type === 'noun' ? (currentStudyLang === 'de' ? 'Nomen' : t('Существительное')) : '');
+                        badge.innerText = typeLabel || '';
+                        badge.className = typeLabel ? "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]" : "hidden";
+                    }
                 }
                 if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
                 document.getElementById('btn-show-answer').classList.remove('hidden');
@@ -2074,8 +2141,13 @@
                 document.getElementById('btn-remembered').onclick = () => { playTone(800, 'sine', 0.3); updateScoreWithSM2(4); };
 
                 const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
-                document.getElementById('sm2-good-time').innerText = formatInterval(goodCalc.interval);
+                // formatInterval uses currentLang directly - always instant
+                const sm2El = document.getElementById('sm2-good-time');
+                sm2El.innerText = formatInterval(goodCalc.interval);
+                sm2El._interval = goodCalc.interval; // store for language switch updates
             }
+            // Instantly translate any UI labels in the card (don't wait for MutationObserver)
+            if (typeof translateNode === 'function') translateNode(cardBlock);
             // Fade card in smoothly if it was hidden by a swipe
             if (needsFadeIn) {
                 requestAnimationFrame(() => {
@@ -2223,9 +2295,12 @@
                 return;
             }
             const w = vtQueue[vtIdx];
-            document.getElementById('vt-counter').innerText = `${t('Осталось:')} ${vtQueue.length - vtIdx}`;
-            document.getElementById('vt-ru').innerText = w.word_ru;
+            document.getElementById('vt-counter').innerText = `${vtQueue.length - vtIdx}`;
+            const vtRemLabel = document.getElementById('vt-remaining-label');
+            if (vtRemLabel) vtRemLabel.innerText = t('Осталось:');
+            // German = primary (big, vt-inf), Russian = secondary (small, vt-ru)
             document.getElementById('vt-inf').innerText = w.word_de;
+            document.getElementById('vt-ru').innerText = w.word_ru;
 
             document.getElementById('vt-answer-block').classList.add('hidden');
             document.getElementById('vt-btn-show').classList.remove('hidden');
@@ -2303,14 +2378,18 @@
                     <div class="w-16 h-16 rounded-full border-4 border-[#D4AF37]/20 border-t-[#D4AF37] animate-[spin_1.5s_linear_infinite] shadow-[0_0_20px_rgba(212,175,55,0.4)]"></div>
                 </div>`;
             try {
-                try { const res = await apiFetch('/history'); serverHistory = await res.json(); }
-                catch (e) { serverHistory = JSON.parse(localStorage.getItem('studyHistory')) || {}; }
+                // Parallelize history + leaderboard fetches for speed
+                const [historyResult, lbResult] = await Promise.allSettled([
+                    apiFetch('/history').then(r => r.json()),
+                    fetch('/leaderboard', { headers: { 'x-user': currentUser } })
+                ]);
+                serverHistory = historyResult.status === 'fulfilled' ? historyResult.value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
+                const lbResponse = lbResult.status === 'fulfilled' ? lbResult.value : null;
 
                 let leaderboardHtml = '';
                 try {
-                    const lbRes = await fetch('/leaderboard', { headers: { 'x-user': currentUser } });
-                    if (lbRes.ok) {
-                        const lbData = await lbRes.json();
+                    if (lbResponse && lbResponse.ok) {
+                        const lbData = await lbResponse.json();
                         const tzoffset = (new Date()).getTimezoneOffset() * 60000;
                         const todayStr = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
                         const yesterdayStr = (new Date(Date.now() - tzoffset - 86400000)).toISOString().slice(0, 10);
@@ -2352,7 +2431,7 @@
                             const totalMinutes = Math.floor((user.total_ms || 0) / 60000);
                             const hours = Math.floor(totalMinutes / 60);
                             const mins = totalMinutes % 60;
-                            const timeStr = hours > 0 ? `<span class="font-bold text-white text-sm">${hours}</span><span class="text-[10px] text-gray-500 ml-0.5">ч</span> <span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">м</span>` : `<span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">м</span>`;
+                            const timeStr = hours > 0 ? `<span class="font-bold text-white text-sm">${hours}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('ч')}</span> <span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('м')}</span>` : `<span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('м')}</span>`;
 
                             const pbgColor = index === 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
                                 (index === 1 ? 'bg-[#172A45] dark:bg-[#172A45] border-gray-200 dark:border-gray-700' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800');
@@ -2446,7 +2525,7 @@
                                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
                                     <span class="text-5xl font-black tracking-tighter leading-none">${minutesToday}</span>
                                     <span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest text-center mt-2 leading-tight">
-                                        ${minutesToday % 10 === 1 && minutesToday % 100 !== 11 ? 'минута' : ([2, 3, 4].includes(minutesToday % 10) && ![12, 13, 14].includes(minutesToday % 100) ? 'минуты' : 'минут')}
+                                        ${t(minutesToday % 10 === 1 && minutesToday % 100 !== 11 ? 'минута' : ([2, 3, 4].includes(minutesToday % 10) && ![12, 13, 14].includes(minutesToday % 100) ? 'минуты' : 'минут'))}
                                     </span>
                                 </div>
                             </div>
@@ -2637,151 +2716,157 @@
     </script>
 
     <script>
-                        window.i18nDict = {
-            "Словарь": {en: "Dictionary", de: "Wörterbuch"},
-            "Учить": {en: "Learn", de: "Lernen"},
-            "Прогресс": {en: "Progress", de: "Fortschritt"},
-            "Тренировка": {en: "Training", de: "Training"},
-            "Настройки": {en: "Settings", de: "Einstellungen"},
-            "В процессе": {en: "In Progress", de: "Lernen"},
-            "Архив": {en: "Archive", de: "Archiv"},
-            "Поиск слов...": {en: "Search words...", de: "Wörter suchen..."},
-            "Новое слово": {en: "New Word", de: "Neues Wort"},
-            "Одной строкой": {en: "Single Line", de: "Einzeilig"},
-            "Детально": {en: "Detailed", de: "Detailliert"},
-            "Сохранить": {en: "Save", de: "Speichern"},
-            "Узнавание": {en: "Recognition", de: "Erkennung"},
-            "Письмо (Финал)": {en: "Writing (Final)", de: "Schreiben (Finale)"},
-            "Осталось:": {en: "Remaining:", de: "Noch:"},
-            "Освоено:": {en: "Mastered:", de: "Gelernt:"},
-            "Уровень:": {en: "Level:", de: "Niveau:"},
-            "Показать": {en: "Show Answer", de: "Antwort zeigen"},
-            "Помню": {en: "Remember", de: "Gewusst"},
-            "Не помню": {en: "Forgot", de: "Vergessen"},
-            "Вопрос": {en: "Question", de: "Frage"},
-            "Тренировать весь курс": {en: "Train whole course", de: "Ganzen Kurs trainieren"},
-            "Слов:": {en: "Words:", de: "Wörter:"},
-            "Ожидают:": {en: "Waiting:", de: "Warten:"},
-            "Доступно:": {en: "Available:", de: "Verfügbar:"},
-            "Изучено:": {en: "Learned:", de: "Gelernt:"},
-            "На сегодня слов нет! Отдыхай.": {en: "No words for today! Relax.", de: "Keine Wörter für heute! Entspann dich."},
-            "Верно!": {en: "Correct!", de: "Richtig!"},
-            "Ошибка. Правильно:": {en: "Wrong. Correct is:", de: "Falsch. Richtig ist:"},
-            "Удалить слово навсегда?": {en: "Delete word forever?", de: "Wort für immer löschen?"},
-            "Изучаемое слово...": {en: "Word to learn...", de: "Zu lernendes Wort..."},
-            "Род / Мн.ч. (опционально)...": {en: "Gender / Plural (optional)...", de: "Genus / Plural (optional)..."},
-            "Инфинитив": {en: "Infinitive", de: "Infinitiv"},
-            "Перевод": {en: "Translation", de: "Übersetzung"},
-            "Вспомнить": {en: "Recall", de: "Erinnern"},
-            "Забыл": {en: "Forgot", de: "Vergessen"},
-            "Следующий повтор через:": {en: "Next review in:", de: "Nächste Wiederholung in:"},
-            "Следующий повтор через: ": {en: "Next review in: ", de: "Nächste Wiederholung in: "},
-            "Напишите перевод...": {en: "Write translation...", de: "Übersetzung schreiben..."},
-            "Формы глаголов": {en: "Verb Forms", de: "Verbformen"},
-            
-            "Слово на английском...": {en: "Word (English)...", de: "Englisches Wort..."},
-            "Слово на русском...": {en: "Word (Russian)...", de: "Russisches Wort..."},
-            "Слово на немецком...": {en: "Word (German)...", de: "Deutsches Wort..."},
-            "Пример использования (необязательно)...": {en: "Example (opt)...", de: "Beispiel (opt)..."},
-            "Синонимы (ч/з запятую)...": {en: "Synonyms (comma-separated)...", de: "Synonyme (kommasepariert)..."},
-            "Антонимы (ч/з запятую)...": {en: "Antonyms (comma-separated)...", de: "Antonyme (kommasepariert)..."},
-            "Множественное число...": {en: "Plural...", de: "Plural..."},
-            "Перевод на русский...": {en: "Translation...", de: "Übersetzung..."},
-            "Рейтинг (За неделю)": {en: "Leaderboard (Weekly)", de: "Bestenliste (Woche)"},
-            "Журнал активности": {en: "Activity Log", de: "Aktivität"},
-            "Цель выполнена!": {en: "Goal achieved!", de: "Ziel erreicht!"},
-            "Цель:": {en: "Goal:", de: "Ziel:"},
-            "Сегодня": {en: "Today", de: "Heute"},
-            "Существительное": {en: "Noun", de: "Nomen"},
-            "Глагол": {en: "Verb", de: "Verb"},
-            "Прилагательное": {en: "Adjective", de: "Adjektiv"},
-            "Другое": {en: "Other", de: "Anderes"},
-            "Курс": {en: "Course", de: "Kurs"},
-            "Ур.": {en: "Lvl.", de: "Niv."},
-            "Тема": {en: "Topic", de: "Thema"},
-            "Уровень (A1, B2...)": {en: "Level (A1...)", de: "Niveau (A1...)"},
-            "Перевожу...": {en: "Translating...", de: "Übersetze..."},
-            "минута": {en: "min", de: "Min"},
-            "минуты": {en: "mins", de: "Min"},
-            "минут": {en: "mins", de: "Min"},
-            "Загрузка списка слов в формате .csv": {en: "Upload words list in .csv format", de: "Laden Sie die Wortliste im .csv-Format hoch"},
-            "Выбрать CSV файл": {en: "Select CSV", de: "CSV-Datei"},
-            "Загрузить слова": {en: "Upload Words", de: "Wörter hochladen"},
-            "Загрузить CSV": {en: "Upload CSV", de: "CSV Hochladen"},
-            "Скачать бэкап": {en: "Download Backup", de: "Backup herunterladen"},
-            "Восстановить": {en: "Restore Backup", de: "Backup wiederherstellen"},
-            "Новинки": {en: "New words", de: "Neue Wörter"},
-            "Папка": {en: "Folder", de: "Ordner"},
-            "Слова на сегодня": {en: "Words for today", de: "Wörter für heute"},
-            "Формы глаголов": {en: "Verb forms", de: "Verbformen"},
-            "Тренировка Präteritum и Partizip II": {en: "Train Präteritum and Partizip II", de: "Präteritum und Partizip II üben"},
-            "Слабые места": {en: "Weak points", de: "Schwachpunkte"},
-            "Новые или забытые:": {en: "New or forgotten:", de: "Neu oder vergessen:"},
-            "Повторить архив": {en: "Review archive", de: "Archiv wiederholen"},
-            "Одно": {en: "Single", de: "Einzig"},
-            "Массово": {en: "Bulk", de: "Massenhaft"},
-            "Архив пуст": {en: "Archive is empty", de: "Archiv ist leer"},
-            "Отлично! Все текущие слова выучены": {en: "Great! All active words learned", de: "Gut gemacht! Alle Wörter gelernt"},
-            "Кто учит слова?": {en: "Who is learning?", de: "Wer lernt?"},
-            "Изменить фото": {en: "Change photo", de: "Foto ändern"},
-            "Скачать базу (.csv)": {en: "Download DB (.csv)", de: "DB herunterladen (.csv)"},
-            "Восстановить из файла": {en: "Restore from file", de: "Aus Datei wiederherstellen"},
-            "дн": {en: "d", de: "T."},
-            "мес": {en: "mo", de: "M."},
-            "г": {en: "y", de: "J."},
-            "Пн": {en: "Mon", de: "Mo"},
-            "Вт": {en: "Tue", de: "Di"},
-            "Ср": {en: "Wed", de: "Mi"},
-            "Чт": {en: "Thu", de: "Do"},
-            "Пт": {en: "Fri", de: "Fr"},
-            "Сб": {en: "Sat", de: "Sa"},
-            "Вс": {en: "Sun", de: "So"},
-            "ч": {en: "h", de: "h"},
-            "м": {en: "m", de: "m"},
-            "die (pl)": {en: "pl.", de: "die (pl)"},
-            "мн. ч.: die": {en: "pl: the", de: "Plural: die"},
-            "Формы:": {en: "Forms:", de: "Formen:"},
-            "Без курса": {en: "No course", de: "Kein Kurs"},
-            "Общее": {en: "General", de: "Allgemein"},
-            "Без темы": {en: "No topic", de: "Ohne Thema"},
-            "Вы": {en: "You", de: "Du"},
-            "Новичок (A1)": {en: "Beginner (A1)", de: "Anfänger (A1)"},
-            "Студент (A2)": {en: "Student (A2)", de: "Student (A2)"},
-            "Специалист (B1)": {en: "Specialist (B1)", de: "Spezialist (B1)"},
-            "Профи (B2+)": {en: "Pro (B2+)", de: "Profi (B2+)"},
-            "Уже есть:": {en: "Already exists:", de: "Existiert bereits:"},
-            
-            "Снова": {en: "Again", de: "Wieder"},
-            "через: ": {en: "in: ", de: "in: "},
+        window.i18nDict = {
+            "Словарь": { en: "Dictionary", de: "Wörterbuch" },
+            "Учить": { en: "Learn", de: "Lernen" },
+            "Прогресс": { en: "Progress", de: "Fortschritt" },
+            "Тренировка": { en: "Training", de: "Training" },
+            "Настройки": { en: "Settings", de: "Einstellungen" },
+            "В процессе": { en: "In Progress", de: "Lernen" },
+            "Архив": { en: "Archive", de: "Archiv" },
+            "Поиск слов...": { en: "Search words...", de: "Wörter suchen..." },
+            "Новое слово": { en: "New Word", de: "Neues Wort" },
+            "Одной строкой": { en: "Single Line", de: "Einzeilig" },
+            "Детально": { en: "Detailed", de: "Detailliert" },
+            "Сохранить": { en: "Save", de: "Speichern" },
+            "Узнавание": { en: "Recognition", de: "Erkennung" },
+            "Письмо (Финал)": { en: "Writing (Final)", de: "Schreiben (Finale)" },
+            "Осталось:": { en: "Remaining:", de: "Noch:" },
+            "Освоено:": { en: "Mastered:", de: "Gelernt:" },
+            "Уровень:": { en: "Level:", de: "Niveau:" },
+            "Показать": { en: "Show Answer", de: "Antwort zeigen" },
+            "Показать ответ": { en: "Show Answer", de: "Antwort zeigen" },
+            "мн.ч.": { en: "pl.", de: "Pl." },
+            "Формы глагола:": { en: "Verb forms:", de: "Verbformen:" },
+            "Помню": { en: "Remember", de: "Gewusst" },
+            "Не помню": { en: "Forgot", de: "Vergessen" },
+            "Вопрос": { en: "Question", de: "Frage" },
+            "Тренировать весь курс": { en: "Train whole course", de: "Ganzen Kurs trainieren" },
+            "Слов:": { en: "Words:", de: "Wörter:" },
+            "Ожидают:": { en: "Waiting:", de: "Warten:" },
+            "Доступно:": { en: "Available:", de: "Verfügbar:" },
+            "Изучено:": { en: "Learned:", de: "Gelernt:" },
+            "На сегодня слов нет! Отдыхай.": { en: "No words for today! Relax.", de: "Keine Wörter für heute! Entspann dich." },
+            "Верно!": { en: "Correct!", de: "Richtig!" },
+            "Ошибка. Правильно:": { en: "Wrong. Correct is:", de: "Falsch. Richtig ist:" },
+            "Удалить слово навсегда?": { en: "Delete word forever?", de: "Wort für immer löschen?" },
+            "Изучаемое слово...": { en: "Word to learn...", de: "Zu lernendes Wort..." },
+            "Род / Мн.ч. (опционально)...": { en: "Gender / Plural (optional)...", de: "Genus / Plural (optional)..." },
+            "Инфинитив": { en: "Infinitive", de: "Infinitiv" },
+            "Перевод": { en: "Translation", de: "Übersetzung" },
+            "Вспомнить": { en: "Recall", de: "Erinnern" },
+            "Забыл": { en: "Forgot", de: "Vergessen" },
+            "Следующий повтор через:": { en: "Next review in:", de: "Nächste Wiederholung in:" },
+            "Следующий повтор через: ": { en: "Next review in: ", de: "Nächste Wiederholung in: " },
+            "Напишите перевод...": { en: "Write translation...", de: "Übersetzung schreiben..." },
+            "Формы глаголов": { en: "Verb Forms", de: "Verbformen" },
 
-"Präteritum...": {en: "Präteritum...", de: "Präteritum..."}, "через:": {en: "in:", de: "in:"},
-            "Partizip II...": {en: "Partizip II...", de: "Partizip II..."},
-            "Изучаемый язык": {en: "Learning Language", de: "Lernsprache"},
-            "Одно слово": {en: "Single Word", de: "Ein Wort"},
-            "Списком (CSV)": {en: "Bulk (CSV)", de: "Massen-CSV"},
-            "По-немецки...": {en: "In German...", de: "Auf Deutsch..."},
-            "По-английски...": {en: "In English...", de: "Auf Englisch..."},
-            "По-русски...": {en: "In Russian...", de: "Auf Russisch..."},
-            "Слово...": {en: "Word...", de: "Wort..."},
-            "Заполните формы Präteritum и Partizip II у глаголов в словаре!": {en: "Fill in Präteritum and Partizip II forms for verbs in your dictionary!", de: "Bitte füllen Sie Präteritum- und Partizip II-Formen für Verben aus!"},
-            "Заполните курс, тему и выберите файл!": {en: "Fill in course, topic and select a file!", de: "Füllen Sie Kurs und Thema aus und wählen Sie eine Datei!"},
-            "Ошибка сети!": {en: "Network error!", de: "Netzwerkfehler!"},
-            "Файл слишком большой!": {en: "File is too large!", de: "Datei ist zu groß!"},
-            "Ошибка выгрузки!": {en: "Export error!", de: "Exportfehler!"},
-            "Ошибка загрузки!": {en: "Import error!", de: "Importfehler!"},
-            "Ошибка восстановления!": {en: "Restoration error!", de: "Wiederherstellungsfehler!"},
-            "Ошибка сброса!": {en: "Reset error!", de: "Fehler beim Zurücksetzen!"},
-            "Отлично! Все глаголы пройдены.": {en: "Great! All verbs mastered.", de: "Hervorragend! Alle Verben gelernt."},
+            "Слово на английском...": { en: "Word (English)...", de: "Englisches Wort..." },
+            "Слово на русском...": { en: "Word (Russian)...", de: "Russisches Wort..." },
+            "Слово на немецком...": { en: "Word (German)...", de: "Deutsches Wort..." },
+            "Пример использования (необязательно)...": { en: "Example (opt)...", de: "Beispiel (opt)..." },
+            "Синонимы (ч/з запятую)...": { en: "Synonyms (comma-separated)...", de: "Synonyme (kommasepariert)..." },
+            "Антонимы (ч/з запятую)...": { en: "Antonyms (comma-separated)...", de: "Antonyme (kommasepariert)..." },
+            "Множественное число...": { en: "Plural...", de: "Plural..." },
+            "Перевод на русский...": { en: "Translation...", de: "Übersetzung..." },
+            "Рейтинг (За неделю)": { en: "Leaderboard (Weekly)", de: "Bestenliste (Woche)" },
+            "Журнал активности": { en: "Activity Log", de: "Aktivität" },
+            "Цель выполнена!": { en: "Goal achieved!", de: "Ziel erreicht!" },
+            "Цель:": { en: "Goal:", de: "Ziel:" },
+            "Сегодня": { en: "Today", de: "Heute" },
+            "Существительное": { en: "Noun", de: "Nomen" },
+            "Глагол": { en: "Verb", de: "Verb" },
+            "Прилагательное": { en: "Adjective", de: "Adjektiv" },
+            "Другое": { en: "Other", de: "Anderes" },
+            "Курс": { en: "Course", de: "Kurs" },
+            "Ур.": { en: "Lvl.", de: "Niv." },
+            "Тема": { en: "Topic", de: "Thema" },
+            "Уровень (A1, B2...)": { en: "Level (A1...)", de: "Niveau (A1...)" },
+            "Перевожу...": { en: "Translating...", de: "Übersetze..." },
+            "минута": { en: "min", de: "Min" },
+            "минуты": { en: "mins", de: "Min" },
+            "минут": { en: "mins", de: "Min" },
+            "Загрузка списка слов в формате .csv": { en: "Upload words list in .csv format", de: "Laden Sie die Wortliste im .csv-Format hoch" },
+            "Выбрать CSV файл": { en: "Select CSV", de: "CSV-Datei" },
+            "Загрузить слова": { en: "Upload Words", de: "Wörter hochladen" },
+            "Загрузить CSV": { en: "Upload CSV", de: "CSV Hochladen" },
+            "Скачать бэкап": { en: "Download Backup", de: "Backup herunterladen" },
+            "Восстановить": { en: "Restore Backup", de: "Backup wiederherstellen" },
+            "Новинки": { en: "New words", de: "Neue Wörter" },
+            "Папка": { en: "Folder", de: "Ordner" },
+            "Слова на сегодня": { en: "Words for today", de: "Wörter für heute" },
+            "Формы глаголов": { en: "Verb forms", de: "Verbformen" },
+            "Тренировка Präteritum и Partizip II": { en: "Train Präteritum and Partizip II", de: "Präteritum und Partizip II üben" },
+            "Слабые места": { en: "Weak points", de: "Schwachpunkte" },
+            "Новые или забытые:": { en: "New or forgotten:", de: "Neu oder vergessen:" },
+            "Повторить архив": { en: "Review archive", de: "Archiv wiederholen" },
+            "Одно": { en: "Single", de: "Einzig" },
+            "Массово": { en: "Bulk", de: "Massenhaft" },
+            "Архив пуст": { en: "Archive is empty", de: "Archiv ist leer" },
+            "Отлично! Все текущие слова выучены": { en: "Great! All active words learned", de: "Gut gemacht! Alle Wörter gelernt" },
+            "Кто учит слова?": { en: "Who is learning?", de: "Wer lernt?" },
+            "Изменить фото": { en: "Change photo", de: "Foto ändern" },
+            "Скачать базу (.csv)": { en: "Download DB (.csv)", de: "DB herunterladen (.csv)" },
+            "Восстановить из файла": { en: "Restore from file", de: "Aus Datei wiederherstellen" },
+            "дн": { en: "d", de: "T." },
+            "мес": { en: "mo", de: "M." },
+            "г": { en: "y", de: "J." },
+            "Пн": { en: "Mon", de: "Mo" },
+            "Вт": { en: "Tue", de: "Di" },
+            "Ср": { en: "Wed", de: "Mi" },
+            "Чт": { en: "Thu", de: "Do" },
+            "Пт": { en: "Fri", de: "Fr" },
+            "Сб": { en: "Sat", de: "Sa" },
+            "Вс": { en: "Sun", de: "So" },
+            "ч": { en: "h", de: "h" },
+            "м": { en: "m", de: "m" },
+            "die (pl)": { en: "pl.", de: "die (pl)" },
+            "мн. ч.: die": { en: "pl: the", de: "Plural: die" },
+            "Формы:": { en: "Forms:", de: "Formen:" },
+            "Без курса": { en: "No course", de: "Kein Kurs" },
+            "Общее": { en: "General", de: "Allgemein" },
+            "Без темы": { en: "No topic", de: "Ohne Thema" },
+            "Вы": { en: "You", de: "Du" },
+            "Новичок (A1)": { en: "Beginner (A1)", de: "Anfänger (A1)" },
+            "Студент (A2)": { en: "Student (A2)", de: "Student (A2)" },
+            "Специалист (B1)": { en: "Specialist (B1)", de: "Spezialist (B1)" },
+            "Профи (B2+)": { en: "Pro (B2+)", de: "Profi (B2+)" },
+            "Уже есть:": { en: "Already exists:", de: "Existiert bereits:" },
+            "Ответ": { en: "Answer", de: "Antwort" },
+
+            "Снова": { en: "Again", de: "Wieder" },
+            "через: ": { en: "in: ", de: "in: " },
+
+            "Präteritum...": { en: "Präteritum...", de: "Präteritum..." }, "через:": { en: "in:", de: "in:" },
+            "Partizip II...": { en: "Partizip II...", de: "Partizip II..." },
+            "Изучаемый язык": { en: "Learning Language", de: "Lernsprache" },
+            "Одно слово": { en: "Single Word", de: "Ein Wort" },
+            "Списком (CSV)": { en: "Bulk (CSV)", de: "Massen-CSV" },
+            "По-немецки...": { en: "In German...", de: "Auf Deutsch..." },
+            "По-английски...": { en: "In English...", de: "Auf Englisch..." },
+            "По-русски...": { en: "In Russian...", de: "Auf Russisch..." },
+            "Слово...": { en: "Word...", de: "Wort..." },
+            "Заполните формы Präteritum и Partizip II у глаголов в словаре!": { en: "Fill in Präteritum and Partizip II forms for verbs in your dictionary!", de: "Bitte füllen Sie Präteritum- und Partizip II-Formen für Verben aus!" },
+            "Заполните курс, тему и выберите файл!": { en: "Fill in course, topic and select a file!", de: "Füllen Sie Kurs und Thema aus und wählen Sie eine Datei!" },
+            "Ошибка сети!": { en: "Network error!", de: "Netzwerkfehler!" },
+            "Файл слишком большой!": { en: "File is too large!", de: "Datei ist zu groß!" },
+            "Ошибка выгрузки!": { en: "Export error!", de: "Exportfehler!" },
+            "Ошибка загрузки!": { en: "Import error!", de: "Importfehler!" },
+            "Ошибка восстановления!": { en: "Restoration error!", de: "Wiederherstellungsfehler!" },
+            "Ошибка сброса!": { en: "Reset error!", de: "Fehler beim Zurücksetzen!" },
+            "Отлично! Все глаголы пройдены.": { en: "Great! All verbs mastered.", de: "Hervorragend! Alle Verben gelernt." },
+            "Показать форму": { en: "Show form", de: "Form zeigen" },
+            "Глагол": { en: "Verb", de: "Verb" },
         };
 
         let currentLang = localStorage.getItem('uiLang') || 'ru';
 
-        
+
         function translateNode(node) {
             if (node.nodeType === Node.TEXT_NODE) {
                 const text = node.nodeValue.trim();
                 let parent = node.parentElement;
-                
+
                 if (parent && parent.closest('.notranslate')) return;
                 if (!text || !parent) return;
 
@@ -2847,6 +2932,26 @@
             currentLang = select.value;
             localStorage.setItem('uiLang', currentLang);
             translateNode(document.body);
+            // Instantly update JS-computed values that translateNode can't reach
+            const sm2El = document.getElementById('sm2-good-time');
+            if (sm2El && sm2El._interval !== undefined) {
+                sm2El.innerText = formatInterval(sm2El._interval);
+            }
+            const remLabel = document.getElementById('train-remaining-label');
+            if (remLabel) remLabel.innerText = t('Осталось:');
+            const vtRemLabel = document.getElementById('vt-remaining-label');
+            if (vtRemLabel && vtRemLabel.innerText) vtRemLabel.innerText = t('Осталось:');
+            // Reload stats if visible
+            const statsView = document.getElementById('view-stats');
+            if (statsView && !statsView.classList.contains('hidden') && statsView.innerHTML.trim().length > 50) {
+                loadStats();
+            }
+            // Regenerate train menu if it's visible (so Доступно/Ожидают update instantly)
+            const trainView = document.getElementById('view-train');
+            const trainSetup = document.getElementById('train-setup-block');
+            if (trainView && !trainView.classList.contains('hidden') && trainSetup && !trainSetup.classList.contains('hidden')) {
+                setupTrainMenu();
+            }
         }
 
         // Initial set of dropdown
@@ -2854,7 +2959,7 @@
             const select = document.getElementById('ui-language');
             if (select) select.value = currentLang;
             translateNode(document.body);
-            
+
             // Re-translate on DOM modifications
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
