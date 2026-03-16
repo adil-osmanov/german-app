@@ -1109,8 +1109,18 @@
 
         async function apiFetch(url, options = {}) {
             if (!currentUser) currentUser = 'osman';
-            if (!options.headers) options.headers = {};
-            options.headers['x-user'] = currentUser;
+
+            // If body is FormData, do NOT set headers object — browser must auto-set
+            // Content-Type: multipart/form-data with correct boundary.
+            // Instead, use Headers API to inject only x-user.
+            if (options.body instanceof FormData) {
+                const h = new Headers(options.headers || {});
+                h.set('x-user', currentUser);
+                options.headers = h;
+            } else {
+                if (!options.headers) options.headers = {};
+                options.headers['x-user'] = currentUser;
+            }
 
             const isScoreUpdate = url.includes('/score') && options.method === 'PUT';
 
@@ -1122,7 +1132,12 @@
 
             try {
                 const res = await fetch(url, options);
-                if (!res.ok) throw new Error('Network Error');
+                if (!res.ok) {
+                    let errText = '';
+                    try { errText = await res.text(); } catch(_) {}
+                    console.error(`apiFetch error ${res.status} for ${url}:`, errText);
+                    throw new Error(`HTTP ${res.status}`);
+                }
                 return res;
             } catch (e) {
                 if (isScoreUpdate && !options._isSync) {
