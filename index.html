@@ -857,6 +857,21 @@
         </div>
     </div>
 
+    <div id="premium-prompt-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity" onclick="if(event.target === this) closePremiumPrompt()">
+        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+            <div class="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/10 to-transparent pointer-events-none"></div>
+            <div class="w-16 h-16 mx-auto bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-4 border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+                <span class="text-2xl drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]">✏️</span>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-4 whitespace-pre-line leading-tight" id="premium-prompt-title">Редактировать</h2>
+            <input type="text" id="premium-prompt-input" class="w-full bg-[#172A45] border border-gray-600 rounded-xl py-3 px-4 text-white font-medium mb-6 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all shadow-inner" autocomplete="off">
+            <div class="flex gap-3 relative z-10">
+                <button onclick="closePremiumPrompt()" class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
+                <button onclick="executePremiumPrompt()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] text-[#112240] font-black hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]" data-orig-ru="Сохранить">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
 
     <script>
@@ -1079,6 +1094,28 @@
             if (premiumConfirmCallback) premiumConfirmCallback();
             closePremiumConfirm();
         };
+
+        let premiumPromptCallback = null;
+        window.premiumPrompt = (title, defaultValue, callback) => {
+            premiumPromptCallback = callback;
+            document.getElementById('premium-prompt-title').innerText = title;
+            const input = document.getElementById('premium-prompt-input');
+            input.value = defaultValue;
+            document.getElementById('premium-prompt-modal').classList.remove('hidden');
+            setTimeout(() => { input.focus(); input.select(); }, 100);
+        };
+        window.closePremiumPrompt = () => {
+            document.getElementById('premium-prompt-modal').classList.add('hidden');
+            premiumPromptCallback = null;
+        };
+        window.executePremiumPrompt = () => {
+            const val = document.getElementById('premium-prompt-input').value;
+            if (premiumPromptCallback) premiumPromptCallback(val);
+            closePremiumPrompt();
+        };
+        document.getElementById('premium-prompt-input')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') executePremiumPrompt();
+        });
 
         let currentUser = localStorage.getItem('appUser');
         if (!currentUser) {
@@ -1570,6 +1607,10 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
+                                    ${isDevMode ? `
+                                    <button onclick="renameSubfolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-full transition-colors" title="Переименовать тему"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                    <button onclick="premiumConfirm(t('Удалить тему со всеми словами внутри?'), () => deleteFolder('${safeF}', '${safeL}', '${safeS}')); event.stopPropagation();" class="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors" title="Удалить тему"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                    ` : ''}
                                     <button onclick="addWordToTopic('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 bg-[#ffc300]/10 hover:bg-[#ffc300]/20 rounded-full text-[#D4AF37] transition-colors" title="Добавить слово"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
                                 </div>
                             </div>
@@ -1633,22 +1674,24 @@
         }
 
         window.renameFolder = async (oldFolder) => {
-            const newFolder = prompt(`Введите новое название для курса "${oldFolder}":`, oldFolder);
-            if (newFolder && newFolder.trim() !== '' && newFolder.trim() !== oldFolder) {
-                try { await apiFetch('/words/rename_folder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ old_folder: oldFolder, new_folder: newFolder.trim() }) }); await fetchWords(); renderDict(); } catch (e) { alert(t('Ошибка сети!')); }
-            }
+            premiumPrompt(t('Новое название для курса:') + '\\n"' + oldFolder + '"', oldFolder, async (newFolder) => {
+                if (newFolder && newFolder.trim() !== '' && newFolder.trim() !== oldFolder) {
+                    try { await apiFetch('/words/rename_folder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ old_folder: oldFolder, new_folder: newFolder.trim() }) }); await fetchWords(); renderDict(); } catch (e) { alert(t('Ошибка сети!')); }
+                }
+            });
         };
 
         window.renameSubfolder = async (f, l, oldS) => {
-            const newS = prompt(`Введите новое название для темы "${oldS}":`, oldS);
-            if (newS && newS.trim() !== '' && newS.trim() !== oldS) {
-                try {
-                    await apiFetch('/words/rename_subfolder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, old_subfolder: oldS, new_subfolder: newS.trim() }) });
-                    const oldKey = `${f}|${l}|${oldS}`; const newKey = `${f}|${l}|${newS.trim()}`;
-                    if (collapsedDictTopics[oldKey] !== undefined) { collapsedDictTopics[newKey] = collapsedDictTopics[oldKey]; delete collapsedDictTopics[oldKey]; }
-                    await fetchWords(); renderDict();
-                } catch (e) { alert(t('Ошибка сети!')); }
-            }
+            premiumPrompt(t('Новое название для темы:') + '\\n"' + oldS + '"', oldS, async (newS) => {
+                if (newS && newS.trim() !== '' && newS.trim() !== oldS) {
+                    try {
+                        await apiFetch('/words/rename_subfolder', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, old_subfolder: oldS, new_subfolder: newS.trim() }) });
+                        const oldKey = `${f}|${l}|${oldS}`; const newKey = `${f}|${l}|${newS.trim()}`;
+                        if (collapsedDictTopics[oldKey] !== undefined) { collapsedDictTopics[newKey] = collapsedDictTopics[oldKey]; delete collapsedDictTopics[oldKey]; }
+                        await fetchWords(); renderDict();
+                    } catch (e) { alert(t('Ошибка сети!')); }
+                }
+            });
         };
 
         const modal = document.getElementById('add-modal');
@@ -2980,6 +3023,8 @@
             "Удалить": { en: "Delete", de: "Löschen" },
             "Отмена": { en: "Cancel", de: "Abbrechen" },
             "Удалить тему со всеми словами внутри?": { en: "Delete topic and all words inside?", de: "Thema und alle Wörter darin löschen?" },
+            "Новое название для курса:": { en: "New name for course:", de: "Neuer Name für den Kurs:" },
+            "Новое название для темы:": { en: "New name for topic:", de: "Neuer Name für das Thema:" },
             "Удалить курс со всеми словами внутри?": { en: "Delete course and all words inside?", de: "Kurs und alle Wörter darin löschen?" },
             "Удалить уровень со всеми словами внутри?": { en: "Delete level and all words inside?", de: "Niveau und alle Wörter darin löschen?" },
         };
