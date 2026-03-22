@@ -410,7 +410,7 @@
             </div>
 
             <div id="train-card-block"
-                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all my-auto -translate-y-20 overflow-hidden touch-pan-y"
+                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all mt-10 mb-auto overflow-hidden touch-pan-y"
                 style="touch-action: pan-y;">
                 <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0">
                 </div>
@@ -469,12 +469,6 @@
                     <div id="train-answer-block" class="hidden w-full mt-3">
                         <div
                             class="flex flex-col justify-center items-center mb-6 bg-[#172A45] dark:bg-[#172A45]/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                        <div id="train-answer-image-wrapper" class="hidden w-full h-32 mb-4 rounded-xl overflow-hidden relative bg-[#112240] border border-gray-800 shadow-inner">
-                            <img id="train-answer-image" class="w-full h-full object-cover opacity-0 transition-opacity duration-500" alt="Association">
-                            <div class="absolute inset-0 flex items-center justify-center -z-10">
-                                <div class="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                        </div>
                             <div class="flex items-center justify-center gap-2 mb-3">
                                 <p id="train-de-word"
                                     class="text-3xl font-bold text-white break-words px-2 leading-tight notranslate">
@@ -916,34 +910,6 @@
 
         const triggerVibration = (pattern) => {
             if (navigator.vibrate) navigator.vibrate(pattern);
-        };
-
-        const triggerPremiumReward = () => {
-            playSound('success');
-            triggerVibration([50, 50, 50]);
-            // Animate floating hearts
-            const heartCount = 24;
-            const colors = ['#ff4d6d', '#ff758f', '#ff85a1', '#ff6b8a', '#e63660', '#ffb3c1'];
-            for (let i = 0; i < heartCount; i++) {
-                const heart = document.createElement('div');
-                heart.innerHTML = '❤';
-                const size = 18 + Math.random() * 28;
-                heart.style.cssText = [
-                    'position:fixed',
-                    `left:${10 + Math.random() * 80}vw`,
-                    'bottom:-60px',
-                    `font-size:${size}px`,
-                    `color:${colors[Math.floor(Math.random() * colors.length)]}`,
-                    'pointer-events:none',
-                    'z-index:9999',
-                    `animation:heartFloat ${1.8 + Math.random() * 1.8}s ease-out forwards`,
-                    `animation-delay:${Math.random() * 0.7}s`,
-                    'will-change:transform,opacity',
-                    `filter:drop-shadow(0 0 6px ${colors[Math.floor(Math.random() * colors.length)]}88)`
-                ].join(';');
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 4500);
-            }
         };
 
         const attachMagneticEffect = (el) => {
@@ -2235,7 +2201,7 @@
             const needsFadeIn = (cardBlock.style.opacity === '0');
 
             if (curIdx >= trainList.length) {
-                saveSessionTime(); document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' }); setupTrainMenu(); triggerPremiumReward(); return;
+                saveSessionTime(); document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' }); setupTrainMenu(); return;
             }
 
             const w = trainList[curIdx];
@@ -2405,22 +2371,6 @@
                 document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden');
                 const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
 
-                const imgWrap = document.getElementById('train-answer-image-wrapper');
-                const imgEl = document.getElementById('train-answer-image');
-                if (imgWrap && imgEl) {
-                    const wType = (w.word_type || '').toLowerCase().trim();
-                    if (['noun', 'verb'].includes(wType)) {
-                        imgWrap.classList.remove('hidden');
-                        imgEl.style.opacity = '0';
-                        
-                        imgEl.onload = () => { imgEl.style.opacity = '1'; };
-                        imgEl.onerror = () => { imgWrap.classList.add('hidden'); };
-                        
-                        const promptText = `minimalist flat vector illustration of ${w.word_de}, white background`;
-                        imgEl.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=400&height=200&nologo=true&seed=${w.id || Math.floor(Math.random()*1000)}`;
-                    } else { imgWrap.classList.add('hidden'); }
-                }
-
                 if (!currentIsGermanQuestion) {
                     const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
                     setTimeout(() => speakWord(fullGerman), 100);
@@ -2492,7 +2442,6 @@
                 alert(t("Отлично! Все глаголы пройдены."));
                 document.getElementById('train-topics-container').parentElement.classList.remove('hidden');
                 document.getElementById('verb-trainer-game').classList.add('hidden');
-                triggerPremiumReward();
                 return;
             }
             const w = vtQueue[vtIdx];
@@ -2700,11 +2649,6 @@
 
                 const pctMinutes = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
                 const isGoalMet = minutesToday >= DAILY_GOAL_MINUTES;
-
-                if (isGoalMet && localStorage.getItem('dailyGoalReachedDate') !== todayIso) {
-                    localStorage.setItem('dailyGoalReachedDate', todayIso);
-                    setTimeout(() => triggerPremiumReward(), 300);
-                }
 
                 let learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= MAX_SCORE).length;
                 let has100Verbs = learnedVerbs >= 100;
