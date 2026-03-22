@@ -658,6 +658,12 @@
                     onchange="uploadAvatar('girlfriend', this)">
             </div>
 
+            <div class="w-full h-px bg-gray-100 dark:bg-gray-800 my-4"></div>
+            
+            <button id="dev-mode-btn" onclick="toggleDevMode()" class="w-full flex items-center justify-between p-4 rounded-xl border-2 border-transparent bg-[#172A45] transition-all hover:bg-[#112240] text-gray-400 mb-6">
+                <div class="flex items-center gap-3"><span class="text-xl opacity-50 grayscale">🛠️</span><span class="font-bold text-lg" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-1 rounded uppercase" data-orig-ru="Выключен">Выключен</span>
+            </button>
+
             <button onclick="document.getElementById('profile-modal').classList.add('hidden')"
                 class="w-full bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] font-medium py-3 rounded-xl hidden"
                 id="profile-close-btn">Скрыть</button>
@@ -835,6 +841,21 @@
             </button>
         </div>
     </nav>
+
+    <div id="premium-confirm-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity" onclick="if(event.target === this) closePremiumConfirm()">
+        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-red-500/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+            <div class="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent pointer-events-none"></div>
+            <div class="w-16 h-16 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+                <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2" id="premium-confirm-title" data-orig-ru="Подтверждение удаления">Подтверждение удаления</h2>
+            <p class="text-gray-300 text-sm mb-6" id="premium-confirm-message"></p>
+            <div class="flex gap-3 relative z-10">
+                <button onclick="closePremiumConfirm()" class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
+                <button onclick="executePremiumConfirm()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]" data-orig-ru="Удалить">Удалить</button>
+            </div>
+        </div>
+    </div>
 
     <datalist id="folder-list"></datalist><datalist id="level-list"></datalist><datalist id="subfolder-list"></datalist>
 
@@ -1020,6 +1041,44 @@
             if (days < 365) return `${(days / 30).toFixed(1).replace('.0', '')} ${mes}`;
             return `${(days / 365).toFixed(1).replace('.0', '')} ${g}`;
         }
+
+        let isDevMode = localStorage.getItem('devMode') === 'true';
+        function updateDevModeUI() {
+            const devBtn = document.getElementById('dev-mode-btn');
+            if (devBtn) {
+                if (isDevMode) {
+                    devBtn.className = "w-full flex items-center justify-between p-4 rounded-xl border-2 border-[#D4AF37] bg-[#D4AF37]/10 transition-all text-white mb-6 premium-glow-btn";
+                    devBtn.innerHTML = `<div class="flex items-center gap-3"><span class="text-xl drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]">🛠️</span><span class="font-bold text-lg text-[#D4AF37]" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-black bg-[#D4AF37] text-[#112240] px-2 py-1 rounded uppercase shadow-md" data-orig-ru="Включен">Включен</span>`;
+                } else {
+                    devBtn.className = "w-full flex items-center justify-between p-4 rounded-xl border-2 border-transparent bg-[#172A45] transition-all hover:bg-[#112240] text-gray-400 mb-6";
+                    devBtn.innerHTML = `<div class="flex items-center gap-3"><span class="text-xl opacity-50 grayscale">🛠️</span><span class="font-bold text-lg" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-1 rounded uppercase" data-orig-ru="Выключен">Выключен</span>`;
+                }
+                if (typeof translateNode === 'function') translateNode(devBtn);
+            }
+        }
+
+        window.toggleDevMode = () => {
+            isDevMode = !isDevMode;
+            localStorage.setItem('devMode', isDevMode);
+            updateDevModeUI();
+            updateProfileUI();
+            if(!document.getElementById('view-dict').classList.contains('hidden')) renderDict();
+        };
+        updateDevModeUI();
+        let premiumConfirmCallback = null;
+        window.premiumConfirm = (message, callback) => {
+            premiumConfirmCallback = callback;
+            document.getElementById('premium-confirm-message').innerText = message;
+            document.getElementById('premium-confirm-modal').classList.remove('hidden');
+        };
+        window.closePremiumConfirm = () => {
+            document.getElementById('premium-confirm-modal').classList.add('hidden');
+            premiumConfirmCallback = null;
+        };
+        window.executePremiumConfirm = () => {
+            if (premiumConfirmCallback) premiumConfirmCallback();
+            closePremiumConfirm();
+        };
 
         let currentUser = localStorage.getItem('appUser');
         if (!currentUser) {
@@ -1478,9 +1537,13 @@
                         <div class="flex justify-between items-center bg-[#172A45] dark:bg-[#172A45] p-3 border-b border-gray-100 dark:border-gray-800">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
                                 <div class="cursor-move drag-handle-folder text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
-                                <h2 class="text-base font-bold text-white truncate notranslate">${f}</h2>
+                                <h2 class="text-base font-bold text-white truncate notranslate" ${isDevMode ? `onclick="renameFolder('${safeF}')" style="cursor:pointer;" title="Переименовать"` : ''}>${f}</h2>
                             </div>
-                            
+                            ${isDevMode ? `
+                            <div class="flex items-center gap-1">
+                                <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            </div>` : ''}
                         </div>
                         <div class="dict-topics-container p-1 space-y-1" data-folder="${safeF}">
                     `;
@@ -1814,11 +1877,49 @@
 
         window.deleteWord = async (id, event) => {
             if (event) event.stopPropagation();
-            if (confirm(t('Удалить слово навсегда?'))) { await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); await fetchWords(); renderDict(); }
+            premiumConfirm(t('Удалить слово навсегда?'), async () => {
+                await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); 
+                await fetchWords(); renderDict(); 
+            });
         };
 
         window.deleteFolder = async (f, l, s) => {
-            if (confirm(t(`Удалить тему "${s}" со всеми словами внутри?`))) { await apiFetch('/words/delete_folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) }); await fetchWords(); renderDict(); }
+            try {
+                await apiFetch('/words/delete_folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) }); 
+                await fetchWords(); renderDict();
+            } catch(e) { alert(t('Ошибка сети!')); }
+        };
+
+        window.deleteCourse = async (f) => {
+            try {
+                await apiFetch('/words/delete_course', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f }) }); 
+                await fetchWords(); renderDict();
+            } catch(e) { alert(t('Ошибка сети!')); }
+        };
+
+        window.deleteLevel = async (f, l) => {
+            try {
+                await apiFetch('/words/delete_level', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l }) }); 
+                await fetchWords(); renderDict();
+            } catch(e) { alert(t('Ошибка сети!')); }
+        };
+
+        window.renameLevel = async (f, oldL, newL) => {
+            try {
+                await apiFetch('/words/rename_level', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, old_level: oldL, new_level: newL }) }); 
+                await fetchWords(); renderDict();
+            } catch(e) { alert(t('Ошибка сети!')); }
+        };
+
+        window.manageLevel = (f, l, event) => {
+            if (!isDevMode) return;
+            event.stopPropagation();
+            const action = prompt(`Уровень: ${l}\n\nВведите новое название для переименования, или введите "DELETE" (заглавными) для полного удаления всех слов этого уровня.`);
+            if (action === 'DELETE') {
+                premiumConfirm(t('Удалить уровень со всеми словами внутри?'), () => deleteLevel(f, l));
+            } else if (action && action.trim() !== '' && action !== l) {
+                renameLevel(f, l, action.trim());
+            }
         };
 
         let _formSubmitting = false;
@@ -2872,6 +2973,15 @@
             "Отлично! Все глаголы пройдены.": { en: "Great! All verbs mastered.", de: "Hervorragend! Alle Verben gelernt." },
             "Показать форму": { en: "Show form", de: "Form zeigen" },
             "Глагол": { en: "Verb", de: "Verb" },
+            "Режим разработчика": { en: "Developer Mode", de: "Entwicklermodus" },
+            "Включен": { en: "ON", de: "AN" },
+            "Выключен": { en: "OFF", de: "AUS" },
+            "Подтверждение удаления": { en: "Confirm Deletion", de: "Löschen bestätigen" },
+            "Удалить": { en: "Delete", de: "Löschen" },
+            "Отмена": { en: "Cancel", de: "Abbrechen" },
+            "Удалить тему со всеми словами внутри?": { en: "Delete topic and all words inside?", de: "Thema und alle Wörter darin löschen?" },
+            "Удалить курс со всеми словами внутри?": { en: "Delete course and all words inside?", de: "Kurs und alle Wörter darin löschen?" },
+            "Удалить уровень со всеми словами внутри?": { en: "Delete level and all words inside?", de: "Niveau und alle Wörter darin löschen?" },
         };
 
         let currentLang = localStorage.getItem('uiLang') || 'ru';

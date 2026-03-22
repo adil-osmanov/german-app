@@ -186,6 +186,18 @@ class SubfolderRename(BaseModel):
     old_subfolder: str
     new_subfolder: str
 
+class CourseDelete(BaseModel):
+    folder: str
+
+class LevelDelete(BaseModel):
+    folder: str
+    level: str
+
+class LevelRename(BaseModel):
+    folder: str
+    old_level: str
+    new_level: str
+
 class HistoryUpdate(BaseModel):
     date_str: str
     ms_spent: int
@@ -362,6 +374,36 @@ def rename_subfolder(data: SubfolderRename, x_user: str = Header("osman")):
     cur = conn.cursor()
     cur.execute("UPDATE words SET subfolder = %s WHERE folder = %s AND level = %s AND subfolder = %s AND username = %s", 
                 (data.new_subfolder, data.folder, data.level, data.old_subfolder, x_user))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success"}
+
+@app.put("/words/rename_level")
+def rename_level(data: LevelRename, x_user: str = Header("osman")):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE words SET level = %s WHERE folder = %s AND level = %s AND username = %s", (data.new_level, data.folder, data.old_level, x_user))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success"}
+
+@app.post("/words/delete_course")
+def delete_course(data: CourseDelete, x_user: str = Header("osman")):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM words WHERE folder = %s AND username = %s", (data.folder, x_user))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"status": "success"}
+
+@app.post("/words/delete_level")
+def delete_level(data: LevelDelete, x_user: str = Header("osman")):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM words WHERE folder = %s AND level = %s AND username = %s", (data.folder, data.level, x_user))
     conn.commit()
     cur.close()
     conn.close()
