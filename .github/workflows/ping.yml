@@ -1,0 +1,15 @@
+name: Ping Render App
+
+on:
+  schedule:
+    # Запускать каждые 14 минут (Render засыпает через 15)
+    - cron: '*/14 * * * *'
+  workflow_dispatch: # Эта строчка добавит кнопку для ручного запуска в интерфейсе GitHub
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send curl request
+        # ВАЖНО: Замени ссылку на реальный URL твоего приложения!
+        run: curl -s https://german-app-zr24.onrender.com > /dev/null
