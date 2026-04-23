@@ -419,23 +419,21 @@
                 <div id="swipe-indicator-left" class="swipe-indicator swipe-left-indicator">Не помню</div>
 
                 <div class="relative z-10">
-                    <!-- Top header row: badge + progress + close -->
-                    <div class="flex items-center mb-2">
+                    <!-- Top header row: badge + close -->
+                    <div class="flex items-center justify-between mb-3 min-h-[28px] w-full">
                         <span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"></span>
-                        <div class="flex items-center gap-2 ml-auto">
-                            <span class="flex items-center gap-1 text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                                <span id="train-remaining-label"></span>
-                                <span id="train-total-cards" class="text-[#D4AF37] font-bold">0</span>
-                            </span>
-                            <button id="btn-stop-training"
-                                class="text-gray-500 hover:text-white bg-white/5 backdrop-blur-md w-7 h-7 rounded-full flex items-center justify-center font-bold transition-all shadow-sm border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 flex-shrink-0">×</button>
-                        </div>
+                        <button id="btn-stop-training"
+                            class="text-gray-500 hover:text-white bg-white/5 backdrop-blur-md w-7 h-7 rounded-full flex items-center justify-center font-bold transition-all shadow-sm border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 flex-shrink-0 ml-auto">×</button>
                     </div>
 
                     <!-- Progress dots + bar -->
                     <div class="mb-4 w-full">
-                        <div class="flex justify-start mb-1.5">
-                            <span id="train-card-progress-text" class="text-[11px] text-gray-600"></span>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span id="train-card-progress-text" class="text-[11px] text-[#D4AF37] tracking-widest leading-none"></span>
+                            <span class="flex items-center gap-1 text-[10px] font-medium text-gray-500 uppercase tracking-wider leading-none">
+                                <span id="train-remaining-label"></span>
+                                <span id="train-total-cards" class="text-[#D4AF37] font-bold">0</span>
+                            </span>
                         </div>
                         <div class="w-full bg-[#112240] dark:bg-[#172A45] h-1 rounded-full overflow-hidden">
                             <div id="train-card-progress-fill" class="bg-[#5A7B9C] h-full transition-all duration-500" style="width: 0%"></div>
@@ -1201,21 +1199,21 @@
             const isScoreUpdate = url.includes('/score') && options.method === 'PUT';
 
             if (!navigator.onLine && isScoreUpdate && !options._isSync) {
-                // Mock success for offline score update
                 await queueOfflineUpdate(url, options.method, JSON.parse(options.body));
                 return { ok: true, json: async () => ({ status: 'queued offline' }) };
             }
 
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 4000);
+            options.signal = controller.signal;
+
             try {
                 const res = await fetch(url, options);
-                if (!res.ok) {
-                    let errText = '';
-                    try { errText = await res.text(); } catch(_) {}
-                    console.error(`apiFetch error ${res.status} for ${url}:`, errText);
-                    throw new Error(`HTTP ${res.status}`);
-                }
+                clearTimeout(id);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 return res;
             } catch (e) {
+                clearTimeout(id);
                 if (isScoreUpdate && !options._isSync) {
                     await queueOfflineUpdate(url, options.method, JSON.parse(options.body));
                     return { ok: true, json: async () => ({ status: 'queued offline' }) };
@@ -1558,6 +1556,7 @@
                             </div>
                             ${isDevMode ? `
                             <div class="flex items-center gap-1">
+                                <button onclick="fastAddCourse('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#34d399] hover:bg-[#34d399]/10 rounded-full transition-colors" title="Добавить тему"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
                                 <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                                 <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>` : ''}
@@ -1637,15 +1636,19 @@
             if (folderContainer) {
                 new Sortable(folderContainer, {
                     handle: '.drag-handle-folder', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
-                    onEnd: function () { const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.dataset.folder); localStorage.setItem('folderOrder', JSON.stringify(order)); }
+                    onEnd: function () { 
+                        if (document.getElementById('search-input').value.trim().length > 0) return;
+                        const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.getAttribute('data-folder')); 
+                        localStorage.setItem('folderOrder', JSON.stringify(order)); }
                 });
             }
             document.querySelectorAll('.dict-topics-container').forEach(topicContainer => {
                 new Sortable(topicContainer, {
                     handle: '.drag-handle-topic', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
                     onEnd: function (evt) {
-                        const f = evt.item.closest('.dict-folder').dataset.folder;
-                        const order = Array.from(topicContainer.querySelectorAll('.dict-topic')).map(el => el.dataset.topic);
+                        if (document.getElementById('search-input').value.trim().length > 0) return;
+                        const f = evt.item.closest('.dict-folder').getAttribute('data-folder');
+                        const order = Array.from(evt.item.closest('.dict-topics-container').querySelectorAll('.dict-topic')).map(el => el.getAttribute('data-topic'));
                         let savedTopicOrder = {}; try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch (e) { }
                         savedTopicOrder[f] = order; localStorage.setItem('topicOrder', JSON.stringify(savedTopicOrder));
                     }
@@ -2210,7 +2213,7 @@
             document.getElementById('train-total-cards').innerText = trainList.length - curIdx;
             // Progress dots instead of text label
             const progressDots = Array.from({ length: MAX_SCORE }, (_, i) => i < Math.min(w.score, MAX_SCORE) ? '●' : '○').join('');
-            document.getElementById('train-card-progress-text').innerHTML = `<span class="text-[#D4AF37] tracking-widest">${progressDots}</span>`;
+            document.getElementById('train-card-progress-text').innerText = progressDots;
             document.getElementById('train-card-progress-fill').style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
 
             document.getElementById('train-answer-block').classList.add('hidden');
@@ -2314,17 +2317,21 @@
 
         let _swipeInProgress = false;
 
+        let _isScoring = false;
         async function updateScoreWithSM2(quality) {
+            if (_isScoring) return;
+            const w = trainList[curIdx];
+            if (!w) return;
+            _isScoring = true;
+            
             const cardBlock = document.getElementById('train-card-block');
             if (!_swipeInProgress) {
                 cardBlock.classList.add('animate-fold-up');
             }
 
-            const w = trainList[curIdx];
-
             // ТУРБО: Если забыл, возвращаем карточку в конец колоды
             if (quality === 0) {
-                trainList.push(w);
+                trainList.push({ ...w }); // Clone it to avoid reference issues
             }
 
             const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor, w.score);
@@ -2357,7 +2364,8 @@
             }
 
             idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
-            curIdx++; _swipeInProgress = false; setTimeout(renderCard, 250);
+            curIdx++; _swipeInProgress = false; 
+            setTimeout(() => { renderCard(); _isScoring = false; }, 250);
         }
 
         document.getElementById('btn-show-answer').onclick = () => {
