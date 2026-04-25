@@ -497,7 +497,7 @@
                             <button id="btn-remembered"
                                 class="flex-1 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] font-bold py-3 rounded-xl active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-[#ffc300]/10">
                                 <span class="mb-0.5">Помню</span><span id="sm2-good-time"
-                                    class="text-[10px] font-medium opacity-70">X дн</span>
+                                    class="text-[10px] font-medium opacity-70 notranslate">X дн</span>
                             </button>
                         </div>
                     </div>
@@ -1001,6 +1001,11 @@
         if (SpeechRecognition) { recognition = new SpeechRecognition(); recognition.interimResults = false; recognition.maxAlternatives = 1; }
 
         function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5, currentScore = 0) {
+            repetitions = Number(repetitions) || 0;
+            interval = Number(interval) || 0;
+            easeFactor = Number(easeFactor) || 2.5;
+            currentScore = Number(currentScore) || 0;
+
             if (repetitions === 0 && currentScore > 0) {
                 repetitions = currentScore;
                 if (interval === 0) {
@@ -1022,6 +1027,7 @@
             const mes = window.i18nDict && window.i18nDict['мес'] && currentLang !== 'ru' ? window.i18nDict['мес'][currentLang] : 'мес';
             const g = window.i18nDict && window.i18nDict['г'] && currentLang !== 'ru' ? window.i18nDict['г'][currentLang] : 'г';
 
+            days = Number(days) || 0;
             if (!days || days <= 0) return `1 ${dn}`;
             if (days < 30) return `${days} ${dn}`;
             if (days < 365) return `${(days / 30).toFixed(1).replace('.0', '')} ${mes}`;
@@ -1366,17 +1372,6 @@
             const start = window.activeInput.selectionStart; const end = window.activeInput.selectionEnd; const val = window.activeInput.value;
             window.activeInput.value = val.slice(0, start) + char + val.slice(end); window.activeInput.selectionStart = window.activeInput.selectionEnd = start + 1; window.activeInput.dispatchEvent(new Event('input'));
         };
-        const handleEnter = (e) => {
-            if (e.key === 'Enter') {
-                const btnNext = document.getElementById('btn-show-answer');
-                if (btnNext && !btnNext.classList.contains('hidden')) { e.preventDefault(); btnNext.click(); }
-            } else if (e.key === '2' && !document.getElementById('train-card-block').classList.contains('hidden')) {
-                const bRem = document.getElementById('btn-remembered'); if (!bRem.classList.contains('hidden')) bRem.click();
-            } else if (e.key === '1' && !document.getElementById('train-card-block').classList.contains('hidden')) {
-                const bFor = document.getElementById('btn-forgot'); if (!bFor.classList.contains('hidden')) bFor.click();
-            }
-        };
-        document.addEventListener('keydown', handleEnter);
 
         async function saveSessionTime() {
             if (sessionStartMs > 0) {
@@ -2329,11 +2324,6 @@
                 cardBlock.classList.add('animate-fold-up');
             }
 
-            // ТУРБО: Если забыл, возвращаем карточку в конец колоды
-            if (quality === 0) {
-                trainList.push({ ...w }); // Clone it to avoid reference issues
-            }
-
             const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor, w.score);
 
             let nextReviewMs = 0;
@@ -2343,6 +2333,11 @@
             let newScore = w.score;
             if (quality >= 3) newScore = Math.min(w.score + 1, MAX_SCORE);
             else newScore = 0;
+
+        // ТУРБО: Если забыл, возвращаем карточку в конец колоды с ОБНОВЛЕННЫМИ статами
+        if (quality === 0) {
+            trainList.push({ ...w, score: newScore, interval: sm2Result.interval, repetitions: sm2Result.repetitions, ease_factor: sm2Result.easeFactor, next_review: nextReviewMs });
+        }
 
             try {
                 await apiFetch(`${API_URL}/${w.id}/score`, {
@@ -2368,7 +2363,10 @@
             setTimeout(() => { renderCard(); _isScoring = false; }, 250);
         }
 
+    let _isFlipping = false;
         document.getElementById('btn-show-answer').onclick = () => {
+        if (_isFlipping) return;
+        _isFlipping = true;
             triggerVibration(15);
             const card = document.getElementById('train-card-block');
             card.classList.add('perspective-1000', 'transform-style-3d');
@@ -2386,6 +2384,7 @@
 
                 card.style.transform = 'rotateX(0deg)';
                 card.style.transition = 'transform 0.2s ease-out';
+            setTimeout(() => { _isFlipping = false; }, 200);
             }, 150);
         };
 
