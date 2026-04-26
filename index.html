@@ -1351,12 +1351,17 @@
             } catch (e) { }
         };
 
+        let _currentAudio = null;
         window.speakWord = (text, event, langOverride) => {
             if (event) event.stopPropagation();
             const lang = langOverride || currentStudyLang;
             const url = `/tts?text=${encodeURIComponent(text)}&lang=${lang}`;
-            const audio = new Audio(url);
-            audio.play().catch(() => {
+            if (_currentAudio) {
+                _currentAudio.pause();
+                _currentAudio.src = '';
+            }
+            _currentAudio = new Audio(url);
+            _currentAudio.play().catch(() => {
                 window.speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(text);
                 if (lang === 'en') u.lang = 'en-US';
@@ -2319,6 +2324,7 @@
             if (!w) return;
             _isScoring = true;
             
+            try {
             const cardBlock = document.getElementById('train-card-block');
             if (!_swipeInProgress) {
                 cardBlock.classList.add('animate-fold-up');
@@ -2360,13 +2366,21 @@
 
             idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
             curIdx++; _swipeInProgress = false; 
-            setTimeout(() => { renderCard(); _isScoring = false; }, 250);
+            setTimeout(() => { 
+                try { renderCard(); } catch(e) { console.error(e); } finally { _isScoring = false; }
+            }, 250);
+            } catch(err) {
+                console.error("SM2 critical:", err);
+                _isScoring = false;
+                _swipeInProgress = false;
+            }
         }
 
     let _isFlipping = false;
         document.getElementById('btn-show-answer').onclick = () => {
         if (_isFlipping) return;
         _isFlipping = true;
+            try {
             triggerVibration(15);
             const card = document.getElementById('train-card-block');
             card.classList.add('perspective-1000', 'transform-style-3d');
@@ -2374,6 +2388,7 @@
             card.style.transition = 'transform 0.15s ease-in';
 
             setTimeout(() => {
+                try {
                 document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden');
                 const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
 
@@ -2384,8 +2399,11 @@
 
                 card.style.transform = 'rotateX(0deg)';
                 card.style.transition = 'transform 0.2s ease-out';
+                } catch(e) { console.error(e); } finally {
             setTimeout(() => { _isFlipping = false; }, 200);
+                }
             }, 150);
+            } catch(err) { _isFlipping = false; }
         };
 
         // --- МИНИ-ИГРА 1: КОНСТРУКТОР ФРАЗ ---
@@ -2398,6 +2416,7 @@
         // --- KEYBOARD SHORTCUTS ---
         // --- KEYBOARD SHORTCUTS ---
         document.addEventListener('keydown', (e) => {
+            if (_isScoring || _isFlipping) return;
             // Flashcards Shortcuts
             if (!document.getElementById('view-train').classList.contains('hidden') && !document.getElementById('train-card-block').classList.contains('hidden')) {
                 // Showing answer
@@ -2758,7 +2777,7 @@
             let rafId = null;
 
             card.addEventListener('touchstart', (e) => {
-                if (document.getElementById('train-answer-block').classList.contains('hidden')) return;
+                if (_isScoring || document.getElementById('train-answer-block').classList.contains('hidden')) return;
                 startX = e.touches[0].clientX;
                 currentX = startX;
                 isDragging = true;
