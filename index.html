@@ -45,6 +45,63 @@
         // Enforce dark theme since it is a premium Navy look
         document.documentElement.classList.add('dark');
         if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js?v=7').catch(() => { }); });
+    
+        window.saveGoals = () => {
+            const n = document.getElementById('input-goal-new').value;
+            const r = document.getElementById('input-goal-rev').value;
+            localStorage.setItem(`goal_new_${currentUser}`, n);
+            localStorage.setItem(`goal_rev_${currentUser}`, r);
+            document.getElementById('goal-modal').classList.add('hidden');
+            updateExperience();
+        };
+
+        window.renderRoadmap = (currentLvl) => {
+            const ranks = [
+                { max: 10, name: "Турист", icon: "🧭", desc: "Уровни 1-10" },
+                { max: 20, name: "Студент", icon: "📚", desc: "Уровни 11-20" },
+                { max: 30, name: "Полиглот", icon: "🌍", desc: "Уровни 21-30" },
+                { max: 40, name: "Лингвист", icon: "✒️", desc: "Уровни 31-40" },
+                { max: 999, name: "Амбассадор", icon: "👑", desc: "Уровни 41+" }
+            ];
+            
+            let html = '';
+            ranks.forEach(r => {
+                const isPast = currentLvl > r.max;
+                const isCurrent = currentLvl <= r.max && (currentLvl > (r.max - 10) || r.max === 999 && currentLvl > 40);
+                const isFuture = !isPast && !isCurrent;
+                
+                let colorClass = isCurrent ? "bg-[#172A45] border-[#D4AF37]" : (isPast ? "bg-[#112240] border-green-500/30 opacity-70" : "bg-[#112240] border-gray-700 opacity-50 grayscale");
+                let textClass = isCurrent ? "text-[#D4AF37]" : "text-gray-400";
+                
+                html += `
+                    <div class="flex items-center gap-4 p-4 rounded-2xl border-2 ${colorClass} transition-all">
+                        <div class="w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-black/20">${r.icon}</div>
+                        <div>
+                            <h3 class="font-bold text-lg ${textClass}">${t(r.name)}</h3>
+                            <p class="text-xs text-gray-500">${r.desc}</p>
+                            ${isCurrent ? `<span class="text-[9px] uppercase tracking-widest text-green-400 mt-1 block">${t("Текущий ранг")}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            const rmList = document.getElementById('roadmap-list');
+            if(rmList) rmList.innerHTML = html;
+        };
+        
+        // Hook renderRoadmap into updateExperience
+        const origUpdateExp = window.updateExperience;
+        window.updateExperience = () => {
+            origUpdateExp();
+            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score >= 5 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
+            let lvl = 1; let xpForNext = 150; let accumulated = 0;
+            while (totalXP >= accumulated + xpForNext) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
+            renderRoadmap(lvl);
+            
+            // set goal inputs
+            document.getElementById('input-goal-new').value = localStorage.getItem(`goal_new_${currentUser}`) || '10';
+            document.getElementById('input-goal-rev').value = localStorage.getItem(`goal_rev_${currentUser}`) || '20';
+        };
+
     </script>
 
     <style>
@@ -55,7 +112,7 @@
             --ac-300: 239 207 104;
             --ac-400: 233 186 58;
             --ac-500: 212 175 55;
-            /* #9CA3AF Brushed Gold */
+            /* #D4AF37 Brushed Gold */
             --ac-600: 192 125 24;
             --ac-700: 153 92 21;
             --ac-800: 125 72 23;
@@ -80,7 +137,7 @@
         }
 
         .active-tab {
-            color: #9CA3AF;
+            color: #D4AF37;
             transform: translateY(-2px);
         }
 
@@ -295,7 +352,79 @@
             z-index: -1;
             transition: opacity 0.3s ease;
         }
+    
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
+        }
+        .xp-float {
+            position: absolute;
+            color: #D4AF37;
+            font-weight: 900;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 10px rgba(212,175,55,0.5);
+            pointer-events: none;
+            animation: floatUpFade 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            z-index: 100;
+        }
+        @keyframes slideInDown {
+            0% { transform: translateY(-100%); opacity: 0; }
+            10% { transform: translateY(0); opacity: 1; }
+            90% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100%); opacity: 0; }
+        }
+        .lvl-up-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #D4AF37, #AA7C11);
+            color: #112240;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-weight: 800;
+            box-shadow: 0 4px 20px rgba(212,175,55,0.4);
+            z-index: 9999;
+            animation: slideInDown 4s ease-in-out forwards;
+        }
+
     </style>
+    
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
+        }
+        .xp-float {
+            position: absolute;
+            color: #D4AF37;
+            font-weight: 900;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 10px rgba(212,175,55,0.5);
+            pointer-events: none;
+            animation: floatUpFade 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            z-index: 100;
+        }
+        @keyframes slideInDown {
+            0% { transform: translateY(-100%); opacity: 0; }
+            10% { transform: translateY(0); opacity: 1; }
+            90% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100%); opacity: 0; }
+        }
+        .lvl-up-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #D4AF37, #AA7C11);
+            color: #112240;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-weight: 800;
+            box-shadow: 0 4px 20px rgba(212,175,55,0.4);
+            z-index: 9999;
+            animation: slideInDown 4s ease-in-out forwards;
+        }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="manifest" href="/manifest.json">
@@ -305,31 +434,31 @@
 </head>
 
 <body
-    class="bg-[#0f1115] text-gray-100 transition-colors duration-300 min-h-screen flex flex-col relative selection:bg-[#6b21a8] selection:text-[#0f1423]">
+    class="bg-[#0a1128] text-gray-100 transition-colors duration-300 min-h-screen flex flex-col relative selection:bg-[#ffc300] selection:text-[#0f1423]">
 
     <!-- Ambient Background Blobs -->
     <div class="fixed inset-0 z-0 pointer-events-none opacity-40">
-        <div class="absolute top-[-10%] left-[-10%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] rounded-full bg-[#4c1d95] blur-[90px] md:blur-[120px]"
+        <div class="absolute top-[-10%] left-[-10%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] rounded-full bg-[#003566] blur-[90px] md:blur-[120px]"
             style="animation: blobFloat1 20s infinite ease-in-out;"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[250px] md:w-[550px] h-[250px] md:h-[550px] rounded-full bg-[#6b21a8]/20 blur-[100px] md:blur-[140px]"
+        <div class="absolute bottom-[-10%] right-[-10%] w-[250px] md:w-[550px] h-[250px] md:h-[550px] rounded-full bg-[#ffc300]/20 blur-[100px] md:blur-[140px]"
             style="animation: blobFloat2 25s infinite ease-in-out;"></div>
-        <div class="absolute top-[30%] left-[20%] w-[150px] md:w-[350px] h-[150px] md:h-[350px] rounded-full bg-[#6b21a8]/10 blur-[80px] md:blur-[120px]"
+        <div class="absolute top-[30%] left-[20%] w-[150px] md:w-[350px] h-[150px] md:h-[350px] rounded-full bg-[#ffc300]/10 blur-[80px] md:blur-[120px]"
             style="animation: blobFloat1 15s infinite reverse ease-in-out;"></div>
     </div>
 
     <div id="cursor-glow" class="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300 opacity-[0.05]"
-        style="background: radial-gradient(600px circle at 50% 50%, rgba(255,255,255,0.02), transparent 50%);"></div>
+        style="background: radial-gradient(600px circle at 50% 50%, #ffffff, transparent 50%);"></div>
 
-    <header class="fixed top-0 left-0 right-0 pt-12 pb-4 px-5 glass z-40 transition-all border-b border-white/5 bg-[#0f1115]/80 backdrop-blur-2xl">
+    <header class="fixed top-0 left-0 right-0 pt-12 pb-4 px-5 glass z-40 transition-all border-b border-white/5 bg-[#0a1128]/80 backdrop-blur-2xl">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
             <h1 id="header-title" class="text-2xl font-black tracking-widest uppercase text-gray-200 drop-shadow-md notranslate">KRAFT</h1>
             <div class="flex items-center gap-3">
-                <select id="ui-language" class="bg-[#1a1d24] text-gray-400 border border-gray-600/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer" onchange="changeUILanguage()">
+                <select id="ui-language" class="bg-[#112240] text-gray-400 border border-gray-600/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer" onchange="changeUILanguage()">
                     <option value="ru">🇷🇺 RU</option>
                     <option value="en">🇬🇧 EN</option>
                     <option value="de">🇩🇪 DE</option>
                 </select>
-                <button id="add-btn" class="w-8 h-8 rounded-full bg-white/5 text-gray-300 flex items-center justify-center hover:bg-white/10 transition-all text-xl font-light border border-white/10 shadow-sm">+</button>
+                <button id="add-btn" class="w-8 h-8 rounded-full bg-white/5 text-[#D4AF37] flex items-center justify-center hover:bg-white/10 transition-all text-xl font-light border border-white/10 shadow-sm">+</button>
             </div>
         </div>
     </header>
@@ -338,53 +467,13 @@
         class="pt-[110px] pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
 
         <section id="view-dict" class="pt-4 pb-6">
-            <!-- Dashboard Widget -->
-            <div class="relative w-full mb-8 pt-6 flex flex-col items-center select-none" id="dashboard-widget">
-                <div class="relative flex items-center justify-center mb-4 cursor-pointer group" onclick="document.getElementById('profile-modal').classList.remove('hidden')">
-                    <div class="relative">
-                        <div id="dash-avatar" class="w-20 h-20 rounded-full bg-cover bg-center border border-gray-600 shadow-lg shadow-black/40 flex items-center justify-center text-3xl font-bold bg-[#1a1d24] text-gray-300 group-hover:scale-105 transition-transform"></div>
-                        <div class="absolute -right-2 -bottom-2 w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-500 border-2 border-[#0f1115] shadow-md flex items-center justify-center text-xs" title="Лига" id="dash-league-icon">
-                            <svg class="w-5 h-5 text-[#0f1115]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="w-full max-w-[220px] flex flex-col items-center mb-6">
-                    <div class="flex justify-between w-full text-[10px] text-gray-400 font-medium tracking-widest uppercase mb-1.5">
-                        <span id="dash-lvl" class="text-white font-bold">Lvl 1</span>
-                        <span id="dash-xp-text">0 / 150 XP</span>
-                    </div>
-                    <div class="w-full h-1 bg-[#1a1d24] rounded-full overflow-hidden border border-white/5">
-                        <div id="dash-xp-bar" class="h-full bg-gradient-to-r from-gray-500 to-gray-200 transition-all duration-1000" style="width: 0%"></div>
-                    </div>
-                    <div class="mt-1.5 text-[9px] text-gray-500 uppercase tracking-widest" id="dash-rank-name">Anfänger</div>
-                </div>
-                
-                <div class="flex justify-center w-full mb-2">
-                    <div class="relative w-24 h-24 flex items-center justify-center">
-                        <svg class="w-full h-full transform -rotate-90 drop-shadow-md">
-                            <circle cx="48" cy="48" r="42" stroke="#1a1d24" stroke-width="5" fill="none" />
-                            <circle cx="48" cy="48" r="32" stroke="#1a1d24" stroke-width="5" fill="none" />
-                            <circle id="ring-review" cx="48" cy="48" r="42" stroke="#6366f1" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" class="transition-all duration-1000" />
-                            <circle id="ring-new" cx="48" cy="48" r="32" stroke="#8b5cf6" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201" class="transition-all duration-1000" />
-                        </svg>
-                        <div class="absolute flex flex-col items-center justify-center pointer-events-none">
-                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">ДЕНЬ</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex justify-center gap-4 mt-2">
-                    <div class="flex items-center gap-1.5 text-[10px] font-medium text-gray-400"><div class="w-2 h-2 rounded-full bg-[#8b5cf6] shadow-[0_0_5px_#8b5cf6]"></div> Новые (<span id="dash-new-text">0/10</span>)</div>
-                    <div class="flex items-center gap-1.5 text-[10px] font-medium text-gray-400"><div class="w-2 h-2 rounded-full bg-[#6366f1] shadow-[0_0_5px_#6366f1]"></div> Повтор (<span id="dash-rev-text">0/20</span>)</div>
-                </div>
             </div>
 
             <div class="mb-4">
                 <div class="relative group">
                     <input type="text" id="search-input" placeholder="Поиск слов..." autocomplete="off"
-                        class="w-full bg-[#1a1d24] border border-white/10 rounded-xl py-3 pl-10 pr-10 shadow-sm outline-none focus:ring-1 focus:ring-gray-400/50 focus:border-gray-500/50 transition-all text-white text-sm">
-                    <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-500 group-focus-within:text-gray-300 transition-colors"
+                        class="w-full bg-[#112240] border border-white/10 rounded-xl py-3 pl-10 pr-10 shadow-sm outline-none focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/50 transition-all text-white text-sm">
+                    <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-500 group-focus-within:text-[#D4AF37] transition-colors"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -400,17 +489,17 @@
                 </div>
             </div>
 
-            <div class="flex bg-[#1a1d24]/50 border border-white/5 p-1 rounded-xl mb-4">
+            <div class="flex bg-[#112240]/50 border border-white/5 p-1 rounded-xl mb-4">
                 <button id="dict-tab-active"
-                    class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#22262f] shadow-sm transition-all text-gray-300">В процессе</button>
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#172A45] shadow-sm transition-all text-[#D4AF37]">В процессе</button>
                 <button id="dict-tab-mastered"
-                    class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-300">Архив</button>
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-[#D4AF37]">Архив</button>
             </div>
 
             <div id="dict-list">
                 <div class="text-center py-20 flex flex-col items-center justify-center">
                     <div
-                        class="w-16 h-16 rounded-full border-4 border-gray-500/20 border-t-[#9CA3AF] animate-[spin_1.5s_linear_infinite] shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                        class="w-16 h-16 rounded-full border-4 border-[#D4AF37]/20 border-t-[#D4AF37] animate-[spin_1.5s_linear_infinite] shadow-[0_0_20px_rgba(212,175,55,0.4)]">
                     </div>
                 </div>
             </div>
@@ -443,13 +532,13 @@
                     <!-- Progress dots + bar -->
                     <div class="mb-4 w-full">
                         <div class="flex justify-between items-center mb-1.5">
-                            <span id="train-card-progress-text" class="text-[11px] text-gray-300 tracking-widest leading-none"></span>
+                            <span id="train-card-progress-text" class="text-[11px] text-[#D4AF37] tracking-widest leading-none"></span>
                             <span class="flex items-center gap-1 text-[10px] font-medium text-gray-500 uppercase tracking-wider leading-none">
                                 <span id="train-remaining-label"></span>
-                                <span id="train-total-cards" class="text-gray-300 font-bold">0</span>
+                                <span id="train-total-cards" class="text-[#D4AF37] font-bold">0</span>
                             </span>
                         </div>
-                        <div class="w-full bg-[#1a1d24] dark:bg-[#22262f] h-1 rounded-full overflow-hidden">
+                        <div class="w-full bg-[#112240] dark:bg-[#172A45] h-1 rounded-full overflow-hidden">
                             <div id="train-card-progress-fill" class="bg-[#5A7B9C] h-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
@@ -460,7 +549,7 @@
                                 class="text-3xl font-bold break-words px-4 leading-tight text-white notranslate">
                             </h2>
                             <button id="btn-speak-question"
-                                class="text-gray-500 hover:text-gray-300 transition-all p-2 bg-[#1a1d24] rounded-full hidden"
+                                class="text-gray-500 hover:text-[#D4AF37] transition-all p-2 bg-[#112240] rounded-full hidden"
                                 title="Прослушать">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -471,22 +560,22 @@
                         </div>
 
                         <div id="train-example-q"
-                            class="text-sm text-gray-300 dark:text-[#FDE08B] italic hidden text-center w-full notranslate">
+                            class="text-sm text-[#D4AF37] dark:text-[#FDE08B] italic hidden text-center w-full notranslate">
                         </div>
                     </div>
                     <button id="btn-show-answer"
-                        class="w-full bg-[#22262f] dark:bg-[#22262f] text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">Показать
+                        class="w-full bg-[#172A45] dark:bg-[#172A45] text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">Показать
                         ответ</button>
 
                     <div id="train-answer-block" class="hidden w-full mt-3">
                         <div
-                            class="flex flex-col justify-center items-center mb-6 bg-[#22262f] dark:bg-[#22262f]/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                            class="flex flex-col justify-center items-center mb-6 bg-[#172A45] dark:bg-[#172A45]/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                             <div class="flex items-center justify-center gap-2 mb-3">
                                 <p id="train-de-word"
                                     class="text-3xl font-bold text-white break-words px-2 leading-tight notranslate">
                                 </p>
                                 <button id="btn-speak-answer"
-                                    class="text-gray-500 hover:text-gray-300 transition-all p-2 bg-[#1a1d24] rounded-full hidden"
+                                    class="text-gray-500 hover:text-[#D4AF37] transition-all p-2 bg-[#112240] rounded-full hidden"
                                     title="Прослушать">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -498,7 +587,7 @@
                             <p id="train-de-plural" class="text-xs font-medium text-gray-500 mb-2 hidden"></p>
 
                             <div id="train-answer-example"
-                                class="text-sm text-gray-300 dark:text-[#FDE08B] mt-3 hidden text-center w-full">
+                                class="text-sm text-[#D4AF37] dark:text-[#FDE08B] mt-3 hidden text-center w-full">
                             </div>
                         </div>
 
@@ -509,7 +598,7 @@
                                     data-orig-ru="Снова">Снова</span>
                             </button>
                             <button id="btn-remembered"
-                                class="flex-1 bg-transparent border-2 border-gray-500 text-gray-300 font-bold py-3 rounded-xl active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-[#6b21a8]/10">
+                                class="flex-1 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] font-bold py-3 rounded-xl active:scale-95 transition-all text-sm flex flex-col items-center hover:bg-[#ffc300]/10">
                                 <span class="mb-0.5">Помню</span><span id="sm2-good-time"
                                     class="text-[10px] font-medium opacity-70 notranslate">X дн</span>
                             </button>
@@ -523,21 +612,21 @@
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-widest text-center mb-1 drop-shadow-sm"
                         id="vt-count-text">Формы глаголов</p>
                     <p
-                        class="text-xs font-bold text-gray-300 uppercase tracking-widest text-center mb-1 drop-shadow-sm">
+                        class="text-xs font-bold text-[#D4AF37] uppercase tracking-widest text-center mb-1 drop-shadow-sm">
                         <span id="vt-remaining-label"></span> <span id="vt-counter">0</span></p>
                 </div>
                 <div
-                    class="flex bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#22262f]/50 p-1 rounded-xl mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
+                    class="flex bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45]/50 p-1 rounded-xl mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
                     <button id="vt-mode-praet" onclick="setVTMode('praet')"
-                        class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#374151] shadow-sm transition-all text-white">Präteritum</button>
+                        class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white">Präteritum</button>
                     <button id="vt-mode-perf" onclick="setVTMode('perf')"
-                        class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Partizip
+                        class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">Partizip
                         II</button>
                 </div>
                 <div
-                    class="glass-card card-gradient-border p-8 rounded-[2rem] shadow-[0_5px_30px_rgba(212,175,55,0.08)] relative min-h-[300px] flex flex-col items-center justify-center text-center bg-[#22262f] dark:bg-[#132039]/90 backdrop-blur-xl transition-all">
+                    class="glass-card card-gradient-border p-8 rounded-[2rem] shadow-[0_5px_30px_rgba(212,175,55,0.08)] relative min-h-[300px] flex flex-col items-center justify-center text-center bg-[#172A45] dark:bg-[#132039]/90 backdrop-blur-xl transition-all">
                     <div
-                        class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#9CA3AF]/5 pointer-events-none z-0 rounded-[2rem]">
+                        class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#D4AF37]/5 pointer-events-none z-0 rounded-[2rem]">
                     </div>
                     <p class="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-3 z-10"
                         data-orig-ru="Глагол">Глагол</p>
@@ -547,17 +636,17 @@
                     <h3 id="vt-ru" class="text-sm font-medium text-gray-400 z-10 mb-8 notranslate"></h3>
 
                     <button id="vt-btn-show" onclick="showVTAnswer()"
-                        class="mt-auto w-full border border-gray-500/50 text-gray-300 font-semibold py-3 rounded-xl active:scale-95 transition-all text-sm z-10 hover:bg-gray-400/10 tracking-wide bg-[#1a1d24]/60"
+                        class="mt-auto w-full border border-[#D4AF37]/50 text-[#D4AF37] font-semibold py-3 rounded-xl active:scale-95 transition-all text-sm z-10 hover:bg-[#D4AF37]/10 tracking-wide bg-[#112240]/60"
                         data-orig-ru="Показать форму">Показать форму</button>
 
                     <div id="vt-answer-block"
                         class="hidden w-full mt-2 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 z-10">
                         <div
-                            class="bg-[#1a1d24]/60 p-5 rounded-2xl border border-gray-500/30 w-full mb-6 relative overflow-hidden flex flex-col items-center justify-center shadow-lg transform transition-all">
+                            class="bg-[#112240]/60 p-5 rounded-2xl border border-[#D4AF37]/30 w-full mb-6 relative overflow-hidden flex flex-col items-center justify-center shadow-lg transform transition-all">
                             <div
                                 class="absolute inset-0 bg-gradient-to-r from-green-500/10 via-transparent to-transparent pointer-events-none">
                             </div>
-                            <p class="text-[9px] text-gray-300/80 uppercase tracking-widest font-black mb-1.5 px-2 py-0.5 bg-[#22262f] rounded border border-gray-500/20"
+                            <p class="text-[9px] text-[#D4AF37]/80 uppercase tracking-widest font-black mb-1.5 px-2 py-0.5 bg-[#172A45] rounded border border-[#D4AF37]/20"
                                 data-orig-ru="Ответ">Ответ</p>
                             <p id="vt-answer"
                                 class="text-2xl font-semibold text-green-400 drop-shadow-md tracking-wide notranslate">
@@ -578,23 +667,79 @@
 
 
 
-        <section id="view-stats" class="hidden relative pt-4 pb-6"></section>
+        
+        <section id="view-stats" class="hidden relative pt-4 pb-6 flex flex-col items-center select-none">
+            
+            <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 relative">
+                <div class="absolute right-4 top-4 flex items-center gap-1.5 text-orange-400 font-bold text-xs bg-[#172A45] px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-sm" title="Стрик (Дней подряд)">
+                    🔥 <span id="prof-streak">0</span>
+                </div>
+                
+                <h2 class="text-xl font-bold mb-6 text-white" data-orig-ru="Профиль">Профиль</h2>
+                
+                <div class="relative flex items-center justify-center mb-4">
+                    <div class="relative cursor-pointer group" onclick="document.getElementById('profile-modal').classList.remove('hidden')">
+                        <div id="prof-avatar" class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center text-4xl font-bold bg-[#172A45] text-[#D4AF37] group-hover:scale-105 transition-transform"></div>
+                        <div class="absolute -right-3 -bottom-2 w-12 h-12 rounded-full bg-gradient-to-br from-[#FDE08B] to-[#AA7C11] border-4 border-[#112240] shadow-md flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform" title="Дорожная карта рангов" id="prof-league-icon" onclick="event.stopPropagation(); document.getElementById('roadmap-modal').classList.remove('hidden')">
+                            🧭
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full max-w-[280px] mx-auto flex flex-col items-center mb-6">
+                    <div class="flex justify-between w-full text-[11px] text-[#D4AF37] font-medium tracking-widest uppercase mb-2">
+                        <span id="prof-lvl" class="text-white font-bold">Lvl 1</span>
+                        <span id="prof-xp-text">0 / 150 XP</span>
+                    </div>
+                    <div class="w-full h-2 bg-[#172A45] rounded-full overflow-hidden border border-[#D4AF37]/20 shadow-inner">
+                        <div id="prof-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2 text-[10px] text-gray-400 uppercase tracking-widest cursor-pointer hover:text-[#D4AF37] transition-colors" id="prof-rank-name" onclick="document.getElementById('roadmap-modal').classList.remove('hidden')">Турист</div>
+                </div>
+            </div>
+            
+            <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-white" data-orig-ru="Цели на день">Цели на день</h2>
+                    <button onclick="document.getElementById('goal-modal').classList.remove('hidden')" class="text-xs text-[#D4AF37] hover:underline flex items-center gap-1"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> Изменить</button>
+                </div>
+                <div class="flex justify-center w-full mb-4">
+                    <div class="relative w-32 h-32 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90 drop-shadow-md">
+                            <circle cx="64" cy="64" r="54" stroke="#172A45" stroke-width="8" fill="none" />
+                            <circle cx="64" cy="64" r="40" stroke="#172A45" stroke-width="8" fill="none" />
+                            <circle id="ring-review" cx="64" cy="64" r="54" stroke="#3AB0FF" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29" class="transition-all duration-1000" />
+                            <circle id="ring-new" cx="64" cy="64" r="40" stroke="#34D399" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="251.32" stroke-dashoffset="251.32" class="transition-all duration-1000" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center gap-6 mt-2">
+                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400"><div class="w-3 h-3 rounded-full bg-[#34D399] shadow-[0_0_5px_#34D399]"></div> Новые (<span id="prof-new-text">0/10</span>)</div>
+                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400"><div class="w-3 h-3 rounded-full bg-[#3AB0FF] shadow-[0_0_5px_#3AB0FF]"></div> Повтор (<span id="prof-rev-text">0/20</span>)</div>
+                </div>
+            </div>
+            
+            <div id="stats-container" class="w-full"></div>
+            
+        </section>
+
     </main>
 
     <div id="backup-modal"
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4"
         onclick="if(event.target === this) this.classList.add('hidden')">
         <div
-            class="bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
+            class="bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#112240] backdrop-blur-md bg-opacity-80 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
             <div class="flex justify-between items-center mb-5">
                 <h2 class="text-xl font-bold">Данные</h2><button
                     onclick="document.getElementById('backup-modal').classList.add('hidden')"
-                    class="w-8 h-8 rounded-full bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#22262f]">×</button>
+                    class="w-8 h-8 rounded-full bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45]">×</button>
             </div>
             <button onclick="exportData()" id="btn-trigger-export"
                 class="w-full bg-[#5A7B9C] text-white font-medium py-3.5 rounded-xl mb-4">Скачать базу (.csv)</button>
             <button id="btn-trigger-restore" onclick="document.getElementById('file-restore').click()"
-                class="w-full bg-[#22262f] dark:bg-[#22262f] font-medium py-3.5 rounded-xl border border-gray-200 dark:border-gray-700">Восстановить
+                class="w-full bg-[#172A45] dark:bg-[#172A45] font-medium py-3.5 rounded-xl border border-gray-200 dark:border-gray-700">Восстановить
                 из файла</button>
             <input type="file" id="file-restore" accept=".csv" class="hidden">
         </div>
@@ -604,17 +749,17 @@
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all"
         onclick="if(event.target === this) this.classList.add('hidden')">
         <div
-            class="bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
+            class="bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#112240] backdrop-blur-md bg-opacity-80 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 text-center relative">
             <h2 class="text-xl font-bold mb-4">Изучаемый язык</h2>
             <div class="flex gap-2 mb-6 w-full" id="language-switcher-container">
                 <button onclick="setStudyLanguage('de')" id="lang-btn-de"
-                    class="flex-1 py-3 bg-[#1a1d24] rounded-xl font-bold text-white border-2 border-gray-500 hover:bg-[#1a1d24] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
+                    class="flex-1 py-3 bg-[#112240] rounded-xl font-bold text-white border-2 border-[#D4AF37] hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
                         class="text-lg">🇩🇪</span> DE</button>
                 <button onclick="setStudyLanguage('en')" id="lang-btn-en"
-                    class="flex-1 py-3 bg-[#22262f] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#1a1d24] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
+                    class="flex-1 py-3 bg-[#172A45] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
                         class="text-lg">🇬🇧</span> EN</button>
                 <button onclick="setStudyLanguage('ru')" id="lang-btn-ru"
-                    class="flex-1 py-3 bg-[#22262f] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#1a1d24] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
+                    class="flex-1 py-3 bg-[#172A45] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm"><span
                         class="text-lg">🇷🇺</span> RU</button>
             </div>
 
@@ -628,7 +773,7 @@
                         <div id="avatar-osman"
                             class="w-12 h-12 rounded-full bg-blue-100 text-[#AA7C11] flex items-center justify-center text-xl font-bold bg-cover bg-center group-hover:opacity-80 transition-all">
                             О</div>
-                        <div class="absolute -bottom-1 -right-1 bg-[#22262f] dark:bg-[#22262f] rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:scale-110 transition-transform"
+                        <div class="absolute -bottom-1 -right-1 bg-[#172A45] dark:bg-[#172A45] rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:scale-110 transition-transform"
                             title="Изменить фото">
                             <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -653,7 +798,7 @@
                         <div id="avatar-girlfriend"
                             class="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-xl font-bold bg-cover bg-center group-hover:opacity-80 transition-all">
                             Д</div>
-                        <div class="absolute -bottom-1 -right-1 bg-[#22262f] dark:bg-[#22262f] rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:scale-110 transition-transform"
+                        <div class="absolute -bottom-1 -right-1 bg-[#172A45] dark:bg-[#172A45] rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 hover:scale-110 transition-transform"
                             title="Изменить фото">
                             <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -672,12 +817,12 @@
 
             <div class="w-full h-px bg-gray-100 dark:bg-gray-800 my-4"></div>
             
-            <button id="dev-mode-btn" onclick="toggleDevMode()" class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-[#22262f] transition-all hover:bg-[#1a1d24] text-gray-400 mb-6">
-                <div class="flex items-center gap-2 min-w-0"><span class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span class="font-bold text-base truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#1a1d24] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2" data-orig-ru="Выключен">Выключен</span>
+            <button id="dev-mode-btn" onclick="toggleDevMode()" class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-[#172A45] transition-all hover:bg-[#112240] text-gray-400 mb-6">
+                <div class="flex items-center gap-2 min-w-0"><span class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span class="font-bold text-base truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2" data-orig-ru="Выключен">Выключен</span>
             </button>
 
             <button onclick="document.getElementById('profile-modal').classList.add('hidden')"
-                class="w-full bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#22262f] font-medium py-3 rounded-xl hidden"
+                class="w-full bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] font-medium py-3 rounded-xl hidden"
                 id="profile-close-btn">Скрыть</button>
         </div>
     </div>
@@ -685,33 +830,33 @@
     <div id="add-modal"
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4"
         onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] flex flex-col relative"
+        <div class="bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#112240] backdrop-blur-md bg-opacity-80 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] flex flex-col relative"
             onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-2">
                     Новое слово
                 </h2>
                 <button id="close-modal"
-                    class="text-gray-500 bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#22262f] hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-colors">×</button>
+                    class="text-gray-500 bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-colors">×</button>
             </div>
             <div class="overflow-y-auto pr-1 -mr-1 pb-1">
                 <div id="modal-tabs"
-                    class="flex bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#22262f] p-1 rounded-xl mb-4">
+                    class="flex bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] p-1 rounded-xl mb-4">
                     <button id="tab-single"
-                        class="flex-1 py-2 text-sm font-medium rounded-lg bg-[#374151] shadow-sm transition-all text-white">Одно
+                        class="flex-1 py-2 text-sm font-medium rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white">Одно
                         слово</button>
                     <button id="tab-bulk"
-                        class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Списком
+                        class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">Списком
                         (CSV)</button>
                 </div>
 
                 <div id="form-single">
                     <div
-                        class="flex bg-[#22262f] dark:bg-[#22262f]/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
+                        class="flex bg-[#172A45] dark:bg-[#172A45]/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
                         <button id="type-noun"
-                            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-[#374151] shadow-sm transition-all text-white">Существительное</button>
+                            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-[#2A3B5E] shadow-sm transition-all text-white">Существительное</button>
                         <button id="type-verb"
-                            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300">Глагол
+                            class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">Глагол
                             / Другое</button>
                     </div>
                     <form id="add-form" class="space-y-3">
@@ -719,52 +864,52 @@
                             <button type="button" id="btn-art-der" onclick="selectArticle('der')"
                                 class="flex-1 py-2 rounded-lg border-2 border-[#5A7B9C] bg-[#5A7B9C]/10 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B] font-medium transition-all shadow-sm text-sm">der</button>
                             <button type="button" id="btn-art-die" onclick="selectArticle('die')"
-                                class="flex-1 py-2 rounded-lg border-2 border-transparent bg-[#22262f] dark:bg-[#22262f] text-gray-500 font-medium transition-all text-sm hover:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">die</button>
+                                class="flex-1 py-2 rounded-lg border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] text-gray-500 font-medium transition-all text-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">die</button>
                             <button type="button" id="btn-art-das" onclick="selectArticle('das')"
-                                class="flex-1 py-2 rounded-lg border-2 border-transparent bg-[#22262f] dark:bg-[#22262f] text-gray-500 font-medium transition-all text-sm hover:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">das</button>
+                                class="flex-1 py-2 rounded-lg border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] text-gray-500 font-medium transition-all text-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">das</button>
                         </div>
                         <div class="flex flex-col w-full">
                             <input type="text" id="word-de" placeholder="Изучаемое слово..." required autocomplete="off"
-                                class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all text-sm">
+                                class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all text-sm">
                             <span id="translate-loader-de"
-                                class="text-[10px] text-gray-300 mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
+                                class="text-[10px] text-[#D4AF37] mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
                             <span id="duplicate-warning"
                                 class="text-[10px] text-[#9C5A5A] mt-1 ml-2 hidden font-medium flex items-center gap-1"></span>
                         </div>
                         <div class="flex gap-2 w-full" id="plural-input-group">
                             <div
-                                class="bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#22262f] rounded-xl py-3 px-2 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">
+                                class="bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45] rounded-xl py-3 px-2 text-center outline-none font-medium text-gray-500 w-[60px] min-w-0 flex items-center justify-center text-xs">
                                 die (pl)</div>
                             <input type="text" id="word-plural" placeholder="Множественное число..." autocomplete="off"
-                                class="flex-1 bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all min-w-0 text-sm">
+                                class="flex-1 bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all min-w-0 text-sm">
                         </div>
                         <div class="flex gap-2 w-full hidden" id="verb-forms-group">
                             <input type="text" id="word-praeteritum" placeholder="Präteritum..." autocomplete="off"
-                                class="flex-1 bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all min-w-0 text-sm">
+                                class="flex-1 bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all min-w-0 text-sm">
                             <input type="text" id="word-partizip" placeholder="Partizip II..." autocomplete="off"
-                                class="flex-1 bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all min-w-0 text-sm">
+                                class="flex-1 bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all min-w-0 text-sm">
                         </div>
                         <div class="flex flex-col w-full">
                             <input type="text" id="word-ru" placeholder="Перевод на русский..." required
                                 autocomplete="off"
-                                class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white transition-all text-sm">
+                                class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white transition-all text-sm">
                             <span id="translate-loader-ru"
-                                class="text-[10px] text-gray-300 mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
+                                class="text-[10px] text-[#D4AF37] mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
                         </div>
                         <input type="text" id="word-example" placeholder="Пример использования (необязательно)..."
-                            class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-white transition-all">
+                            class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-white transition-all">
                         <div class="flex w-full gap-2">
                             <div class="flex-[2] min-w-0"><input type="text" id="word-folder" list="folder-list"
                                     placeholder="Курс" required
-                                    class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-3 outline-none text-xs font-medium text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700">
+                                    class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-3 outline-none text-xs font-medium text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700">
                             </div>
                             <div class="flex-[1] min-w-0"><input type="text" id="word-level" list="level-list"
                                     placeholder="Ур."
-                                    class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-1 outline-none text-xs font-medium text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-center uppercase">
+                                    class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-1 outline-none text-xs font-medium text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-center uppercase">
                             </div>
                             <div class="flex-[2] min-w-0"><input type="text" id="word-subfolder" list="subfolder-list"
                                     placeholder="Тема" required
-                                    class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-3 outline-none text-xs font-medium text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700">
+                                    class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-3 outline-none text-xs font-medium text-white focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700">
                             </div>
                         </div>
                         <button type="submit" id="btn-save"
@@ -776,15 +921,15 @@
                     <div class="flex w-full gap-2">
                         <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list"
                                 placeholder="Курс"
-                                class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-3 outline-none font-medium text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
+                                class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-3 outline-none font-medium text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
                         </div>
                         <div class="flex-[1] min-w-0"><input type="text" id="bulk-level" list="level-list"
                                 placeholder="Ур."
-                                class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-1 outline-none font-medium text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
+                                class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-1 outline-none font-medium text-white text-xs text-center uppercase border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
                         </div>
                         <div class="flex-[2] min-w-0"><input type="text" id="bulk-subfolder" list="subfolder-list"
                                 placeholder="Тема"
-                                class="w-full bg-[#22262f] dark:bg-[#22262f] rounded-xl py-3 px-3 outline-none font-medium text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
+                                class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-3 outline-none font-medium text-white text-xs border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500/50">
                         </div>
                     </div>
                     <div class="mt-2 p-6 border-2 border-dashed border-green-300 dark:border-green-800/50 bg-green-50 dark:bg-green-900/10 rounded-xl text-center transition-all group hover:bg-green-100 dark:hover:bg-green-900/20 cursor-pointer"
@@ -817,73 +962,70 @@
                 <div
                     class="absolute top-[-1px] left-[10%] w-[80%] h-[3px] rounded-b-full bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] opacity-0 group-[.active-tab]:opacity-100 transition-opacity duration-300 shadow-[0_2px_10px_rgba(212,175,55,0.5)]">
                 </div>
-                <svg class="w-6 h-6 group-[.active-tab]:text-gray-300 group-[.active-tab]:scale-110 transition-transform duration-300"
+                <svg class="w-6 h-6 group-[.active-tab]:text-[#D4AF37] group-[.active-tab]:scale-110 transition-transform duration-300"
                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                     </path>
                 </svg>
-                <span class="text-[9px] font-bold group-[.active-tab]:text-gray-300 truncate mt-0.5">Словарь</span>
+                <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Словарь</span>
             </button>
             <button id="nav-train"
                 class="flex flex-col items-center justify-center gap-1 transition-all text-gray-500 hover:text-gray-100 dark:hover:text-white group w-1/3 h-full relative">
                 <div
                     class="absolute top-[-1px] left-[10%] w-[80%] h-[3px] rounded-b-full bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] opacity-0 group-[.active-tab]:opacity-100 transition-opacity duration-300 shadow-[0_2px_10px_rgba(212,175,55,0.5)]">
                 </div>
-                <svg class="w-6 h-6 group-[.active-tab]:text-gray-300 group-[.active-tab]:scale-110 transition-transform duration-300"
+                <svg class="w-6 h-6 group-[.active-tab]:text-[#D4AF37] group-[.active-tab]:scale-110 transition-transform duration-300"
                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
                     </path>
                 </svg>
-                <span class="text-[9px] font-bold group-[.active-tab]:text-gray-300 truncate mt-0.5">Учить</span>
+                <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Учить</span>
             </button>
             <button id="nav-stats"
                 class="flex flex-col items-center justify-center gap-1 transition-all text-gray-500 hover:text-gray-100 dark:hover:text-white group w-1/3 h-full relative">
                 <div
                     class="absolute top-[-1px] left-[10%] w-[80%] h-[3px] rounded-b-full bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] opacity-0 group-[.active-tab]:opacity-100 transition-opacity duration-300 shadow-[0_2px_10px_rgba(212,175,55,0.5)]">
                 </div>
-                <svg class="w-6 h-6 group-[.active-tab]:text-gray-300 group-[.active-tab]:scale-110 transition-transform duration-300"
+                <svg class="w-6 h-6 group-[.active-tab]:text-[#D4AF37] group-[.active-tab]:scale-110 transition-transform duration-300"
                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                     </path>
                 </svg>
-                <span class="text-[9px] font-bold group-[.active-tab]:text-gray-300 truncate mt-0.5">Прогресс</span>
+                <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Прогресс</span>
             </button>
         </div>
     </nav>
     
-    <!-- Fixed Streak Indicator in Bottom Right -->
-    <div class="fixed bottom-20 right-4 z-50 flex items-center gap-1.5 text-orange-400 font-bold text-[11px] bg-[#0f1115]/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)] pointer-events-none select-none">
-        🔥 <span id="dash-streak" class="tracking-wide">0 Tage</span>
-    </div>
+    
 
     <div id="premium-confirm-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity" onclick="if(event.target === this) closePremiumConfirm()">
-        <div class="bg-[#1a1d24] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-red-500/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-red-500/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
             <div class="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent pointer-events-none"></div>
             <div class="w-16 h-16 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
                 <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h2 class="text-xl font-bold text-white mb-2" id="premium-confirm-title" data-orig-ru="Подтверждение удаления">Подтверждение удаления</h2>
-            <p class="text-gray-300 text-sm mb-6" id="premium-confirm-message"></p>
+            <p class="text-[#D4AF37] text-sm mb-6" id="premium-confirm-message"></p>
             <div class="flex gap-3 relative z-10">
-                <button onclick="closePremiumConfirm()" class="flex-1 py-3 rounded-xl bg-[#22262f] text-white font-bold hover:bg-[#374151] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
+                <button onclick="closePremiumConfirm()" class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
                 <button onclick="executePremiumConfirm()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]" data-orig-ru="Удалить">Удалить</button>
             </div>
         </div>
     </div>
 
     <div id="premium-prompt-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity" onclick="if(event.target === this) closePremiumPrompt()">
-        <div class="bg-[#1a1d24] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-gray-500/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
-            <div class="absolute inset-0 bg-gradient-to-br from-[#9CA3AF]/10 to-transparent pointer-events-none"></div>
-            <div class="w-16 h-16 mx-auto bg-gray-400/20 rounded-full flex items-center justify-center mb-4 border border-gray-500/50 shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+            <div class="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/10 to-transparent pointer-events-none"></div>
+            <div class="w-16 h-16 mx-auto bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-4 border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.4)]">
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]">✏️</span>
             </div>
             <h2 class="text-xl font-bold text-white mb-4 whitespace-pre-line leading-tight" id="premium-prompt-title">Редактировать</h2>
-            <input type="text" id="premium-prompt-input" class="w-full bg-[#22262f] border border-gray-600 rounded-xl py-3 px-4 text-white font-medium mb-6 focus:outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-400 transition-all shadow-inner" autocomplete="off">
+            <input type="text" id="premium-prompt-input" class="w-full bg-[#172A45] border border-gray-600 rounded-xl py-3 px-4 text-white font-medium mb-6 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all shadow-inner" autocomplete="off">
             <div class="flex gap-3 relative z-10">
-                <button onclick="closePremiumPrompt()" class="flex-1 py-3 rounded-xl bg-[#22262f] text-white font-bold hover:bg-[#374151] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
+                <button onclick="closePremiumPrompt()" class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
                 <button onclick="executePremiumPrompt()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] text-[#112240] font-black hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]" data-orig-ru="Сохранить">Сохранить</button>
             </div>
         </div>
@@ -1058,11 +1200,11 @@
             const devBtn = document.getElementById('dev-mode-btn');
             if (devBtn) {
                 if (isDevMode) {
-                    devBtn.className = "w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-gray-500 bg-gray-400/10 transition-all text-white mb-6 ";
-                    devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] flex-shrink-0">🛠️</span><span class="font-bold text-base text-gray-300 truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-black bg-gray-400 text-[#112240] px-2 py-0.5 rounded uppercase shadow-md flex-shrink-0 ml-2" data-orig-ru="Включен">Включен</span>`;
+                    devBtn.className = "w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-[#D4AF37] bg-[#D4AF37]/10 transition-all text-white mb-6 ";
+                    devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] flex-shrink-0">🛠️</span><span class="font-bold text-base text-[#D4AF37] truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-black bg-[#D4AF37] text-[#112240] px-2 py-0.5 rounded uppercase shadow-md flex-shrink-0 ml-2" data-orig-ru="Включен">Включен</span>`;
                 } else {
-                    devBtn.className = "w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-[#22262f] transition-all hover:bg-[#1a1d24] text-gray-400 mb-6";
-                    devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span class="font-bold text-base truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#1a1d24] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2" data-orig-ru="Выключен">Выключен</span>`;
+                    devBtn.className = "w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-[#172A45] transition-all hover:bg-[#112240] text-gray-400 mb-6";
+                    devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span class="font-bold text-base truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2" data-orig-ru="Выключен">Выключен</span>`;
                 }
                 if (typeof translateNode === 'function') translateNode(devBtn);
             }
@@ -1316,17 +1458,17 @@
 
         function updateProfileUI() {
             if (!currentUser) return;
-            document.getElementById('profile-btn-osman').className = currentUser === 'osman' ? "w-full flex items-center p-4 rounded-xl border-2 border-[#5A7B9C] bg-[#5A7B9C]/10 dark:bg-blue-900/20 transition-all text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-[#22262f] dark:bg-[#22262f] transition-all hover:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 text-white";
-            document.getElementById('profile-btn-girlfriend').className = currentUser === 'girlfriend' ? "w-full flex items-center p-4 rounded-xl border-2 border-pink-500 bg-pink-50 dark:bg-pink-900/20 transition-all text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-[#22262f] dark:bg-[#22262f] transition-all hover:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 text-white";
+            document.getElementById('profile-btn-osman').className = currentUser === 'osman' ? "w-full flex items-center p-4 rounded-xl border-2 border-[#5A7B9C] bg-[#5A7B9C]/10 dark:bg-blue-900/20 transition-all text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] transition-all hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 text-white";
+            document.getElementById('profile-btn-girlfriend').className = currentUser === 'girlfriend' ? "w-full flex items-center p-4 rounded-xl border-2 border-pink-500 bg-pink-50 dark:bg-pink-900/20 transition-all text-white" : "w-full flex items-center p-4 rounded-xl border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] transition-all hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700 text-white";
             loadAvatars();
 
             ['de', 'en', 'ru'].forEach(l => {
                 const btn = document.getElementById('lang-btn-' + l);
                 if (btn) {
                     if (l === currentStudyLang) {
-                        btn.className = "flex-1 py-3 bg-[#1a1d24] rounded-xl font-bold text-white border-2 border-gray-500 hover:bg-[#1a1d24] transition-all flex items-center justify-center gap-2 shadow-sm text-sm";
+                        btn.className = "flex-1 py-3 bg-[#112240] rounded-xl font-bold text-white border-2 border-[#D4AF37] hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm";
                     } else {
-                        btn.className = "flex-1 py-3 bg-[#22262f] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#1a1d24] transition-all flex items-center justify-center gap-2 shadow-sm text-sm";
+                        btn.className = "flex-1 py-3 bg-[#172A45] rounded-xl font-bold text-gray-500 border-2 border-transparent hover:bg-[#112240] transition-all flex items-center justify-center gap-2 shadow-sm text-sm";
                     }
                 }
             });
@@ -1347,9 +1489,9 @@
         };
 
         const getLevelColor = (level) => {
-            if (!level) return 'bg-[#1a1d24] backdrop-blur-md bg-opacity-80 text-gray-500 dark:bg-[#22262f] dark:text-gray-500';
+            if (!level) return 'bg-[#112240] backdrop-blur-md bg-opacity-80 text-gray-500 dark:bg-[#172A45] dark:text-gray-500';
             const l = level.toUpperCase().replace(/А/g, 'A').replace(/В/g, 'B').replace(/С/g, 'C');
-            return 'bg-[#6b21a8]/10 text-gray-300 border border-gray-500/20';
+            return 'bg-[#ffc300]/10 text-[#D4AF37] border border-[#D4AF37]/20';
         };
 
         const updateIcons = () => { };
@@ -1422,21 +1564,29 @@
             return { key, stats, dateStr };
         };
 
-        window.updateDailyActivity = (isNew) => {
+        
+        window.updateDailyActivity = (isNew, eventX, eventY) => {
             const { key, stats } = getDailyStats();
             if (isNew) stats.newWords++; else stats.reviews++;
             localStorage.setItem(key, JSON.stringify(stats));
             
+            const xpGain = isNew ? 10 : 5;
+            if (eventX && eventY) showXPFloat(xpGain, eventX, eventY - 20);
+            else showXPFloat(xpGain, window.innerWidth / 2, window.innerHeight / 2 - 50);
+
             // Update Streak logic
             let currentStreak = parseInt(localStorage.getItem(`streak_${currentUser}`) || '0', 10);
             let lastStreakDate = localStorage.getItem(`lastStreakDate_${currentUser}`);
             const dateStr = new Date().toISOString().slice(0, 10);
             
-            if (lastStreakDate !== dateStr) {
+            const targetNew = parseInt(localStorage.getItem(`goal_new_${currentUser}`) || '10', 10);
+            const targetRev = parseInt(localStorage.getItem(`goal_rev_${currentUser}`) || '20', 10);
+            
+            if (stats.newWords >= targetNew && stats.reviews >= targetRev && lastStreakDate !== dateStr) {
                 let d = new Date(); d.setDate(d.getDate() - 1);
                 let yest = d.toISOString().slice(0,10);
-                if (lastStreakDate === yest) {
-                    currentStreak++; // continuous
+                if (lastStreakDate === yest || lastStreakDate == null) {
+                    currentStreak++; // continuous or first time
                 } else {
                     currentStreak = 1; // broken streak
                 }
@@ -1461,21 +1611,34 @@
             const currentLevelXP = totalXP - accumulated;
             const pct = Math.min(100, (currentLevelXP / xpForNext) * 100);
             
-            let rankName = "Anfänger";
-            let rankIcon = `<svg class="w-4 h-4 text-[#0f1115]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg>`; // Triangle
+            // Level Up logic
+            const prevLvl = parseInt(localStorage.getItem(`current_level_${currentUser}`) || '1', 10);
+            if (lvl > prevLvl) {
+                showLevelUp(lvl);
+                localStorage.setItem(`current_level_${currentUser}`, lvl);
+            }
+            
+            let rankName = t("Турист");
+            let rankIcon = `🧭`; 
             if (lvl >= 11 && lvl <= 20) {
-                rankName = "Entdecker";
-                rankIcon = `<svg class="w-4 h-4 text-[#0f1115]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l10 10-10 10L2 12 12 2z"/></svg>`; // Diamond
-            } else if (lvl > 20) {
-                rankName = "Kenner";
-                rankIcon = `<svg class="w-4 h-4 text-[#0f1115]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>`; // Star
+                rankName = t("Студент");
+                rankIcon = `📚`;
+            } else if (lvl >= 21 && lvl <= 30) {
+                rankName = t("Полиглот");
+                rankIcon = `🌍`;
+            } else if (lvl >= 31 && lvl <= 40) {
+                rankName = t("Лингвист");
+                rankIcon = `✒️`;
+            } else if (lvl > 40) {
+                rankName = t("Амбассадор");
+                rankIcon = `👑`;
             }
 
-            const badge = document.getElementById('dash-lvl');
-            const bar = document.getElementById('dash-xp-bar');
-            const xpText = document.getElementById('dash-xp-text');
-            const rankEl = document.getElementById('dash-rank-name');
-            const rankIcoEl = document.getElementById('dash-league-icon');
+            const badge = document.getElementById('prof-lvl');
+            const bar = document.getElementById('prof-xp-bar');
+            const xpText = document.getElementById('prof-xp-text');
+            const rankEl = document.getElementById('prof-rank-name');
+            const rankIcoEl = document.getElementById('prof-league-icon');
             
             if (badge) badge.innerText = `Lvl ${lvl}`;
             if (bar) bar.style.width = `${pct}%`;
@@ -1484,7 +1647,7 @@
             if (rankIcoEl) rankIcoEl.innerHTML = rankIcon;
             
             // Avatar update
-            const dashAvatar = document.getElementById('dash-avatar');
+            const dashAvatar = document.getElementById('prof-avatar');
             if (dashAvatar) {
                 const currentAv = localStorage.getItem('avatar_' + currentUser);
                 if (currentAv && currentAv.startsWith('data:')) {
@@ -1498,11 +1661,11 @@
 
             // Daily Stats
             const { stats } = getDailyStats();
-            const targetNew = 10;
-            const targetRev = 20;
+            const targetNew = parseInt(localStorage.getItem(`goal_new_${currentUser}`) || '10', 10);
+            const targetRev = parseInt(localStorage.getItem(`goal_rev_${currentUser}`) || '20', 10);
             
-            const newText = document.getElementById('dash-new-text');
-            const revText = document.getElementById('dash-rev-text');
+            const newText = document.getElementById('prof-new-text');
+            const revText = document.getElementById('prof-rev-text');
             if (newText) newText.innerText = `${stats.newWords}/${targetNew}`;
             if (revText) revText.innerText = `${stats.reviews}/${targetRev}`;
             
@@ -1511,18 +1674,18 @@
             if (ringNew) {
                 const dashOffsetNew = 201 - (Math.min(stats.newWords / targetNew, 1) * 201);
                 ringNew.style.strokeDashoffset = dashOffsetNew;
-                if(stats.newWords >= targetNew) ringNew.style.filter = "drop-shadow(0 0 4px #8b5cf6)";
+                if(stats.newWords >= targetNew) ringNew.style.filter = "drop-shadow(0 0 4px #34D399)";
             }
             if (ringRev) {
                 const dashOffsetRev = 264 - (Math.min(stats.reviews / targetRev, 1) * 264);
                 ringRev.style.strokeDashoffset = dashOffsetRev;
-                if(stats.reviews >= targetRev) ringRev.style.filter = "drop-shadow(0 0 4px #6366f1)";
+                if(stats.reviews >= targetRev) ringRev.style.filter = "drop-shadow(0 0 4px #3AB0FF)";
             }
             
-            // Streak
+            // Streak computation (based on daily goals)
             let currentStreak = parseInt(localStorage.getItem(`streak_${currentUser}`) || '0', 10);
-            const streakEl = document.getElementById('dash-streak');
-            if (streakEl) streakEl.innerText = `${currentStreak} Tage`;
+            const streakEl = document.getElementById('prof-streak');
+            if (streakEl) streakEl.innerText = `${currentStreak}`;
         };
 
         window.fetchWords = async () => {
@@ -1621,10 +1784,10 @@
         window.selectArticle = (art) => {
             currentArticle = art;
             const btns = { der: document.getElementById('btn-art-der'), die: document.getElementById('btn-art-die'), das: document.getElementById('btn-art-das') };
-            Object.values(btns).forEach(b => { b.className = "flex-1 py-2 rounded-lg border-2 border-transparent bg-[#22262f] dark:bg-[#22262f] text-gray-500 font-medium transition-all text-sm hover:bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700"; });
+            Object.values(btns).forEach(b => { b.className = "flex-1 py-2 rounded-lg border-2 border-transparent bg-[#172A45] dark:bg-[#172A45] text-gray-500 font-medium transition-all text-sm hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700"; });
             if (art === 'der') btns.der.className = "flex-1 py-2 rounded-lg border-2 border-[#5A7B9C] bg-[#5A7B9C]/10 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B] font-medium transition-all shadow-sm text-sm";
             else if (art === 'die') btns.die.className = "flex-1 py-2 rounded-lg border-2 border-[#9C5A5A] bg-[#9C5A5A]/10 dark:bg-red-900/30 text-[#9C5A5A] dark:text-red-400 font-medium transition-all shadow-sm text-sm";
-            else if (art === 'das') btns.das.className = "flex-1 py-2 rounded-lg border-2 border-gray-500 bg-green-50 dark:bg-green-900/30 text-[#5A9C78] dark:text-green-400 font-medium transition-all shadow-sm text-sm";
+            else if (art === 'das') btns.das.className = "flex-1 py-2 rounded-lg border-2 border-[#D4AF37] bg-green-50 dark:bg-green-900/30 text-[#5A9C78] dark:text-green-400 font-medium transition-all shadow-sm text-sm";
         };
 
         const wordInp = document.getElementById('word-de');
@@ -1640,8 +1803,8 @@
         document.getElementById('dict-tab-active').onclick = () => { dictTabFilter = 'active'; renderDictTabs(); };
         document.getElementById('dict-tab-mastered').onclick = () => { dictTabFilter = 'mastered'; renderDictTabs(); };
         function renderDictTabs() {
-            document.getElementById('dict-tab-active').className = dictTabFilter === 'active' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#374151] shadow-sm transition-all text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
-            document.getElementById('dict-tab-mastered').className = dictTabFilter === 'mastered' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#374151] shadow-sm transition-all flex items-center justify-center gap-1 text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('dict-tab-active').className = dictTabFilter === 'active' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
+            document.getElementById('dict-tab-mastered').className = dictTabFilter === 'mastered' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all flex items-center justify-center gap-1 text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-[#D4AF37]";
             renderDict();
         }
 
@@ -1683,16 +1846,16 @@
                 folderNames.forEach(f => {
                     const safeF = escapeStr(f);
                     html += `
-                    <div class="dict-folder mb-3 bg-[#22262f] dark:bg-[#22262f] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-folder="${safeF}">
-                        <div class="flex justify-between items-center bg-[#22262f] dark:bg-[#22262f] p-3 border-b border-gray-100 dark:border-gray-800">
+                    <div class="dict-folder mb-3 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-folder="${safeF}">
+                        <div class="flex justify-between items-center bg-[#172A45] dark:bg-[#172A45] p-3 border-b border-gray-100 dark:border-gray-800">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                <div class="cursor-move drag-handle-folder text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
+                                <div class="cursor-move drag-handle-folder text-gray-500 hover:text-gray-600 dark:hover:text-[#D4AF37]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
                                 <h2 class="text-base font-bold text-white truncate notranslate" ${isDevMode ? `onclick="renameFolder('${safeF}')" style="cursor:pointer;" title="Переименовать"` : ''}>${f}</h2>
                             </div>
                             ${isDevMode ? `
                             <div class="flex items-center gap-1">
                                 <button onclick="fastAddCourse('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#34d399] hover:bg-[#34d399]/10 rounded-full transition-colors" title="Добавить тему"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
-                                <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-gray-300 hover:bg-gray-400/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                                 <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>` : ''}
                         </div>
@@ -1710,8 +1873,8 @@
                         const isCollapsed = collapsedDictTopics[topicKey]; const chevronClass = isCollapsed ? '' : 'rotate-180';
 
                         html += `
-                        <div class="dict-topic bg-[#1a1d24] dark:bg-[#233554] border-l-2 border-l-[#9CA3AF] rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-all mb-1 mx-1" data-topic="${safeTopicKey}">
-                            <div class="flex justify-between items-center p-3 pr-2 transition-colors hover:bg-[#374151] dark:hover:bg-[#374151]">
+                        <div class="dict-topic bg-[#112240] dark:bg-[#233554] border-l-2 border-l-[#D4AF37] rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-all mb-1 mx-1" data-topic="${safeTopicKey}">
+                            <div class="flex justify-between items-center p-3 pr-2 transition-colors hover:bg-[#2A3B5E] dark:hover:bg-[#2A3B5E]">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
                                     <div class="cursor-move drag-handle-topic text-gray-500 hover:text-gray-600 p-1 -ml-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
                                     <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${safeTopicKey}')">
@@ -1722,10 +1885,10 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     ${isDevMode ? `
-                                    <button onclick="renameSubfolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 text-gray-300 hover:bg-gray-400/10 rounded-full transition-colors" title="Переименовать тему"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                    <button onclick="renameSubfolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-full transition-colors" title="Переименовать тему"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                                     <button onclick="premiumConfirm(t('Удалить тему со всеми словами внутри?'), () => deleteFolder('${safeF}', '${safeL}', '${safeS}')); event.stopPropagation();" class="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors" title="Удалить тему"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                     ` : ''}
-                                    <button onclick="addWordToTopic('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 bg-[#6b21a8]/10 hover:bg-[#6b21a8]/20 rounded-full text-gray-300 transition-colors" title="Добавить слово"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
+                                    <button onclick="addWordToTopic('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 bg-[#ffc300]/10 hover:bg-[#ffc300]/20 rounded-full text-[#D4AF37] transition-colors" title="Добавить слово"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
                                 </div>
                             </div>
 
@@ -1739,7 +1902,7 @@
                             const safeWordDe = escapeStr(w.word_de);
 
                             html += `
-                            <div onclick="openEdit(${w.id})" class="bg-[#22262f] dark:bg-[#22262f]/50 p-3 rounded-xl border border-blue-900/20 dark:border-gray-700/50 flex justify-between items-center active:scale-[0.99] transition-all cursor-pointer hover:border-blue-500/30">
+                            <div onclick="openEdit(${w.id})" class="bg-[#172A45] dark:bg-[#172A45]/50 p-3 rounded-xl border border-blue-900/20 dark:border-gray-700/50 flex justify-between items-center active:scale-[0.99] transition-all cursor-pointer hover:border-blue-500/30">
                                 <div class="flex-1 pr-3 min-w-0">
                                     <p class="text-base font-bold text-white leading-tight truncate notranslate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-medium mr-1">${w.article}</span>` : ''}${w.word_de} <span class="text-gray-500 text-xs font-normal ml-1">${extraInfo}</span></p>
                                     <p class="text-gray-500 text-sm font-medium mt-0.5 truncate notranslate">${w.word_ru}</p>
@@ -1747,8 +1910,8 @@
                                 </div>
                                 <div class="flex flex-col items-end gap-1 flex-shrink-0">
                                     <div class="flex gap-1 mb-1">
-                                        <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-2 bg-[#22262f] dark:bg-[#233554] rounded-full text-gray-500 hover:text-gray-300 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"></path></svg></button>
-                                        <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-[#22262f] dark:bg-[#233554] rounded-full text-gray-500 hover:text-[#9C5A5A] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                        <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-2 bg-[#172A45] dark:bg-[#233554] rounded-full text-gray-500 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"></path></svg></button>
+                                        <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-[#172A45] dark:bg-[#233554] rounded-full text-gray-500 hover:text-[#9C5A5A] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                     </div>
                                     <span class="text-xs font-bold ${w.score >= MAX_SCORE ? 'text-[#5A9C78]' : (w.score >= 3 ? 'text-orange-500' : 'text-gray-500')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
                                 </div>
@@ -1815,8 +1978,8 @@
         const modal = document.getElementById('add-modal');
         const setType = (t) => {
             currentType = t;
-            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-[#374151] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
-            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-[#374151] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('type-noun').className = t === 'noun' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
+            document.getElementById('type-verb').className = t === 'verb' ? "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
 
             // Base visibility overrides for types
             document.getElementById('plural-input-group').style.display = t === 'verb' ? 'none' : 'flex';
@@ -1830,13 +1993,13 @@
 
         const showSingleTab = () => {
             document.getElementById('form-single').classList.remove('hidden'); document.getElementById('form-bulk').classList.add('hidden');
-            document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg bg-[#374151] shadow-sm transition-all text-white";
-            document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white";
+            document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
         };
         const showBulkTab = () => {
             document.getElementById('form-bulk').classList.remove('hidden'); document.getElementById('form-single').classList.add('hidden');
             document.getElementById('tab-bulk').className = "flex-1 py-2 text-sm font-bold rounded-lg bg-[#5A9C78] text-white shadow-md shadow-green-500/40 transition-all transform scale-[1.02]";
-            document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('tab-single').className = "flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
         };
 
         document.getElementById('tab-single').onclick = showSingleTab;
@@ -2161,8 +2324,8 @@
 
         window.setDirection = (dir) => {
             trainDirection = dir;
-            const activeCls = "flex-1 py-2 text-[10px] font-bold rounded-lg bg-[#374151] text-gray-300 shadow-sm transition-all uppercase";
-            const inactiveCls = "flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-gray-300";
+            const activeCls = "flex-1 py-2 text-[10px] font-bold rounded-lg bg-[#2A3B5E] text-[#D4AF37] shadow-sm transition-all uppercase";
+            const inactiveCls = "flex-1 py-2 text-[10px] font-bold rounded-lg text-gray-500 transition-all uppercase hover:text-gray-700 dark:hover:text-[#D4AF37]";
             document.getElementById('dir-auto').className = dir === 'auto' ? activeCls : inactiveCls;
             document.getElementById('dir-ru-de').className = dir === 'ru-de' ? activeCls : inactiveCls;
             document.getElementById('dir-de-ru').className = dir === 'de-ru' ? activeCls : inactiveCls;
@@ -2184,20 +2347,20 @@
                 const verbAvailableCount = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip).length;
 
                 let html = `
-                    <button onclick="startTraining('all')" class="w-full text-left bg-[#22262f] border border-gray-500/30 hover:scale-[0.98] transition-all p-5 rounded-2xl shadow-md text-white flex justify-between items-center group mb-3">
+                    <button onclick="startTraining('all')" class="w-full text-left bg-[#172A45] border border-[#D4AF37]/30 hover:scale-[0.98] transition-all p-5 rounded-2xl shadow-md text-white flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-lg font-bold">${t('Слова на сегодня')}</h3>
                             <p class="text-yellow-100/70 text-[11px] font-medium mt-1"><span class="notranslate">${t('Доступно:')}</span> ${availableCount} ${waitingCount > 0 ? `<span class="opacity-60">|</span> <span class="notranslate">${t('Ожидают:')}</span> ${waitingCount}` : ''}</p>
                         </div>
-                        <div class="bg-[#1a1d24] backdrop-blur-md bg-opacity-80/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                        <div class="bg-[#112240] backdrop-blur-md bg-opacity-80/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                     </button>
                     ${currentStudyLang === 'de' ? `
-                    <button onclick="startVerbTrainer()" class="w-full text-left bg-[#22262f] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
+                    <button onclick="startVerbTrainer()" class="w-full text-left bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-sm font-bold text-white flex items-center gap-2">${t('Формы глаголов')}</h3>
                             <p class="text-gray-500 text-[10px] font-medium mt-0.5">${t('Тренировка Präteritum и Partizip II')}: <span class="notranslate">${verbAvailableCount}</span></p>
                         </div>
-                        <div class="text-gray-300"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
+                        <div class="text-[#D4AF37]"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
                     </button>` : ''}
                 `;
 
@@ -2215,7 +2378,7 @@
 
                 if (masteredCount > 0) {
                     html += `
-                        <button onclick="startTraining('mastered')" class="w-full text-left bg-[#22262f] dark:bg-[#22262f] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
+                        <button onclick="startTraining('mastered')" class="w-full text-left bg-[#172A45] dark:bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
                             <div>
                                 <h3 class="text-sm font-bold text-white flex items-center gap-2"> ${t('Повторить архив')}</h3>
                                 <p class="text-gray-500 text-[10px] font-medium mt-0.5"><span class="notranslate">${t('Изучено:')}</span> ${masteredCount}</p>
@@ -2242,7 +2405,7 @@
                     let folderActiveHTML = '';
                     if (cWordsCount > 0) {
                         folderActiveHTML += `
-                            <details id="${folderId}" ontoggle="localStorage.setItem('${folderId}', this.open)" class="group mb-2 bg-[#22262f] dark:bg-[#22262f] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" ${isOpen}>
+                            <details id="${folderId}" ontoggle="localStorage.setItem('${folderId}', this.open)" class="group mb-2 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" ${isOpen}>
                                 <summary class="flex justify-between items-center p-4 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
                                     <h3 class="text-sm font-bold text-white notranslate">${folder}</h3>
                                     <div class="flex items-center gap-3">
@@ -2270,7 +2433,7 @@
                             if (!hasActive && cWordsCount === 0) {
                                 // Edge case where no active words but waiting words exist
                                 folderActiveHTML += `
-                                <details id="${folderId}" ontoggle="localStorage.setItem('${folderId}', this.open)" class="group mb-2 bg-[#22262f] dark:bg-[#22262f] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" ${isOpen}>
+                                <details id="${folderId}" ontoggle="localStorage.setItem('${folderId}', this.open)" class="group mb-2 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" ${isOpen}>
                                     <summary class="flex justify-between items-center p-4 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
                                         <h3 class="text-sm font-bold text-white notranslate">${folder}</h3>
                                         <div class="flex items-center gap-3">
@@ -2282,7 +2445,7 @@
                             }
                             hasActive = true;
                             folderActiveHTML += `
-                                <button onclick="startTraining('${escapeStr(topicKey)}')" class="w-[calc(100%-12px)] mx-auto ml-1.5 text-left bg-[#1a1d24] backdrop-blur-md bg-opacity-80 dark:bg-[#233554] hover:bg-[#374151] transition-all p-2.5 rounded-lg flex justify-between items-center group mb-1">
+                                <button onclick="startTraining('${escapeStr(topicKey)}')" class="w-[calc(100%-12px)] mx-auto ml-1.5 text-left bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#233554] hover:bg-[#2A3B5E] transition-all p-2.5 rounded-lg flex justify-between items-center group mb-1">
                                     <div>
                                         <div class="flex items-center gap-2 mb-0.5">
                                             ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${getLevelColor(l)}">${l}</span>` : ''}
@@ -2290,7 +2453,7 @@
                                         </div>
                                         <p class="text-[11px] text-gray-500"><span class="notranslate">${t('Доступно:')}</span> ${wordsCount} <span class="opacity-60">${waitingCount > 0 ? `| <span class="notranslate">${t('Ожидают:')}</span> ${waitingCount}` : ''}</span></p>
                                     </div>
-                                    <div class="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                                    <div class="text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                                 </button>
                             `;
                         }
@@ -2362,7 +2525,7 @@
             if (remLabel) remLabel.innerText = t('Осталось:');
             if (exQ) {
                 exQ.classList.add('hidden');
-                exQ.className = "text-sm text-gray-300 dark:text-[#FDE08B] italic mb-5 hidden text-center w-full";
+                exQ.className = "text-sm text-[#D4AF37] dark:text-[#FDE08B] italic mb-5 hidden text-center w-full";
             }
 
             const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer');
@@ -2390,7 +2553,7 @@
                 ansEx.innerHTML = `
                     <div class="flex items-center justify-center gap-2">
                         <span class="italic text-center">"${sentence}"</span>
-                        <button onclick="speakWord('${safeSentence}', event)" class="p-1.5 bg-[#1a1d24] rounded-full text-gray-400 hover:text-gray-300 transition-all flex-shrink-0 border border-gray-700 shadow-sm" title="Прослушать пример">
+                        <button onclick="speakWord('${safeSentence}', event)" class="p-1.5 bg-[#112240] rounded-full text-gray-400 hover:text-[#D4AF37] transition-all flex-shrink-0 border border-gray-700 shadow-sm" title="Прослушать пример">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"></path></svg>
                         </button>
                     </div>
@@ -2418,7 +2581,7 @@
 
             if (state === 'L1' || state === 'L2' || state === 'Archive') {
                 if (badge) {
-                    if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#1a1d24] dark:bg-[#22262f] text-gray-500"; }
+                    if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] dark:bg-[#172A45] text-gray-500"; }
                     else {
                         // Show word type label
                         const typeLabel = w.word_type === 'verb' ? (currentStudyLang === 'de' ? 'Verb' : t('Глагол')) : (w.word_type === 'noun' ? (currentStudyLang === 'de' ? 'Nomen' : t('Существительное')) : '');
@@ -2497,7 +2660,7 @@
             w.repetitions = sm2Result.repetitions;
             
             // Call Daily Activity tracking
-            updateDailyActivity(w.repetitions === 1);
+            updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
 
 
             const gwItem = globalWords.find(gw => gw.id === w.id);
@@ -2601,8 +2764,8 @@
 
         window.setVTMode = (mode) => {
             vtMode = mode;
-            document.getElementById('vt-mode-praet').className = mode === 'praet' ? "flex-1 py-2 text-xs font-bold rounded-lg bg-[#374151] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
-            document.getElementById('vt-mode-perf').className = mode === 'perf' ? "flex-1 py-2 text-xs font-bold rounded-lg bg-[#374151] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-gray-300";
+            document.getElementById('vt-mode-praet').className = mode === 'praet' ? "flex-1 py-2 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
+            document.getElementById('vt-mode-perf').className = mode === 'perf' ? "flex-1 py-2 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
             renderVerbCard();
         };
 
@@ -2685,8 +2848,8 @@
 
                 daysHtml += `
                 <div class="flex flex-col items-center flex-1 gap-1.5 group">
-                    <span class="text-[10px] font-bold ${mins > 0 ? 'text-gray-500 dark:text-gray-300' : 'text-transparent'} transition-all">${Math.round(mins)}${t('м')}</span>
-                    <div class="w-full max-w-[36px] h-28 bg-[#22262f] dark:bg-[#22262f]/50 rounded-[10px] flex flex-col justify-end overflow-hidden border border-gray-100 dark:border-gray-700/50">
+                    <span class="text-[10px] font-bold ${mins > 0 ? 'text-gray-500 dark:text-[#D4AF37]' : 'text-transparent'} transition-all">${Math.round(mins)}${t('м')}</span>
+                    <div class="w-full max-w-[36px] h-28 bg-[#172A45] dark:bg-[#172A45]/50 rounded-[10px] flex flex-col justify-end overflow-hidden border border-gray-100 dark:border-gray-700/50">
                         <div class="w-full ${barColor} transition-all duration-1000 ease-out rounded-[8px]" style="height: ${heightPct}%"></div>
                     </div>
                     <span class="text-[9px] ${textColor} uppercase tracking-widest mt-1 truncate max-w-full px-1 text-center">${dayName}</span>
@@ -2704,10 +2867,19 @@
 
         async function loadStats() {
             const stats = document.getElementById('view-stats');
-            stats.innerHTML = `
-                <div class="text-center py-20 flex flex-col items-center justify-center h-full min-h-[50vh]">
-                    <div class="w-16 h-16 rounded-full border-4 border-gray-500/20 border-t-[#9CA3AF] animate-[spin_1.5s_linear_infinite] shadow-[0_0_20px_rgba(212,175,55,0.4)]"></div>
-                </div>`;
+            
+                const statsContainer = document.getElementById('stats-container');
+                if (statsContainer) {
+                    statsContainer.innerHTML = `
+                        <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 text-center">
+                            <h3 class="text-lg font-bold text-white mb-2">Архив</h3>
+                            <p class="text-sm text-gray-400">Слов выучено: <span class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / ${totalCount}</p>
+                            <p class="text-sm text-gray-400 mt-2">Глаголов выучено: <span class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
+                        </div>
+                    `;
+                    updateExperience();
+                }
+
             try {
                 // Parallelize history + leaderboard fetches for speed
                 const [historyResult, lbResult] = await Promise.allSettled([
@@ -2765,19 +2937,19 @@
                             const timeStr = hours > 0 ? `<span class="font-bold text-white text-sm">${hours}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('ч')}</span> <span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('м')}</span>` : `<span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('м')}</span>`;
 
                             const pbgColor = index === 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
-                                (index === 1 ? 'bg-[#22262f] dark:bg-[#22262f] border-gray-200 dark:border-gray-700' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800');
-                            const troColor = index === 0 ? 'text-gray-300' : (index === 1 ? 'text-gray-500' : 'text-orange-500');
+                                (index === 1 ? 'bg-[#172A45] dark:bg-[#172A45] border-gray-200 dark:border-gray-700' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800');
+                            const troColor = index === 0 ? 'text-[#D4AF37]' : (index === 1 ? 'text-gray-500' : 'text-orange-500');
 
                             leaderboardHtml += `
-                                <div class="bg-[#22262f] dark:bg-[#22262f] p-3 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between transition-all hover:bg-[#22262f] dark:hover:bg-gray-700/50">
+                                <div class="bg-[#172A45] dark:bg-[#172A45] p-3 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between transition-all hover:bg-[#172A45] dark:hover:bg-gray-700/50">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-full ${pbgColor} flex items-center justify-center font-bold text-sm border flex-shrink-0 ${troColor}">${index + 1}</div>
-                                        <div class="w-10 h-10 rounded-full bg-[#1a1d24] backdrop-blur-md border border-[#ffc300]/30 flex items-center justify-center font-bold text-lg text-gray-500 bg-cover bg-no-repeat shrink-0" style="${avatarUrl ? `background-image: url(${avatarUrl}) !important; background-position: center top !important; background-size: cover !important;` : ''}">
+                                        <div class="w-10 h-10 rounded-full bg-[#112240] backdrop-blur-md border border-[#ffc300]/30 flex items-center justify-center font-bold text-lg text-gray-500 bg-cover bg-no-repeat shrink-0" style="${avatarUrl ? `background-image: url(${avatarUrl}) !important; background-position: center top !important; background-size: cover !important;` : ''}">
                                             ${!avatarUrl ? initials : ''}
                                         </div>
                                         <div>
                                             <h3 class="font-bold text-sm text-white truncate flex items-center gap-2">
-                                                ${name} ${isMe ? `<span class="text-[9px] bg-[#6b21a8]/20 text-gray-300 px-1.5 py-0.5 rounded uppercase tracking-wider">${t('Вы')}</span>` : ''}
+                                                ${name} ${isMe ? `<span class="text-[9px] bg-[#ffc300]/20 text-[#D4AF37] px-1.5 py-0.5 rounded uppercase tracking-wider">${t('Вы')}</span>` : ''}
                                             </h3>
                                         </div>
                                     </div>
@@ -2843,58 +3015,19 @@
 
 
 
-                stats.innerHTML = `
-                    <div class="bg-gradient-to-br from-[#1C2841] to-[#0B132B] border border-blue-500/20 text-[#FDE08B] p-6 rounded-[2rem] shadow-lg mb-8 relative overflow-hidden text-center text-white border border-blue-500/30">
-                        <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent)]"></div>
-                        
-                        <h3 class="text-xs font-black uppercase tracking-[0.2em] text-blue-200 mb-6 drop-shadow-md">${t('Сегодня')}</h3>
-                        
-                        <div class="flex items-center justify-center mb-6 relative">
-                            <div class="w-40 h-40 relative flex items-center justify-center">
-                                <svg class="w-full h-full transform -rotate-90 drop-shadow-lg">
-                                    <circle cx="80" cy="80" r="72" stroke="currentColor" class="text-blue-900/40" stroke-width="14" fill="none"/>
-                                    <circle cx="80" cy="80" r="72" stroke="currentColor" class="${isGoalMet ? 'text-[#34D399]' : 'text-blue-300'} transition-all duration-1000 ease-out" stroke-width="14" fill="none" stroke-dasharray="452.4" stroke-dashoffset="${452.4 * (1 - pctMinutes / 100)}" stroke-linecap="round"/>
-                                </svg>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                    <span class="text-5xl font-black tracking-tighter leading-none">${minutesToday}</span>
-                                    <span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest text-center mt-2 leading-tight">
-                                        ${t(minutesToday % 10 === 1 && minutesToday % 100 !== 11 ? 'минута' : ([2, 3, 4].includes(minutesToday % 10) && ![12, 13, 14].includes(minutesToday % 100) ? 'минуты' : 'минут'))}
-                                    </span>
-                                </div>
-                            </div>
+                
+                const statsContainer = document.getElementById('stats-container');
+                if (statsContainer) {
+                    statsContainer.innerHTML = `
+                        <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 text-center">
+                            <h3 class="text-lg font-bold text-white mb-2">Архив</h3>
+                            <p class="text-sm text-gray-400">Слов выучено: <span class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / ${totalCount}</p>
+                            <p class="text-sm text-gray-400 mt-2">Глаголов выучено: <span class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
                         </div>
+                    `;
+                    updateExperience();
+                }
 
-                        ${isGoalMet ?
-                        `<div class="inline-flex items-center gap-2 bg-[#5A9C78]/20 border border-green-400/30 px-4 py-2 rounded-full backdrop-blur-sm">
-                                <span class="text-xl"></span>
-                                    <span class="text-sm font-bold text-green-300">${t('Цель выполнена!')}</span>
-                            </div>` :
-                        `<div class="inline-flex items-center gap-2 bg-[#1a1d24] backdrop-blur-md bg-opacity-80/10 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm">
-                                    <span class="text-xs font-bold text-yellow-100/70 uppercase tracking-widest">${t('Цель:')} ${DAILY_GOAL_MINUTES} ${t('мин')}</span>
-                            </div>`
-                    }
-                    </div>
-
-                    </div>
-
-
-                    ${leaderboardHtml}
-
-                    <div class="glass-card p-5 rounded-[1.5rem] mb-8 overflow-hidden relative">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-20"></div>
-                        <div class="flex justify-between items-center mb-5">
-                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">${t('Журнал активности')}</h3>
-                            ${streak > 0 ? `<div class="flex items-center gap-1 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full" title="${streak} ${t('дней подряд')}"><span class="text-[10px] font-black text-orange-400 leading-none">🔥 ${streak}</span></div>` : ''}
-                        </div>
-                        <div class="w-full overflow-x-auto pb-2 scrollbar-hide">
-                            ${generateHeatmap(serverHistory)}
-                        </div>
-                    </div>
-                    
-
-
-
-                `;
             } catch (err) { }
         }
 
@@ -3050,6 +3183,27 @@
 
     <script>
         window.i18nDict = {
+            "Турист": { en: "Tourist", de: "Tourist" },
+            "Студент": { en: "Student", de: "Student" },
+            "Полиглот": { en: "Polyglot", de: "Polyglott" },
+            "Лингвист": { en: "Linguist", de: "Linguist" },
+            "Амбассадор": { en: "Ambassador", de: "Botschafter" },
+            "Уровень повышен!": { en: "Level Up!", de: "Levelaufstieg!" },
+            "Цели на день": { en: "Daily Goals", de: "Tagesziele" },
+            "Профиль": { en: "Profile", de: "Profil" },
+            "Изменить": { en: "Edit", de: "Bearbeiten" },
+            "Редактировать цели": { en: "Edit Goals", de: "Ziele bearbeiten" },
+            "Новых слов в день (зеленое кольцо)": { en: "New words per day", de: "Neue Wörter pro Tag" },
+            "Слов на повторение (синее кольцо)": { en: "Words to review", de: "Wörter zur Wiederholung" },
+            "Сохранить": { en: "Save", de: "Speichern" },
+            "Ранги": { en: "Ranks", de: "Ränge" },
+            "Текущий ранг": { en: "Current Rank", de: "Aktueller Rang" },
+            "Уровни 1-10": { en: "Levels 1-10", de: "Stufen 1-10" },
+            "Уровни 11-20": { en: "Levels 11-20", de: "Stufen 11-20" },
+            "Уровни 21-30": { en: "Levels 21-30", de: "Stufen 21-30" },
+            "Уровни 31-40": { en: "Levels 31-40", de: "Stufen 31-40" },
+            "Уровни 41+": { en: "Levels 41+", de: "Stufen 41+" },
+
             "Словарь": { en: "Dictionary", de: "Wörterbuch" },
             "Учить": { en: "Learn", de: "Lernen" },
             "Прогресс": { en: "Progress", de: "Fortschritt" },
@@ -3317,6 +3471,38 @@
             observer.observe(document.body, { childList: true, subtree: true });
         }, 100);
     </script>
+
+    <!-- Goal Edit Modal -->
+    <div id="goal-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-white/10 text-center relative">
+            <h2 class="text-xl font-bold mb-4 text-white">Редактировать цели</h2>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-left text-xs text-gray-400 mb-1">Новых слов в день (зеленое кольцо)</label>
+                    <input type="number" id="input-goal-new" class="w-full bg-[#172A45] rounded-xl py-3 px-4 outline-none border border-gray-700 text-white font-medium" value="10">
+                </div>
+                <div>
+                    <label class="block text-left text-xs text-gray-400 mb-1">Слов на повторение (синее кольцо)</label>
+                    <input type="number" id="input-goal-rev" class="w-full bg-[#172A45] rounded-xl py-3 px-4 outline-none border border-gray-700 text-white font-medium" value="20">
+                </div>
+            </div>
+            <button onclick="saveGoals()" class="w-full bg-[#D4AF37] text-[#112240] font-bold py-3.5 rounded-xl hover:bg-[#FDE08B] transition-all">Сохранить</button>
+        </div>
+    </div>
+
+    <!-- Roadmap Modal -->
+    <div id="roadmap-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-[#112240] w-full max-w-md rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/20 relative max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white">Ранги</h2>
+                <button onclick="document.getElementById('roadmap-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-[#172A45] text-gray-400 hover:text-white flex items-center justify-center">×</button>
+            </div>
+            <div class="space-y-4 relative" id="roadmap-list">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
