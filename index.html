@@ -377,7 +377,7 @@
     <main id="main-scroll"
         class="pt-20 pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
 
-        <section id="view-dict" class="pb-6">
+        <section id="view-dict" class="pt-3 pb-6">
 
             <div class="mb-4">
                 <div class="relative group">
@@ -433,7 +433,7 @@
             </div>
 
             <div id="train-card-block"
-                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all mt-10 mb-auto overflow-hidden touch-pan-y"
+                class="hidden w-full glass-card card-gradient-border p-4 rounded-[1.5rem] text-center relative flex flex-col transition-all mb-auto overflow-hidden touch-pan-y"
                 style="touch-action: pan-y;">
                 <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-0">
                 </div>
@@ -1491,8 +1491,7 @@
             localStorage.setItem(key, JSON.stringify(stats));
             
             const xpGain = isNew ? 10 : 5;
-            if (eventX && eventY) showXPFloat(xpGain, eventX, eventY - 20);
-            else showXPFloat(xpGain, window.innerWidth / 2, window.innerHeight / 2 - 50);
+            showXPFloat(xpGain, eventX || (window.innerWidth / 2), (eventY || (window.innerHeight / 2 - 50)) - 20);
 
             
             // Update Streak logic
@@ -1608,8 +1607,8 @@
             const profTotal = document.getElementById('prof-total-text');
             const profVerbs = document.getElementById('prof-verbs-text');
             if (profMastered && globalWords) {
-                const mst = globalWords.filter(w => w.score >= 5).length;
-                const vbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= 5).length;
+                const mst = globalWords.filter(w => w.score >= MAX_SCORE).length;
+                const vbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= MAX_SCORE).length;
                 profMastered.innerText = mst;
                 profTotal.innerText = globalWords.length;
                 profVerbs.innerText = vbs;
@@ -2650,8 +2649,13 @@
             w.interval = sm2Result.interval;
             w.repetitions = sm2Result.repetitions;
             
-            // Call Daily Activity tracking
-            updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
+            // Only give XP when user answered correctly (quality >= 3)
+            if (quality >= 3) {
+                updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
+            } else {
+                // No XP — just update streak/rings without the float animation
+                updateExperience();
+            }
 
 
             const gwItem = globalWords.find(gw => gw.id === w.id);
@@ -2793,7 +2797,8 @@
                 answerText = alreadyHasAux ? escapeStr(w.partizip) : `<span class="text-gray-400 text-sm mr-1">${aux}</span>${escapeStr(w.partizip)}`;
                 document.getElementById('vt-answer').innerHTML = answerText;
             } else {
-                document.getElementById('vt-answer').innerText = vtMode === 'praet' ? w.praeteritum : w.partizip;
+                // Partizip mode without Perfekt context
+                document.getElementById('vt-answer').innerText = w.partizip;
             }
             const container = document.getElementById('verb-trainer-game').querySelector('.glass-card');
             container.classList.add('perspective-1000', 'transform-style-3d');
@@ -2810,14 +2815,15 @@
         window.answerVerb = (remembered) => {
             if (remembered) {
                 playTone(800, 'sine', 0.3);
-                // +7 XP for correct verb form answer (harder than flashcard review)
-                updateDailyActivity(false, window.innerWidth / 2, window.innerHeight / 3);
-                // Override xp gain to 7 for verb trainer specifically
+                // +5 XP for correct verb form (same as review)
                 const { key, stats } = getDailyStats();
-                // showXPFloat is already called inside updateDailyActivity, so we just render
+                stats.reviews++;
+                localStorage.setItem(key, JSON.stringify(stats));
+                showXPFloat(5, window.innerWidth / 2, window.innerHeight / 3);
+                updateExperience();
             } else {
                 playTone(200, 'sawtooth', 0.2);
-                // No XP for wrong answers — re-added to queue
+                // No XP for wrong
             }
             if (!remembered) { vtQueue.push({ ...vtQueue[vtIdx] }); }
             vtIdx++;
@@ -2868,8 +2874,8 @@
 
         async function loadStats() {
             const totalCount = globalWords.length;
-            const mastered = globalWords.filter(w => w.score >= 5).length;
-            const learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= 5).length;
+            const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
+            const learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= MAX_SCORE).length;
             
             try {
                 const historyResult = await Promise.allSettled([
