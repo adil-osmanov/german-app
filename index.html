@@ -543,6 +543,16 @@
                         class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">Partizip
                         II</button>
                 </div>
+                <!-- XP progress bar for verb trainer -->
+                <div id="vt-xp-panel" class="w-full bg-[#112240] rounded-[1rem] p-3 mb-3 border border-[#D4AF37]/20" style="display:none; flex-direction:column; gap:6px;">
+                    <div class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
+                        <span id="vt-xp-lvl">Lvl 1</span>
+                        <span id="vt-xp-text" class="text-gray-400">0 / 150 XP</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-[#172A45] rounded-full overflow-hidden">
+                        <div id="vt-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                </div>
                 <div
                     class="glass-card card-gradient-border p-8 rounded-[2rem] shadow-[0_5px_30px_rgba(212,175,55,0.08)] relative min-h-[300px] flex flex-col items-center justify-center text-center bg-[#172A45] dark:bg-[#132039]/90 backdrop-blur-xl transition-all">
                     <div
@@ -1594,13 +1604,21 @@
             if (rankEl) rankEl.innerText = rankName;
             if (rankIcoEl) rankIcoEl.innerHTML = rankIcon;
 
-            // Real-time XP panel inside view-train
+            // Real-time XP panel inside view-train (flashcard trainer)
             const trainLvl = document.getElementById('train-xp-lvl');
             const trainBar = document.getElementById('train-xp-bar');
             const trainXPText = document.getElementById('train-xp-text');
             if (trainLvl) trainLvl.innerText = `Lvl ${lvl}`;
             if (trainBar) trainBar.style.width = `${pct}%`;
             if (trainXPText) trainXPText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
+
+            // Real-time XP panel inside verb trainer
+            const vtLvl = document.getElementById('vt-xp-lvl');
+            const vtBar = document.getElementById('vt-xp-bar');
+            const vtXPText = document.getElementById('vt-xp-text');
+            if (vtLvl) vtLvl.innerText = `Lvl ${lvl}`;
+            if (vtBar) vtBar.style.width = `${pct}%`;
+            if (vtXPText) vtXPText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
 
             // Fix Archive stats dynamically
             const profMastered = document.getElementById('prof-mastered-text');
@@ -1861,24 +1879,20 @@
                         html += `
                         <div class="dict-topic bg-[#112240] dark:bg-[#233554] border-l-2 border-l-[#D4AF37] rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-all mb-1 mx-1" data-topic="${safeTopicKey}">
                             <div class="flex justify-between items-center p-3 pr-2 transition-colors hover:bg-[#2A3B5E] dark:hover:bg-[#2A3B5E]">
+                        <div class="dict-topic bg-[#112240] rounded-xl border border-white/5 mb-1 overflow-hidden" data-topic="${safeTopicKey}">
+                            <div class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-[#172A45] transition-colors" onclick="toggleTopic('${safeTopicKey}')">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
-                                    <div class="cursor-move drag-handle-topic text-gray-500 hover:text-gray-600 p-1 -ml-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
-                                    <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${safeTopicKey}')">
-                                        <svg class="topic-chevron w-4 h-4 text-gray-500 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                        ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
-                                        <h3 class="text-sm font-medium text-gray-200 truncate"><span class="notranslate">${s}</span> <span class="text-gray-500 font-normal">(${wordsInTopic.length})</span></h3>
-                                    </div>
+                                    ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
+                                    <span class="text-sm font-medium text-gray-200 truncate notranslate">${s}</span>
+                                    <span class="text-xs text-gray-600 flex-shrink-0">${wordsInTopic.length}</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    ${isDevMode ? `
-                                    <button onclick="renameSubfolder('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-full transition-colors" title="Переименовать тему"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                                    <button onclick="premiumConfirm(t('Удалить тему со всеми словами внутри?'), () => deleteFolder('${safeF}', '${safeL}', '${safeS}')); event.stopPropagation();" class="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors" title="Удалить тему"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                    ` : ''}
-                                    <button onclick="addWordToTopic('${safeF}', '${safeL}', '${safeS}'); event.stopPropagation();" class="p-1.5 bg-[#ffc300]/10 hover:bg-[#ffc300]/20 rounded-full text-[#D4AF37] transition-colors" title="Добавить слово"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    ${isDevMode ? `<button onclick="renameSubfolder('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>` : ''}
+                                    <button onclick="addWordToTopic('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
+                                    <svg class="topic-chevron w-4 h-4 text-gray-600 transition-transform ${chevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
-
-                            <div id="topic-words-${safeTopicKey}" class="p-2 space-y-1 bg-[#0A192F] border-t border-gray-800/50${isCollapsed ? ' hidden' : ''}">
+                            <div id="topic-words-${safeTopicKey}" class="px-2 pb-2 space-y-1${isCollapsed ? ' hidden' : ''}">
                         `;
 
                         wordsInTopic.forEach(w => {
@@ -1886,20 +1900,19 @@
                             if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
                             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
                             const safeWordDe = escapeStr(w.word_de);
-
                             html += `
-                            <div onclick="openEdit(${w.id})" class="bg-[#172A45] dark:bg-[#172A45]/50 p-3 rounded-xl border border-blue-900/20 dark:border-gray-700/50 flex justify-between items-center active:scale-[0.99] transition-all cursor-pointer hover:border-blue-500/30">
+                            <div onclick="openEdit(${w.id})" class="bg-[#172A45] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#1e3357] transition-colors">
                                 <div class="flex-1 pr-3 min-w-0">
-                                    <p class="text-base font-bold text-white leading-tight truncate notranslate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-medium mr-1">${w.article}</span>` : ''}${w.word_de} <span class="text-gray-500 text-xs font-normal ml-1">${extraInfo}</span></p>
-                                    <p class="text-gray-500 text-sm font-medium mt-0.5 truncate notranslate">${w.word_ru}</p>
-                                   ${w.example ? `<p class="text-[12px] text-blue-200/70 mt-1 font-light leading-tight truncate notranslate">"${escapeStr(w.example.split(/[-—(/\[]/)[0].trim())}"</p>` : ''}
+                                    <p class="text-base font-bold text-white leading-tight truncate notranslate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-medium mr-1">${w.article}</span>` : ''}${w.word_de} <span class="text-gray-500 text-xs font-normal">${extraInfo}</span></p>
+                                    <p class="text-gray-400 text-sm mt-0.5 truncate notranslate">${w.word_ru}</p>
+                                    ${w.example ? `<p class="text-[11px] text-blue-300/60 mt-1 truncate notranslate">${escapeStr(w.example.split(/[-—(/\[]/)[0].trim())}</p>` : ''}
                                 </div>
-                                <div class="flex flex-col items-end gap-1 flex-shrink-0">
-                                    <div class="flex gap-1 mb-1">
-                                        <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-2 bg-[#172A45] dark:bg-[#233554] rounded-full text-gray-500 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"></path></svg></button>
-                                        <button onclick="deleteWord(${w.id}, event)" class="p-2 bg-[#172A45] dark:bg-[#233554] rounded-full text-gray-500 hover:text-[#9C5A5A] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+                                    <div class="flex gap-1">
+                                        <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-1.5 rounded-full text-gray-500 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"/></svg></button>
+                                        <button onclick="deleteWord(${w.id}, event)" class="p-1.5 rounded-full text-gray-500 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                                     </div>
-                                    <span class="text-xs font-bold ${w.score >= MAX_SCORE ? 'text-[#5A9C78]' : (w.score >= 3 ? 'text-orange-500' : 'text-gray-500')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+                                    <span class="text-xs font-bold ${w.score >= MAX_SCORE ? 'text-[#5A9C78]' : (w.score >= 3 ? 'text-orange-500' : 'text-gray-600')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
                                 </div>
                             </div>`;
                         });
@@ -2754,6 +2767,9 @@
             sessionStartMs = Date.now();
             document.getElementById('train-topics-container').parentElement.classList.add('hidden');
             document.getElementById('verb-trainer-game').classList.remove('hidden');
+            const vtXpPanel = document.getElementById('vt-xp-panel');
+            if (vtXpPanel) vtXpPanel.style.display = 'flex';
+            updateExperience();
             renderVerbCard();
         };
 
@@ -2770,6 +2786,8 @@
                 alert(t("Отлично! Все глаголы пройдены."));
                 document.getElementById('train-topics-container').parentElement.classList.remove('hidden');
                 document.getElementById('verb-trainer-game').classList.add('hidden');
+                const vtXpPanel = document.getElementById('vt-xp-panel');
+                if (vtXpPanel) vtXpPanel.style.display = 'none';
                 return;
             }
             const w = vtQueue[vtIdx];
@@ -2787,18 +2805,18 @@
         window.showVTAnswer = () => {
             triggerVibration(15);
             const w = vtQueue[vtIdx];
-            let answerText = w.partizip;
-            if (vtMode === 'perf' && w.partizip) {
+            if (vtMode === 'praet') {
+                // Präteritum mode: show praeteritum form only
+                document.getElementById('vt-answer').innerText = w.praeteritum || '—';
+            } else {
+                // Partizip II / Perfekt mode: show with haben/sein helper
                 const seinVerbs = ['gehen','fahren','laufen','fliegen','kommen','ankommen','werden','sein','bleiben','passieren','fallen','steigen','aufstehen','einschlafen','aufwachen','wachsen','entstehen','sterben'];
                 const inf = (w.word_de || '').toLowerCase();
                 const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
                 const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
                 const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
-                answerText = alreadyHasAux ? escapeStr(w.partizip) : `<span class="text-gray-400 text-sm mr-1">${aux}</span>${escapeStr(w.partizip)}`;
-                document.getElementById('vt-answer').innerHTML = answerText;
-            } else {
-                // Partizip mode without Perfekt context
-                document.getElementById('vt-answer').innerText = w.partizip;
+                const answerHtml = alreadyHasAux ? escapeStr(w.partizip) : `<span class="text-gray-400 text-sm mr-1">${aux}</span>${escapeStr(w.partizip)}`;
+                document.getElementById('vt-answer').innerHTML = answerHtml;
             }
             const container = document.getElementById('verb-trainer-game').querySelector('.glass-card');
             container.classList.add('perspective-1000', 'transform-style-3d');
