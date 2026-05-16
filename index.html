@@ -395,14 +395,18 @@
 
     <header class="fixed top-0 left-0 right-0 pt-12 pb-4 px-5 glass z-40 transition-all border-b border-white/5 bg-[#0a1128]/80 backdrop-blur-2xl">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
-            <h1 id="header-title" class="text-2xl font-black tracking-widest uppercase text-gray-200 drop-shadow-md notranslate">KRAFT</h1>
+            <h1 id="header-title" class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] premium-title origin-left drop-shadow-md">
+                Словарь</h1>
             <div class="flex items-center gap-3">
                 <select id="ui-language" class="bg-[#112240] text-gray-400 border border-gray-600/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer" onchange="changeUILanguage()">
                     <option value="ru">🇷🇺 RU</option>
                     <option value="en">🇬🇧 EN</option>
                     <option value="de">🇩🇪 DE</option>
                 </select>
-                <button id="add-btn" class="w-8 h-8 rounded-full bg-white/5 text-[#D4AF37] flex items-center justify-center hover:bg-white/10 transition-all text-xl font-light border border-white/10 shadow-sm">+</button>
+                <button onclick="document.getElementById('profile-modal').classList.remove('hidden')" class="p-1.5 rounded-full hover:bg-white/10 transition-all text-[#D4AF37] overflow-hidden flex items-center justify-center bg-cover bg-center border border-[#D4AF37]/50 shadow-md transform hover:scale-105" style="width: 36px; height: 36px;" id="header-avatar" title="Сменить профиль">
+                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </button>
+                <button id="add-btn" class="bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] text-[#0f172a] w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 text-xl font-black border border-[#FDE08B]/50 shadow-lg shadow-[#D4AF37]/30">+</button>
             </div>
         </div>
     </header>
@@ -411,7 +415,6 @@
         class="pt-[110px] pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
 
         <section id="view-dict" class="pt-4 pb-6">
-            </div>
 
             <div class="mb-4">
                 <div class="relative group">
@@ -1542,7 +1545,7 @@
 
         window.updateExperience = () => {
             if(!globalWords) return;
-            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score >= 5 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
+            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score > 0 ? w.score * 5 : 0) + (w.interval > 0 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
             
             let lvl = 1;
             let xpForNext = 150;
@@ -1861,7 +1864,7 @@
                                 </div>
                             </div>`;
                         });
-                        html += `</div></div>`;
+                        html += `</div>`;
                     });
                     html += `</div></div>`;
                 });
@@ -2810,169 +2813,55 @@
 
 
         async function loadStats() {
-            const stats = document.getElementById('view-stats');
+            const totalCount = globalWords.length;
+            const mastered = globalWords.filter(w => w.score >= 5).length;
+            const learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= 5).length;
             
-                const statsContainer = document.getElementById('stats-container');
-                if (statsContainer) {
-                    statsContainer.innerHTML = `
-                        <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 text-center">
-                            <h3 class="text-lg font-bold text-white mb-2">Архив</h3>
-                            <p class="text-sm text-gray-400">Слов выучено: <span class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / ${totalCount}</p>
-                            <p class="text-sm text-gray-400 mt-2">Глаголов выучено: <span class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
-                        </div>
-                    `;
-                    updateExperience();
-                }
-
             try {
-                // Parallelize history + leaderboard fetches for speed
                 const [historyResult, lbResult] = await Promise.allSettled([
                     apiFetch('/history').then(r => r.json()),
                     fetch('/leaderboard', { headers: { 'x-user': currentUser } })
                 ]);
-                serverHistory = historyResult.status === 'fulfilled' ? historyResult.value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
-                const lbResponse = lbResult.status === 'fulfilled' ? lbResult.value : null;
-
-                let leaderboardHtml = '';
-                try {
-                    if (lbResponse && lbResponse.ok) {
-                        const lbData = await lbResponse.json();
-                        const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-                        const todayStr = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
-                        const yesterdayStr = (new Date(Date.now() - tzoffset - 86400000)).toISOString().slice(0, 10);
-
-                        lbData.forEach(user => {
-                            let streak = 0;
-                            if (user.history && user.history.length > 0) {
-                                const dates = user.history.sort((a, b) => b.localeCompare(a));
-                                if (dates[0] === todayStr || dates[0] === yesterdayStr) {
-                                    let currDate = new Date(dates[0]);
-                                    for (let d of dates) {
-                                        if (d === currDate.toISOString().slice(0, 10)) {
-                                            streak++;
-                                            currDate.setDate(currDate.getDate() - 1);
-                                        } else {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            user.streak = streak;
-                        });
-
-                        lbData.sort((a, b) => b.total_ms - a.total_ms);
-
-                        leaderboardHtml = `<h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-2 mt-2">${t('Рейтинг (За неделю)')}</h3><div class="space-y-3 mb-8">`;
-
-                        const avatars = {
-                            'osman': localStorage.getItem('avatar_osman'),
-                            'girlfriend': localStorage.getItem('avatar_girlfriend')
-                        };
-
-                        lbData.forEach((user, index) => {
-                            const isMe = user.username === currentUser;
-                            const avatarUrl = avatars[user.username] || '';
-                            const initials = user.username === 'osman' ? 'О' : (user.username === 'girlfriend' ? 'Д' : user.username[0].toUpperCase());
-                            const name = user.username === 'osman' ? 'Adil Osmanov' : (user.username === 'girlfriend' ? 'Ewelin Osmanov' : user.username);
-
-                            const totalMinutes = Math.floor((user.total_ms || 0) / 60000);
-                            const hours = Math.floor(totalMinutes / 60);
-                            const mins = totalMinutes % 60;
-                            const timeStr = hours > 0 ? `<span class="font-bold text-white text-sm">${hours}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('ч')}</span> <span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('м')}</span>` : `<span class="font-bold text-white text-sm">${mins}</span><span class="text-[10px] text-gray-500 ml-0.5">${t('м')}</span>`;
-
-                            const pbgColor = index === 0 ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
-                                (index === 1 ? 'bg-[#172A45] dark:bg-[#172A45] border-gray-200 dark:border-gray-700' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800');
-                            const troColor = index === 0 ? 'text-[#D4AF37]' : (index === 1 ? 'text-gray-500' : 'text-orange-500');
-
-                            leaderboardHtml += `
-                                <div class="bg-[#172A45] dark:bg-[#172A45] p-3 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between transition-all hover:bg-[#172A45] dark:hover:bg-gray-700/50">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full ${pbgColor} flex items-center justify-center font-bold text-sm border flex-shrink-0 ${troColor}">${index + 1}</div>
-                                        <div class="w-10 h-10 rounded-full bg-[#112240] backdrop-blur-md border border-[#ffc300]/30 flex items-center justify-center font-bold text-lg text-gray-500 bg-cover bg-no-repeat shrink-0" style="${avatarUrl ? `background-image: url(${avatarUrl}) !important; background-position: center top !important; background-size: cover !important;` : ''}">
-                                            ${!avatarUrl ? initials : ''}
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-sm text-white truncate flex items-center gap-2">
-                                                ${name} ${isMe ? `<span class="text-[9px] bg-[#ffc300]/20 text-[#D4AF37] px-1.5 py-0.5 rounded uppercase tracking-wider">${t('Вы')}</span>` : ''}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                    <div class="text-right px-2">
-                                        ${timeStr}
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        leaderboardHtml += '</div>';
-                    }
-                } catch (e) { }
-
-                const total = globalWords.length;
-                const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
-                const pctMastery = total === 0 ? 0 : Math.round((mastered / total) * 100);
-
-                let statusLevel = "Новичок (A1)";
-                if (mastered > 50) statusLevel = "Студент (A2)";
-                if (mastered > 200) statusLevel = "Специалист (B1)";
-                if (mastered > 500) statusLevel = "Профи (B2+)";
-
-                const folders = {};
-                globalWords.forEach(w => {
-                    const k = `${w.folder}| ${w.level || 'Общее'}| ${w.subfolder} `;
-                    if (!folders[k]) folders[k] = { f: w.folder, l: w.level || 'Общее', s: w.subfolder, total: 0, done: 0 };
-                    folders[k].total++; if (w.score >= MAX_SCORE) folders[k].done++;
-                });
-
-                const sortedFolders = Object.values(folders).sort((a, b) => {
-                    const pctA = a.done / a.total; const pctB = b.done / b.total;
-                    if (pctB !== pctA) return pctA - pctB; return a.s.localeCompare(b.s);
-                });
-
-                let streak = 0;
-                let d = new Date(); let tz = d.getTimezoneOffset() * 60000;
-                let todayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
-                d.setDate(d.getDate() - 1); let yesterdayIso = new Date(d.getTime() - tz).toISOString().slice(0, 10);
-
-                const goalMs = DAILY_GOAL_MINUTES * 60000;
-                let checkD = new Date();
-                if ((serverHistory[todayIso] || 0) >= goalMs) { } else if ((serverHistory[yesterdayIso] || 0) >= goalMs) { checkD.setDate(checkD.getDate() - 1); } else { checkD = null; }
-                if (checkD) {
-                    let iter = 0;
-                    while (iter < 3650) {
-                        iter++;
-                        let iso = new Date(checkD.getTime() - checkD.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-                        if ((serverHistory[iso] || 0) >= goalMs) { streak++; checkD.setDate(checkD.getDate() - 1); } else { break; }
-                    }
-                }
-                let minutesToday = Math.floor((serverHistory[todayIso] || 0) / 60000);
-
-                const pctMinutes = Math.min(100, (minutesToday / DAILY_GOAL_MINUTES) * 100);
-                const isGoalMet = minutesToday >= DAILY_GOAL_MINUTES;
-
-                let learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= MAX_SCORE).length;
-                let has100Verbs = learnedVerbs >= 100;
-                let hasWeekStreak = streak >= 7;
-                let perfectSprints = parseInt(localStorage.getItem('perfectSprints') || '0', 10);
-                let hasPerfectSprint = perfectSprints > 0;
-
-                let badgesHtml = ``;
-
-
-
+                let serverHistory = historyResult.status === 'fulfilled' ? historyResult.value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
                 
                 const statsContainer = document.getElementById('stats-container');
                 if (statsContainer) {
                     statsContainer.innerHTML = `
                         <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 text-center">
-                            <h3 class="text-lg font-bold text-white mb-2">Архив</h3>
-                            <p class="text-sm text-gray-400">Слов выучено: <span class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / ${totalCount}</p>
-                            <p class="text-sm text-gray-400 mt-2">Глаголов выучено: <span class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
+                            <h3 class="text-lg font-bold text-white mb-2">${t("Архив")}</h3>
+                            <p class="text-sm text-gray-400">${t("Слов выучено:")} <span class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / ${totalCount}</p>
+                            <p class="text-sm text-gray-400 mt-2">${t("Глаголов выучено:")} <span class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
                         </div>
+                        
+                        <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
+                            <h3 class="text-lg font-bold text-white mb-2">${t("Активность")}</h3>
+                            ${generateHeatmap(serverHistory)}
+                        </div>
+                        
+                        <div id="leaderboard-block"></div>
                     `;
-                    updateExperience();
                 }
 
-            } catch (err) { }
+                if (lbResult.status === 'fulfilled' && lbResult.value.ok) {
+                    const lbData = await lbResult.value.json();
+                    let leaderboardHtml = `<h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-2 mt-2">${t('Рейтинг (За неделю)')}</h3><div class="space-y-3 mb-8">`;
+                    lbData.sort((a, b) => b.total_ms - a.total_ms);
+                    lbData.forEach((user, index) => {
+                        const totalMinutes = Math.floor((user.total_ms || 0) / 60000);
+                        const hours = Math.floor(totalMinutes / 60);
+                        const mins = totalMinutes % 60;
+                        leaderboardHtml += `
+                            <div class="bg-[#172A45] p-3 rounded-xl border border-gray-700 flex justify-between items-center">
+                                <span class="text-white font-bold">${user.username}</span>
+                                <span class="text-gray-400">${hours}ч ${mins}м</span>
+                            </div>
+                        `;
+                    });
+                    leaderboardHtml += '</div>';
+                    const lbContainer = document.getElementById('leaderboard-block');
+                    if (lbContainer) lbContainer.innerHTML = leaderboardHtml;
+                }
+            } catch (e) { console.error('Stats error:', e); }
         }
 
         window.resetFolderStats = async (f, l, s) => {
@@ -3456,11 +3345,10 @@
             if(rmList) rmList.innerHTML = html;
         };
         
-        // Hook renderRoadmap into updateExperience
         const origUpdateExp = window.updateExperience;
         window.updateExperience = () => {
             if (origUpdateExp) origUpdateExp();
-            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score >= 5 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
+            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score > 0 ? w.score * 5 : 0) + (w.interval > 0 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
             let lvl = 1; let xpForNext = 150; let accumulated = 0;
             while (totalXP >= accumulated + xpForNext) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
             renderRoadmap(lvl);
