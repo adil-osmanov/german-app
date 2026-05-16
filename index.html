@@ -412,9 +412,9 @@
     </header>
 
     <main id="main-scroll"
-        class="pt-[110px] pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
+        class="pt-24 pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
 
-        <section id="view-dict" class="pt-4 pb-6">
+        <section id="view-dict" class="pb-6">
 
             <div class="mb-4">
                 <div class="relative group">
@@ -450,13 +450,23 @@
                     </div>
                 </div>
             </div>
-            </div>
         </section>
 
         <section id="view-train" class="hidden relative pt-4 pb-6 flex-1 flex flex-col">
             <div id="train-setup-block" class="w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <!-- Скрыто: настройки направления (MIX, RU>DE, DE>RU) для лаконичности -->
                 <div id="train-topics-container" class="space-y-3"></div>
+            </div>
+
+            
+            <div id="train-xp-panel" class="w-full bg-[#112240] rounded-[1rem] p-3 shadow-md border border-[#D4AF37]/20 mb-3 gap-2 hidden" style="display:none; flex-direction:column;">
+                <div class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
+                    <span id="train-xp-lvl">Lvl 1</span>
+                    <span id="train-xp-text" class="text-gray-400">0 / 150 XP</span>
+                </div>
+                <div class="w-full h-1.5 bg-[#172A45] rounded-full overflow-hidden">
+                    <div id="train-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700" style="width: 0%"></div>
+                </div>
             </div>
 
             <div id="train-card-block"
@@ -1621,6 +1631,27 @@
             if (xpText) xpText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
             if (rankEl) rankEl.innerText = rankName;
             if (rankIcoEl) rankIcoEl.innerHTML = rankIcon;
+
+            // Real-time XP panel inside view-train
+            const trainLvl = document.getElementById('train-xp-lvl');
+            const trainBar = document.getElementById('train-xp-bar');
+            const trainXPText = document.getElementById('train-xp-text');
+            if (trainLvl) trainLvl.innerText = `Lvl ${lvl}`;
+            if (trainBar) trainBar.style.width = `${pct}%`;
+            if (trainXPText) trainXPText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
+
+            // Fix Archive stats dynamically
+            const profMastered = document.getElementById('prof-mastered-text');
+            const profTotal = document.getElementById('prof-total-text');
+            const profVerbs = document.getElementById('prof-verbs-text');
+            if (profMastered && globalWords) {
+                const mst = globalWords.filter(w => w.score >= 5).length;
+                const vbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= 5).length;
+                profMastered.innerText = mst;
+                profTotal.innerText = globalWords.length;
+                profVerbs.innerText = vbs;
+            }
+
             
             // Avatar update
             const dashAvatar = document.getElementById('prof-avatar');
@@ -1856,7 +1887,8 @@
                             <div class="flex justify-between items-center p-3 pr-2 transition-colors hover:bg-[#2A3B5E] dark:hover:bg-[#2A3B5E]">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
                                     <div class="cursor-move drag-handle-topic text-gray-500 hover:text-gray-600 p-1 -ml-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
-                                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${safeTopicKey}')">
+                                        <svg class="w-4 h-4 text-gray-500 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
                                         <h3 class="text-sm font-medium text-gray-200 truncate"><span class="notranslate">${s}</span> <span class="text-gray-500 font-normal">(${wordsInTopic.length})</span></h3>
                                     </div>
@@ -1870,7 +1902,7 @@
                                 </div>
                             </div>
 
-                            <div class="p-2 space-y-1 bg-[#0A192F] border-t border-gray-800/50">
+                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1 bg-[#0A192F] border-t border-gray-800/50'}">
                         `;
 
                         wordsInTopic.forEach(w => {
@@ -2466,10 +2498,12 @@
 
             if (!trainList.length) return alert(t('На сегодня слов нет! Отдыхай.'));
             trainList.sort(() => 0.5 - Math.random()); curIdx = 0; sessionStartMs = Date.now();
-            document.getElementById('train-setup-block').classList.add('hidden'); document.getElementById('train-card-block').classList.remove('hidden'); renderCard();
+            document.getElementById('train-setup-block').classList.add('hidden'); document.getElementById('train-card-block').classList.remove('hidden');
+            const pnl = document.getElementById('train-xp-panel'); if(pnl) { pnl.style.display = 'flex'; } renderCard();
         };
 
         document.getElementById('btn-stop-training').onclick = () => {
+            const pnl = document.getElementById('train-xp-panel'); if(pnl) pnl.style.display = 'none';
             if (cardTimeout) clearTimeout(cardTimeout);
             saveSessionTime(); setupTrainMenu();
         };
@@ -2849,48 +2883,25 @@
             const learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= 5).length;
             
             try {
-                const [historyResult, lbResult] = await Promise.allSettled([
-                    apiFetch('/history').then(r => r.json()),
-                    fetch('/leaderboard', { headers: { 'x-user': currentUser } })
+                const historyResult = await Promise.allSettled([
+                    apiFetch('/history').then(r => r.json())
                 ]);
-                let serverHistory = historyResult.status === 'fulfilled' ? historyResult.value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
+                let serverHistory = historyResult[0].status === 'fulfilled' ? historyResult[0].value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
                 
                 const statsContainer = document.getElementById('stats-container');
                 if (statsContainer) {
                     statsContainer.innerHTML = `
                         <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 text-center">
-                            <h3 class="text-lg font-bold text-white mb-2">${t("Архив")}</h3>
-                            <p class="text-sm text-gray-400">${t("Слов выучено:")} <span class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / ${totalCount}</p>
-                            <p class="text-sm text-gray-400 mt-2">${t("Глаголов выучено:")} <span class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
+                            <h3 class="text-lg font-bold text-white mb-2">${t('Архив')}</h3>
+                            <p class="text-sm text-gray-400">${t('Слов выучено:')} <span id="prof-mastered-text" class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / <span id="prof-total-text">${totalCount}</span></p>
+                            <p class="text-sm text-gray-400 mt-2">${t('Глаголов выучено:')} <span id="prof-verbs-text" class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
                         </div>
                         
                         <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
-                            <h3 class="text-lg font-bold text-white mb-2">${t("Активность")}</h3>
+                            <h3 class="text-lg font-bold text-white mb-2">${t('Активность')}</h3>
                             ${generateHeatmap(serverHistory)}
                         </div>
-                        
-                        <div id="leaderboard-block"></div>
                     `;
-                }
-
-                if (lbResult.status === 'fulfilled' && lbResult.value.ok) {
-                    const lbData = await lbResult.value.json();
-                    let leaderboardHtml = `<h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-2 mt-2">${t('Рейтинг (За неделю)')}</h3><div class="space-y-3 mb-8">`;
-                    lbData.sort((a, b) => b.total_ms - a.total_ms);
-                    lbData.forEach((user, index) => {
-                        const totalMinutes = Math.floor((user.total_ms || 0) / 60000);
-                        const hours = Math.floor(totalMinutes / 60);
-                        const mins = totalMinutes % 60;
-                        leaderboardHtml += `
-                            <div class="bg-[#172A45] p-3 rounded-xl border border-gray-700 flex justify-between items-center">
-                                <span class="text-white font-bold">${user.username}</span>
-                                <span class="text-gray-400">${hours}ч ${mins}м</span>
-                            </div>
-                        `;
-                    });
-                    leaderboardHtml += '</div>';
-                    const lbContainer = document.getElementById('leaderboard-block');
-                    if (lbContainer) lbContainer.innerHTML = leaderboardHtml;
                 }
             } catch (e) { console.error('Stats error:', e); }
         }
