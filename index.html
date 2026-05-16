@@ -311,7 +311,7 @@
         }
     </style>
     </style>
-    <!-- confetti removed: using hearts animation instead -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -337,9 +337,17 @@
     <header
         class="fixed top-0 left-0 right-0 pt-12 pb-4 px-5 glass z-40 transition-all border-b border-white/10 bg-[#0f172a]/60 backdrop-blur-2xl">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
-            <h1 id="header-title"
-                class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] premium-title origin-left drop-shadow-md">
-                Словарь</h1>
+            <div class="flex flex-col">
+                <h1 id="header-title"
+                    class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] premium-title origin-left drop-shadow-md">
+                    Словарь</h1>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase">LVL <span id="user-level-badge">1</span></span>
+                    <div class="w-16 h-1 bg-[#112240] rounded-full overflow-hidden border border-[#D4AF37]/20 shadow-inner">
+                        <div id="user-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
             <div class="flex items-center gap-3">
                 <select id="ui-language"
                     class="bg-[#112240] text-[#D4AF37] border border-[#D4AF37]/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer"
@@ -1392,6 +1400,17 @@
         const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), stats: document.getElementById('nav-stats') };
         const isWordDue = (w) => Date.now() >= (w.next_review || 0);
 
+        window.updateExperience = () => {
+            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score || 0) * 10), 0);
+            const level = Math.floor(totalXP / 500) + 1;
+            const currentLevelXP = totalXP % 500;
+            const pct = (currentLevelXP / 500) * 100;
+            const badge = document.getElementById('user-level-badge');
+            const bar = document.getElementById('user-xp-bar');
+            if (badge) badge.innerText = level;
+            if (bar) bar.style.width = `${pct}%`;
+        };
+
         window.fetchWords = async () => {
             try {
                 if (!navigator.onLine) throw new Error('Offline mode');
@@ -1400,6 +1419,7 @@
                     const allWords = data.map(w => ({ ...w, ease_factor: w.ease_factor || 2.5, interval: w.interval || 0, repetitions: w.repetitions || 0 }));
                     await idbSaveWords(allWords);
                     globalWords = allWords.filter(w => (w.target_lang || 'de') === currentStudyLang);
+                    updateExperience();
                 }
                 setTimeout(processSyncQueue, 500);
             } catch (e) {
@@ -1422,6 +1442,7 @@
                 } catch (err) { }
             }
             if (!Array.isArray(globalWords)) globalWords = [];
+            updateExperience();
             try {
                 document.getElementById('folder-list').innerHTML = [...new Set(globalWords.map(w => w.folder))].filter(Boolean).map(f => `<option value="${escapeStr(f)}">`).join('');
                 document.getElementById('level-list').innerHTML = [...new Set(globalWords.map(w => w.level).filter(Boolean))].map(l => `<option value="${escapeStr(l)}">`).join('');
@@ -2101,11 +2122,13 @@
                 for (const folder in groupedTopics) {
                     const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
                     const cWordsCount = courseWords.filter(w => isWordDue(w)).length;
+                    const folderId = `details-${btoa(encodeURIComponent(folder)).replace(/=/g, '')}`;
+                    const isOpen = localStorage.getItem(folderId) === 'false' ? '' : 'open';
 
                     let folderActiveHTML = '';
                     if (cWordsCount > 0) {
                         folderActiveHTML += `
-                            <details class="group mb-2 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" open>
+                            <details id="${folderId}" ontoggle="localStorage.setItem('${folderId}', this.open)" class="group mb-2 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" ${isOpen}>
                                 <summary class="flex justify-between items-center p-4 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
                                     <h3 class="text-sm font-bold text-white notranslate">${folder}</h3>
                                     <div class="flex items-center gap-3">
@@ -2133,7 +2156,7 @@
                             if (!hasActive && cWordsCount === 0) {
                                 // Edge case where no active words but waiting words exist
                                 folderActiveHTML += `
-                                <details class="group mb-2 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" open>
+                                <details id="${folderId}" ontoggle="localStorage.setItem('${folderId}', this.open)" class="group mb-2 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" ${isOpen}>
                                     <summary class="flex justify-between items-center p-4 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
                                         <h3 class="text-sm font-bold text-white notranslate">${folder}</h3>
                                         <div class="flex items-center gap-3">
@@ -2204,6 +2227,7 @@
             const needsFadeIn = (cardBlock.style.opacity === '0');
 
             if (curIdx >= trainList.length) {
+                if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                 saveSessionTime(); document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' }); setupTrainMenu(); return;
             }
 
@@ -2365,6 +2389,7 @@
             }
 
             idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
+            updateExperience();
             curIdx++; _swipeInProgress = false; 
             setTimeout(() => { 
                 try { renderCard(); } catch(e) { console.error(e); } finally { _isScoring = false; }
@@ -2465,6 +2490,7 @@
 
         window.renderVerbCard = () => {
             if (vtIdx >= vtQueue.length) {
+                if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                 alert(t("Отлично! Все глаголы пройдены."));
                 document.getElementById('train-topics-container').parentElement.classList.remove('hidden');
                 document.getElementById('verb-trainer-game').classList.add('hidden');
@@ -2485,7 +2511,18 @@
         window.showVTAnswer = () => {
             triggerVibration(15);
             const w = vtQueue[vtIdx];
-            document.getElementById('vt-answer').innerText = vtMode === 'praet' ? w.praeteritum : w.partizip;
+            let answerText = w.partizip;
+            if (vtMode === 'perf' && w.partizip) {
+                const seinVerbs = ['gehen','fahren','laufen','fliegen','kommen','ankommen','werden','sein','bleiben','passieren','fallen','steigen','aufstehen','einschlafen','aufwachen','wachsen','entstehen','sterben'];
+                const inf = (w.word_de || '').toLowerCase();
+                const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
+                const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
+                const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
+                answerText = alreadyHasAux ? escapeStr(w.partizip) : `<span class="text-gray-400 text-sm mr-1">${aux}</span>${escapeStr(w.partizip)}`;
+                document.getElementById('vt-answer').innerHTML = answerText;
+            } else {
+                document.getElementById('vt-answer').innerText = vtMode === 'praet' ? w.praeteritum : w.partizip;
+            }
             const container = document.getElementById('verb-trainer-game').querySelector('.glass-card');
             container.classList.add('perspective-1000', 'transform-style-3d');
             container.style.transform = 'rotateY(90deg)';
@@ -2666,7 +2703,9 @@
                 let checkD = new Date();
                 if ((serverHistory[todayIso] || 0) >= goalMs) { } else if ((serverHistory[yesterdayIso] || 0) >= goalMs) { checkD.setDate(checkD.getDate() - 1); } else { checkD = null; }
                 if (checkD) {
-                    while (true) {
+                    let iter = 0;
+                    while (iter < 3650) {
+                        iter++;
                         let iso = new Date(checkD.getTime() - checkD.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
                         if ((serverHistory[iso] || 0) >= goalMs) { streak++; checkD.setDate(checkD.getDate() - 1); } else { break; }
                     }
