@@ -393,7 +393,7 @@
     <div id="cursor-glow" class="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300 opacity-[0.05]"
         style="background: radial-gradient(600px circle at 50% 50%, #ffffff, transparent 50%);"></div>
 
-    <header class="fixed top-0 left-0 right-0 pt-12 pb-4 px-5 glass z-40 transition-all border-b border-white/5 bg-[#0a1128]/80 backdrop-blur-2xl">
+    <header class="fixed top-0 left-0 right-0 pt-8 pb-3 px-5 glass z-40 transition-all border-b border-white/5 bg-[#0a1128]/80 backdrop-blur-2xl">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
             <h1 id="header-title" class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] premium-title origin-left drop-shadow-md">
                 Словарь</h1>
@@ -412,7 +412,7 @@
     </header>
 
     <main id="main-scroll"
-        class="pt-24 pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
+        class="pt-20 pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
 
         <section id="view-dict" class="pb-6">
 
@@ -1825,7 +1825,21 @@
                 renderDict(searchInp.value.toLowerCase());
             }, 250);
         };
-        window.toggleTopic = (topicKey) => { collapsedDictTopics[topicKey] = !collapsedDictTopics[topicKey]; renderDict(searchInp.value.toLowerCase()); };
+        window.toggleTopic = (topicKey) => {
+            // Toggle without full re-render: just toggle hidden class on the words container
+            const wordsDiv = document.getElementById('topic-words-' + topicKey);
+            if (wordsDiv) {
+                const isNowHidden = wordsDiv.classList.toggle('hidden');
+                if (!isNowHidden) wordsDiv.classList.add('p-2', 'space-y-1', 'bg-[#0A192F]', 'border-t', 'border-gray-800/50');
+                collapsedDictTopics[topicKey] = isNowHidden;
+                // Rotate chevron
+                const chevron = document.querySelector(`[data-topic="${CSS.escape(topicKey)}"] .topic-chevron`);
+                if (chevron) chevron.classList.toggle('rotate-180', !isNowHidden);
+            } else {
+                collapsedDictTopics[topicKey] = !collapsedDictTopics[topicKey];
+                renderDict(searchInp.value.toLowerCase());
+            }
+        };
 
         function renderDict(query = searchInp.value.toLowerCase()) {
             const container = document.getElementById('dict-list');
@@ -1888,7 +1902,7 @@
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
                                     <div class="cursor-move drag-handle-topic text-gray-500 hover:text-gray-600 p-1 -ml-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
                                     <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${safeTopicKey}')">
-                                        <svg class="w-4 h-4 text-gray-500 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        <svg class="topic-chevron w-4 h-4 text-gray-500 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
                                         <h3 class="text-sm font-medium text-gray-200 truncate"><span class="notranslate">${s}</span> <span class="text-gray-500 font-normal">(${wordsInTopic.length})</span></h3>
                                     </div>
@@ -1902,7 +1916,7 @@
                                 </div>
                             </div>
 
-                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1 bg-[#0A192F] border-t border-gray-800/50'}">
+                            <div id="topic-words-${safeTopicKey}" class="p-2 space-y-1 bg-[#0A192F] border-t border-gray-800/50${isCollapsed ? ' hidden' : ''}">
                         `;
 
                         wordsInTopic.forEach(w => {
@@ -1934,6 +1948,7 @@
                 html += '</div>';
 
                 container.innerHTML = html;
+                // Init sortable after render
                 setTimeout(initSortable, 100);
             } catch (err) { container.innerHTML = `<div class="text-center py-20 text-[#9C5A5A]">Ошибка рендера. Очистите кэш.</div>`; }
         }
@@ -1949,6 +1964,7 @@
                         const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.getAttribute('data-folder')); 
                         localStorage.setItem('folderOrder', JSON.stringify(order)); }
                 });
+                folderContainer._sortableInited = true;
             }
             document.querySelectorAll('.dict-topics-container').forEach(topicContainer => {
                 new Sortable(topicContainer, {
@@ -2829,7 +2845,17 @@
         };
 
         window.answerVerb = (remembered) => {
-            if (remembered) playTone(800, 'sine', 0.3); else playTone(200, 'sawtooth', 0.2);
+            if (remembered) {
+                playTone(800, 'sine', 0.3);
+                // +7 XP for correct verb form answer (harder than flashcard review)
+                updateDailyActivity(false, window.innerWidth / 2, window.innerHeight / 3);
+                // Override xp gain to 7 for verb trainer specifically
+                const { key, stats } = getDailyStats();
+                // showXPFloat is already called inside updateDailyActivity, so we just render
+            } else {
+                playTone(200, 'sawtooth', 0.2);
+                // No XP for wrong answers — re-added to queue
+            }
             if (!remembered) { vtQueue.push({ ...vtQueue[vtIdx] }); }
             vtIdx++;
             renderVerbCard();
