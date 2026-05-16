@@ -46,62 +46,6 @@
         document.documentElement.classList.add('dark');
         if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js?v=7').catch(() => { }); });
     
-        window.saveGoals = () => {
-            const n = document.getElementById('input-goal-new').value;
-            const r = document.getElementById('input-goal-rev').value;
-            localStorage.setItem(`goal_new_${currentUser}`, n);
-            localStorage.setItem(`goal_rev_${currentUser}`, r);
-            document.getElementById('goal-modal').classList.add('hidden');
-            updateExperience();
-        };
-
-        window.renderRoadmap = (currentLvl) => {
-            const ranks = [
-                { max: 10, name: "Турист", icon: "🧭", desc: "Уровни 1-10" },
-                { max: 20, name: "Студент", icon: "📚", desc: "Уровни 11-20" },
-                { max: 30, name: "Полиглот", icon: "🌍", desc: "Уровни 21-30" },
-                { max: 40, name: "Лингвист", icon: "✒️", desc: "Уровни 31-40" },
-                { max: 999, name: "Амбассадор", icon: "👑", desc: "Уровни 41+" }
-            ];
-            
-            let html = '';
-            ranks.forEach(r => {
-                const isPast = currentLvl > r.max;
-                const isCurrent = currentLvl <= r.max && (currentLvl > (r.max - 10) || r.max === 999 && currentLvl > 40);
-                const isFuture = !isPast && !isCurrent;
-                
-                let colorClass = isCurrent ? "bg-[#172A45] border-[#D4AF37]" : (isPast ? "bg-[#112240] border-green-500/30 opacity-70" : "bg-[#112240] border-gray-700 opacity-50 grayscale");
-                let textClass = isCurrent ? "text-[#D4AF37]" : "text-gray-400";
-                
-                html += `
-                    <div class="flex items-center gap-4 p-4 rounded-2xl border-2 ${colorClass} transition-all">
-                        <div class="w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-black/20">${r.icon}</div>
-                        <div>
-                            <h3 class="font-bold text-lg ${textClass}">${t(r.name)}</h3>
-                            <p class="text-xs text-gray-500">${r.desc}</p>
-                            ${isCurrent ? `<span class="text-[9px] uppercase tracking-widest text-green-400 mt-1 block">${t("Текущий ранг")}</span>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            const rmList = document.getElementById('roadmap-list');
-            if(rmList) rmList.innerHTML = html;
-        };
-        
-        // Hook renderRoadmap into updateExperience
-        const origUpdateExp = window.updateExperience;
-        window.updateExperience = () => {
-            origUpdateExp();
-            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score >= 5 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
-            let lvl = 1; let xpForNext = 150; let accumulated = 0;
-            while (totalXP >= accumulated + xpForNext) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
-            renderRoadmap(lvl);
-            
-            // set goal inputs
-            document.getElementById('input-goal-new').value = localStorage.getItem(`goal_new_${currentUser}`) || '10';
-            document.getElementById('input-goal-rev').value = localStorage.getItem(`goal_rev_${currentUser}`) || '20';
-        };
-
     </script>
 
     <style>
@@ -3470,6 +3414,63 @@
             });
             observer.observe(document.body, { childList: true, subtree: true });
         }, 100);
+
+        window.saveGoals = () => {
+            const n = document.getElementById('input-goal-new').value;
+            const r = document.getElementById('input-goal-rev').value;
+            localStorage.setItem(`goal_new_${currentUser}`, n);
+            localStorage.setItem(`goal_rev_${currentUser}`, r);
+            document.getElementById('goal-modal').classList.add('hidden');
+            updateExperience();
+        };
+
+        window.renderRoadmap = (currentLvl) => {
+            const ranks = [
+                { max: 10, name: "Турист", icon: "🧭", desc: "Уровни 1-10" },
+                { max: 20, name: "Студент", icon: "📚", desc: "Уровни 11-20" },
+                { max: 30, name: "Полиглот", icon: "🌍", desc: "Уровни 21-30" },
+                { max: 40, name: "Лингвист", icon: "✒️", desc: "Уровни 31-40" },
+                { max: 999, name: "Амбассадор", icon: "👑", desc: "Уровни 41+" }
+            ];
+            
+            let html = '';
+            ranks.forEach(r => {
+                const isPast = currentLvl > r.max;
+                const isCurrent = currentLvl <= r.max && (currentLvl > (r.max - 10) || r.max === 999 && currentLvl > 40);
+                
+                let colorClass = isCurrent ? "bg-[#172A45] border-[#D4AF37]" : (isPast ? "bg-[#112240] border-green-500/30 opacity-70" : "bg-[#112240] border-gray-700 opacity-50 grayscale");
+                let textClass = isCurrent ? "text-[#D4AF37]" : "text-gray-400";
+                
+                html += `
+                    <div class="flex items-center gap-4 p-4 rounded-2xl border-2 ${colorClass} transition-all">
+                        <div class="w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-black/20">${r.icon}</div>
+                        <div>
+                            <h3 class="font-bold text-lg ${textClass}">${t(r.name)}</h3>
+                            <p class="text-xs text-gray-500">${t(r.desc)}</p>
+                            ${isCurrent ? `<span class="text-[9px] uppercase tracking-widest text-green-400 mt-1 block">${t("Текущий ранг")}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            const rmList = document.getElementById('roadmap-list');
+            if(rmList) rmList.innerHTML = html;
+        };
+        
+        // Hook renderRoadmap into updateExperience
+        const origUpdateExp = window.updateExperience;
+        window.updateExperience = () => {
+            if (origUpdateExp) origUpdateExp();
+            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score >= 5 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
+            let lvl = 1; let xpForNext = 150; let accumulated = 0;
+            while (totalXP >= accumulated + xpForNext) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
+            renderRoadmap(lvl);
+            
+            // set goal inputs
+            const inpNew = document.getElementById('input-goal-new');
+            const inpRev = document.getElementById('input-goal-rev');
+            if (inpNew) inpNew.value = localStorage.getItem(`goal_new_${currentUser}`) || '10';
+            if (inpRev) inpRev.value = localStorage.getItem(`goal_rev_${currentUser}`) || '20';
+        };
     </script>
 
     <!-- Goal Edit Modal -->
