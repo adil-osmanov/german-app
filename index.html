@@ -941,7 +941,7 @@
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                     </path>
                 </svg>
-                <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Прогресс</span>
+                <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Профиль</span>
             </button>
         </div>
     </nav>
@@ -1521,6 +1521,7 @@
             if (eventX && eventY) showXPFloat(xpGain, eventX, eventY - 20);
             else showXPFloat(xpGain, window.innerWidth / 2, window.innerHeight / 2 - 50);
 
+            
             // Update Streak logic
             let currentStreak = parseInt(localStorage.getItem(`streak_${currentUser}`) || '0', 10);
             let lastStreakDate = localStorage.getItem(`lastStreakDate_${currentUser}`);
@@ -1540,7 +1541,35 @@
                 localStorage.setItem(`lastStreakDate_${currentUser}`, dateStr);
                 localStorage.setItem(`streak_${currentUser}`, currentStreak);
             }
+
             updateExperience();
+        };
+
+        
+        window.showXPFloat = (xp, x, y) => {
+            const el = document.createElement('div');
+            el.className = 'xp-float';
+            el.innerText = `+${xp} XP`;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1200);
+        };
+        
+        window.showLevelUp = (lvl) => {
+            if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            const toast = document.createElement('div');
+            toast.className = 'lvl-up-toast';
+            toast.innerText = `${t("Уровень повышен!")} ${lvl}`;
+            document.body.appendChild(toast);
+            triggerVibration([50, 100, 50]);
+            setTimeout(() => {
+                toast.style.animation = 'none';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -100%)';
+                toast.style.transition = 'all 0.5s ease-out';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
         };
 
         window.updateExperience = () => {
@@ -1619,12 +1648,12 @@
             const ringNew = document.getElementById('ring-new');
             const ringRev = document.getElementById('ring-review');
             if (ringNew) {
-                const dashOffsetNew = 201 - (Math.min(stats.newWords / targetNew, 1) * 201);
+                const dashOffsetNew = 251.32 - (Math.min(stats.newWords / targetNew, 1) * 251.32);
                 ringNew.style.strokeDashoffset = dashOffsetNew;
                 if(stats.newWords >= targetNew) ringNew.style.filter = "drop-shadow(0 0 4px #34D399)";
             }
             if (ringRev) {
-                const dashOffsetRev = 264 - (Math.min(stats.reviews / targetRev, 1) * 264);
+                const dashOffsetRev = 339.29 - (Math.min(stats.reviews / targetRev, 1) * 339.29);
                 ringRev.style.strokeDashoffset = dashOffsetRev;
                 if(stats.reviews >= targetRev) ringRev.style.filter = "drop-shadow(0 0 4px #3AB0FF)";
             }
@@ -1756,11 +1785,14 @@
         }
 
         const searchInp = document.getElementById('search-input');
+        let _searchDebounce;
         searchInp.oninput = () => {
-            const clearBtn = document.getElementById('search-clear-btn');
-            if (searchInp.value.length > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden');
-            if (searchInp.value.trim().length > 0) collapsedDictTopics = {};
-            renderDict(searchInp.value.toLowerCase());
+            clearTimeout(_searchDebounce);
+            _searchDebounce = setTimeout(() => {
+                const clearBtn = document.getElementById('search-clear-btn');
+                if (searchInp.value.length > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden');
+                renderDict(searchInp.value.toLowerCase());
+            }, 250);
         };
         window.toggleTopic = (topicKey) => { collapsedDictTopics[topicKey] = !collapsedDictTopics[topicKey]; renderDict(searchInp.value.toLowerCase()); };
 
@@ -1824,8 +1856,7 @@
                             <div class="flex justify-between items-center p-3 pr-2 transition-colors hover:bg-[#2A3B5E] dark:hover:bg-[#2A3B5E]">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
                                     <div class="cursor-move drag-handle-topic text-gray-500 hover:text-gray-600 p-1 -ml-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
-                                    <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer" onclick="toggleTopic('${safeTopicKey}')">
-                                        <svg class="w-4 h-4 text-gray-500 transition-transform ${chevronClass} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    <div class="flex items-center gap-2 min-w-0 flex-1">
                                         ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
                                         <h3 class="text-sm font-medium text-gray-200 truncate"><span class="notranslate">${s}</span> <span class="text-gray-500 font-normal">(${wordsInTopic.length})</span></h3>
                                     </div>
@@ -1839,7 +1870,7 @@
                                 </div>
                             </div>
 
-                            <div class="${isCollapsed ? 'hidden' : 'p-2 space-y-1 bg-[#0A192F] border-t border-gray-800/50'}">
+                            <div class="p-2 space-y-1 bg-[#0A192F] border-t border-gray-800/50">
                         `;
 
                         wordsInTopic.forEach(w => {
@@ -3346,6 +3377,33 @@
         };
         
         const origUpdateExp = window.updateExperience;
+        
+        window.showXPFloat = (xp, x, y) => {
+            const el = document.createElement('div');
+            el.className = 'xp-float';
+            el.innerText = `+${xp} XP`;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1200);
+        };
+        
+        window.showLevelUp = (lvl) => {
+            if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            const toast = document.createElement('div');
+            toast.className = 'lvl-up-toast';
+            toast.innerText = `${t("Уровень повышен!")} ${lvl}`;
+            document.body.appendChild(toast);
+            triggerVibration([50, 100, 50]);
+            setTimeout(() => {
+                toast.style.animation = 'none';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -100%)';
+                toast.style.transition = 'all 0.5s ease-out';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        };
+
         window.updateExperience = () => {
             if (origUpdateExp) origUpdateExp();
             const totalXP = globalWords.reduce((sum, w) => sum + ((w.score > 0 ? w.score * 5 : 0) + (w.interval > 0 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
