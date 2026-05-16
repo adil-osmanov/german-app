@@ -1501,29 +1501,27 @@
             localStorage.setItem(key, JSON.stringify(stats));
             
             const xpGain = isNew ? 10 : 5;
+            // Add XP to persistent counter — this is the single source of truth
+            const xpKey = `total_xp_${currentUser}`;
+            const newTotal = (parseInt(localStorage.getItem(xpKey) || '0', 10)) + xpGain;
+            localStorage.setItem(xpKey, newTotal);
+
             showXPFloat(xpGain, eventX || (window.innerWidth / 2), (eventY || (window.innerHeight / 2 - 50)) - 20);
 
-            
             // Update Streak logic
             let currentStreak = parseInt(localStorage.getItem(`streak_${currentUser}`) || '0', 10);
             let lastStreakDate = localStorage.getItem(`lastStreakDate_${currentUser}`);
             const dateStr = new Date().toISOString().slice(0, 10);
-            
             const targetNew = parseInt(localStorage.getItem(`goal_new_${currentUser}`) || '10', 10);
             const targetRev = parseInt(localStorage.getItem(`goal_rev_${currentUser}`) || '20', 10);
-            
             if (stats.newWords >= targetNew && stats.reviews >= targetRev && lastStreakDate !== dateStr) {
                 let d = new Date(); d.setDate(d.getDate() - 1);
                 let yest = d.toISOString().slice(0,10);
-                if (lastStreakDate === yest || lastStreakDate == null) {
-                    currentStreak++; // continuous or first time
-                } else {
-                    currentStreak = 1; // broken streak
-                }
+                if (lastStreakDate === yest || lastStreakDate == null) { currentStreak++; }
+                else { currentStreak = 1; }
                 localStorage.setItem(`lastStreakDate_${currentUser}`, dateStr);
                 localStorage.setItem(`streak_${currentUser}`, currentStreak);
             }
-
             updateExperience();
         };
 
@@ -1556,7 +1554,14 @@
 
         window.updateExperience = () => {
             if(!globalWords) return;
-            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score > 0 ? w.score * 5 : 0) + (w.interval > 0 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
+            // Use persistent XP counter — single source of truth, always matches floats
+            const xpKey = `total_xp_${currentUser}`;
+            let totalXP = parseInt(localStorage.getItem(xpKey) || '0', 10);
+            // Bootstrap: if no counter yet, seed from word data (one-time migration)
+            if (totalXP === 0 && globalWords.length > 0) {
+                totalXP = globalWords.reduce((sum, w) => sum + (w.score > 0 ? w.score * 5 : 0) + (w.repetitions > 1 ? (w.repetitions - 1) * 5 : 0), 0);
+                localStorage.setItem(xpKey, totalXP);
+            }
             
             let lvl = 1;
             let xpForNext = 150;
@@ -1850,20 +1855,19 @@
                 folderNames.forEach(f => {
                     const safeF = escapeStr(f);
                     html += `
-                    <div class="dict-folder mb-3 bg-[#172A45] dark:bg-[#172A45] rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-folder="${safeF}">
-                        <div class="flex justify-between items-center bg-[#172A45] dark:bg-[#172A45] p-3 border-b border-gray-100 dark:border-gray-800">
+                    <div class="dict-folder mb-4 bg-[#112240] rounded-2xl overflow-hidden border border-white/5" data-folder="${safeF}">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-white/5">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                <div class="cursor-move drag-handle-folder text-gray-500 hover:text-gray-600 dark:hover:text-[#D4AF37]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg></div>
+                                <div class="cursor-move drag-handle-folder text-gray-600 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
                                 <h2 class="text-base font-bold text-white truncate notranslate" ${isDevMode ? `onclick="renameFolder('${safeF}')" style="cursor:pointer;" title="Переименовать"` : ''}>${f}</h2>
                             </div>
-                            ${isDevMode ? `
-                            <div class="flex items-center gap-1">
-                                <button onclick="fastAddCourse('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#34d399] hover:bg-[#34d399]/10 rounded-full transition-colors" title="Добавить тему"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></button>
-                                <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                                <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            ${isDevMode ? `<div class="flex items-center gap-1">
+                                <button onclick="fastAddCourse('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#34d399] hover:bg-[#34d399]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
+                                <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37]/60 hover:text-[#D4AF37] rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400/60 hover:text-red-400 rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                             </div>` : ''}
                         </div>
-                        <div class="dict-topics-container p-1 space-y-1" data-folder="${safeF}">
+                        <div class="dict-topics-container p-2 space-y-1" data-folder="${safeF}">
                     `;
 
                     let topics = [];
@@ -1877,8 +1881,6 @@
                         const isCollapsed = collapsedDictTopics[topicKey]; const chevronClass = isCollapsed ? '' : 'rotate-180';
 
                         html += `
-                        <div class="dict-topic bg-[#112240] dark:bg-[#233554] border-l-2 border-l-[#D4AF37] rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-all mb-1 mx-1" data-topic="${safeTopicKey}">
-                            <div class="flex justify-between items-center p-3 pr-2 transition-colors hover:bg-[#2A3B5E] dark:hover:bg-[#2A3B5E]">
                         <div class="dict-topic bg-[#112240] rounded-xl border border-white/5 mb-1 overflow-hidden" data-topic="${safeTopicKey}">
                             <div class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-[#172A45] transition-colors" onclick="toggleTopic('${safeTopicKey}')">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
