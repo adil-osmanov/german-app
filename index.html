@@ -45,7 +45,7 @@
         // Enforce dark theme since it is a premium Navy look
         document.documentElement.classList.add('dark');
         if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js?v=7').catch(() => { }); });
-    
+
     </script>
 
     <style>
@@ -148,7 +148,7 @@
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        
+
 
         @keyframes heartFloat {
             0% {
@@ -296,27 +296,52 @@
             z-index: -1;
             transition: opacity 0.3s ease;
         }
-    
+
         @keyframes floatUpFade {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(1.2);
+            }
         }
+
         .xp-float {
             position: absolute;
             color: #D4AF37;
             font-weight: 900;
             font-size: 1.5rem;
-            text-shadow: 0 2px 10px rgba(212,175,55,0.5);
+            text-shadow: 0 2px 10px rgba(212, 175, 55, 0.5);
             pointer-events: none;
             animation: floatUpFade 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             z-index: 100;
         }
+
         @keyframes slideInDown {
-            0% { transform: translateY(-100%); opacity: 0; }
-            10% { transform: translateY(0); opacity: 1; }
-            90% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-100%); opacity: 0; }
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            10% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            90% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
         }
+
         .lvl-up-toast {
             position: fixed;
             top: 20px;
@@ -327,11 +352,10 @@
             padding: 12px 24px;
             border-radius: 100px;
             font-weight: 800;
-            box-shadow: 0 4px 20px rgba(212,175,55,0.4);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
             z-index: 9999;
             animation: slideInDown 4s ease-in-out forwards;
         }
-
     </style>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="manifest" href="/manifest.json">
@@ -356,20 +380,30 @@
     <div id="cursor-glow" class="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300 opacity-[0.05]"
         style="background: radial-gradient(600px circle at 50% 50%, #ffffff, transparent 50%);"></div>
 
-    <header class="fixed top-0 left-0 right-0 pt-8 pb-3 px-5 glass z-40 transition-all border-b border-white/5 bg-[#0a1128]/80 backdrop-blur-2xl">
+    <header
+        class="fixed top-0 left-0 right-0 pt-8 pb-3 px-5 glass z-40 transition-all border-b border-white/5 bg-[#0a1128]/80 backdrop-blur-2xl">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
-            <h1 id="header-title" class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] premium-title origin-left drop-shadow-md">
+            <h1 id="header-title"
+                class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] premium-title origin-left drop-shadow-md">
                 Словарь</h1>
             <div class="flex items-center gap-3">
-                <select id="ui-language" class="bg-[#112240] text-gray-400 border border-gray-600/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer" onchange="changeUILanguage()">
+                <select id="ui-language"
+                    class="bg-[#112240] text-gray-400 border border-gray-600/30 text-xs py-1 px-2 rounded-lg outline-none cursor-pointer"
+                    onchange="changeUILanguage()">
                     <option value="ru">🇷🇺 RU</option>
                     <option value="en">🇬🇧 EN</option>
                     <option value="de">🇩🇪 DE</option>
                 </select>
-                <button onclick="document.getElementById('profile-modal').classList.remove('hidden')" class="p-1.5 rounded-full hover:bg-white/10 transition-all text-[#D4AF37] overflow-hidden flex items-center justify-center bg-cover bg-center border border-[#D4AF37]/50 shadow-md transform hover:scale-105" style="width: 36px; height: 36px;" id="header-avatar" title="Сменить профиль">
-                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <button onclick="document.getElementById('profile-modal').classList.remove('hidden')"
+                    class="p-1.5 rounded-full hover:bg-white/10 transition-all text-[#D4AF37] overflow-hidden flex items-center justify-center bg-cover bg-center border border-[#D4AF37]/50 shadow-md transform hover:scale-105"
+                    style="width: 36px; height: 36px;" id="header-avatar" title="Сменить профиль">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
                 </button>
-                <button id="add-btn" class="bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] text-[#0f172a] w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 text-xl font-black border border-[#FDE08B]/50 shadow-lg shadow-[#D4AF37]/30">+</button>
+                <button id="add-btn"
+                    class="bg-gradient-to-br from-[#FDE08B] via-[#D4AF37] to-[#AA7C11] text-[#0f172a] w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 text-xl font-black border border-[#FDE08B]/50 shadow-lg shadow-[#D4AF37]/30">+</button>
             </div>
         </div>
     </header>
@@ -401,7 +435,8 @@
 
             <div class="flex bg-[#112240]/50 border border-white/5 p-1 rounded-xl mb-4">
                 <button id="dict-tab-active"
-                    class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#172A45] shadow-sm transition-all text-[#D4AF37]">В процессе</button>
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#172A45] shadow-sm transition-all text-[#D4AF37]">В
+                    процессе</button>
                 <button id="dict-tab-mastered"
                     class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-[#D4AF37]">Архив</button>
             </div>
@@ -421,14 +456,19 @@
                 <div id="train-topics-container" class="space-y-3"></div>
             </div>
 
-            
-            <div id="train-xp-panel" class="w-full bg-[#112240] rounded-[1rem] p-3 shadow-md border border-[#D4AF37]/20 mb-3 gap-2 hidden" style="display:none; flex-direction:column;">
-                <div class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
+
+            <div id="train-xp-panel"
+                class="w-full bg-[#112240] rounded-[1rem] p-3 shadow-md border border-[#D4AF37]/20 mb-3 gap-2 hidden"
+                style="display:none; flex-direction:column;">
+                <div
+                    class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
                     <span id="train-xp-lvl">Lvl 1</span>
                     <span id="train-xp-text" class="text-gray-400">0 / 150 XP</span>
                 </div>
                 <div class="w-full h-1.5 bg-[#172A45] rounded-full overflow-hidden">
-                    <div id="train-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700" style="width: 0%"></div>
+                    <div id="train-xp-bar"
+                        class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700"
+                        style="width: 0%"></div>
                 </div>
             </div>
 
@@ -444,7 +484,8 @@
                 <div class="relative z-10">
                     <!-- Top header row: badge + close -->
                     <div class="flex items-center justify-between mb-3 min-h-[28px] w-full">
-                        <span id="train-level-badge" class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"></span>
+                        <span id="train-level-badge"
+                            class="px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"></span>
                         <button id="btn-stop-training"
                             class="text-gray-500 hover:text-white bg-white/5 backdrop-blur-md w-7 h-7 rounded-full flex items-center justify-center font-bold transition-all shadow-sm border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 flex-shrink-0 ml-auto">×</button>
                     </div>
@@ -452,14 +493,17 @@
                     <!-- Progress dots + bar -->
                     <div class="mb-4 w-full">
                         <div class="flex justify-between items-center mb-1.5">
-                            <span id="train-card-progress-text" class="text-[11px] text-[#D4AF37] tracking-widest leading-none"></span>
-                            <span class="flex items-center gap-1 text-[10px] font-medium text-gray-500 uppercase tracking-wider leading-none">
+                            <span id="train-card-progress-text"
+                                class="text-[11px] text-[#D4AF37] tracking-widest leading-none"></span>
+                            <span
+                                class="flex items-center gap-1 text-[10px] font-medium text-gray-500 uppercase tracking-wider leading-none">
                                 <span id="train-remaining-label"></span>
                                 <span id="train-total-cards" class="text-[#D4AF37] font-bold">0</span>
                             </span>
                         </div>
                         <div class="w-full bg-[#112240] dark:bg-[#172A45] h-1 rounded-full overflow-hidden">
-                            <div id="train-card-progress-fill" class="bg-[#5A7B9C] h-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="train-card-progress-fill" class="bg-[#5A7B9C] h-full transition-all duration-500"
+                                style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -533,7 +577,8 @@
                         id="vt-count-text">Формы глаголов</p>
                     <p
                         class="text-xs font-bold text-[#D4AF37] uppercase tracking-widest text-center mb-1 drop-shadow-sm">
-                        <span id="vt-remaining-label"></span> <span id="vt-counter">0</span></p>
+                        <span id="vt-remaining-label"></span> <span id="vt-counter">0</span>
+                    </p>
                 </div>
                 <div
                     class="flex bg-[#112240] backdrop-blur-md bg-opacity-80 dark:bg-[#172A45]/50 p-1 rounded-xl mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
@@ -544,13 +589,17 @@
                         II</button>
                 </div>
                 <!-- XP progress bar for verb trainer -->
-                <div id="vt-xp-panel" class="w-full bg-[#112240] rounded-[1rem] p-3 mb-3 border border-[#D4AF37]/20" style="display:none; flex-direction:column; gap:6px;">
-                    <div class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
+                <div id="vt-xp-panel" class="w-full bg-[#112240] rounded-[1rem] p-3 mb-3 border border-[#D4AF37]/20"
+                    style="display:none; flex-direction:column; gap:6px;">
+                    <div
+                        class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
                         <span id="vt-xp-lvl">Lvl 1</span>
                         <span id="vt-xp-text" class="text-gray-400">0 / 150 XP</span>
                     </div>
                     <div class="w-full h-1.5 bg-[#172A45] rounded-full overflow-hidden">
-                        <div id="vt-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700" style="width: 0%"></div>
+                        <div id="vt-xp-bar"
+                            class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700"
+                            style="width: 0%"></div>
                     </div>
                 </div>
                 <div
@@ -597,61 +646,88 @@
 
 
 
-        
+
         <section id="view-stats" class="hidden relative pt-4 pb-6 flex flex-col items-center select-none">
-            
+
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 relative">
-                <div class="absolute right-4 top-4 flex items-center gap-1.5 text-orange-400 font-bold text-xs bg-[#172A45] px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-sm" title="Стрик (Дней подряд)">
+                <div class="absolute right-4 top-4 flex items-center gap-1.5 text-orange-400 font-bold text-xs bg-[#172A45] px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-sm"
+                    title="Стрик (Дней подряд)">
                     🔥 <span id="prof-streak">0</span>
                 </div>
-                
+
                 <h2 class="text-xl font-bold mb-6 text-white" data-orig-ru="Профиль">Профиль</h2>
-                
+
                 <div class="relative flex items-center justify-center mb-4">
-                    <div class="relative cursor-pointer group" onclick="document.getElementById('profile-modal').classList.remove('hidden')">
-                        <div id="prof-avatar" class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center text-4xl font-bold bg-[#172A45] text-[#D4AF37] group-hover:scale-105 transition-transform"></div>
-                        <div class="absolute -right-3 -bottom-2 w-12 h-12 rounded-full bg-gradient-to-br from-[#FDE08B] to-[#AA7C11] border-4 border-[#112240] shadow-md flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform" title="Дорожная карта рангов" id="prof-league-icon" onclick="event.stopPropagation(); document.getElementById('roadmap-modal').classList.remove('hidden')">
+                    <div class="relative cursor-pointer group"
+                        onclick="document.getElementById('profile-modal').classList.remove('hidden')">
+                        <div id="prof-avatar"
+                            class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center text-4xl font-bold bg-[#172A45] text-[#D4AF37] group-hover:scale-105 transition-transform">
+                        </div>
+                        <div class="absolute -right-3 -bottom-2 w-12 h-12 rounded-full bg-gradient-to-br from-[#FDE08B] to-[#AA7C11] border-4 border-[#112240] shadow-md flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform"
+                            title="Дорожная карта рангов" id="prof-league-icon"
+                            onclick="event.stopPropagation(); document.getElementById('roadmap-modal').classList.remove('hidden')">
                             🧭
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="w-full max-w-[280px] mx-auto flex flex-col items-center mb-6">
-                    <div class="flex justify-between w-full text-[11px] text-[#D4AF37] font-medium tracking-widest uppercase mb-2">
+                    <div
+                        class="flex justify-between w-full text-[11px] text-[#D4AF37] font-medium tracking-widest uppercase mb-2">
                         <span id="prof-lvl" class="text-white font-bold">Lvl 1</span>
                         <span id="prof-xp-text">0 / 150 XP</span>
                     </div>
-                    <div class="w-full h-2 bg-[#172A45] rounded-full overflow-hidden border border-[#D4AF37]/20 shadow-inner">
-                        <div id="prof-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000" style="width: 0%"></div>
+                    <div
+                        class="w-full h-2 bg-[#172A45] rounded-full overflow-hidden border border-[#D4AF37]/20 shadow-inner">
+                        <div id="prof-xp-bar"
+                            class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000"
+                            style="width: 0%"></div>
                     </div>
-                    <div class="mt-2 text-[10px] text-gray-400 uppercase tracking-widest cursor-pointer hover:text-[#D4AF37] transition-colors" id="prof-rank-name" onclick="document.getElementById('roadmap-modal').classList.remove('hidden')">Турист</div>
+                    <div class="mt-2 text-[10px] text-gray-400 uppercase tracking-widest cursor-pointer hover:text-[#D4AF37] transition-colors"
+                        id="prof-rank-name"
+                        onclick="document.getElementById('roadmap-modal').classList.remove('hidden')">Турист</div>
                 </div>
             </div>
-            
+
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-white" data-orig-ru="Цели на день">Цели на день</h2>
-                    <button onclick="document.getElementById('goal-modal').classList.remove('hidden')" class="text-xs text-[#D4AF37] hover:underline flex items-center gap-1"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> Изменить</button>
+                    <button onclick="document.getElementById('goal-modal').classList.remove('hidden')"
+                        class="text-xs text-[#D4AF37] hover:underline flex items-center gap-1"><svg class="w-3 h-3"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg> Изменить</button>
                 </div>
                 <div class="flex justify-center w-full mb-4">
                     <div class="relative w-32 h-32 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90 drop-shadow-md">
                             <circle cx="64" cy="64" r="54" stroke="#172A45" stroke-width="8" fill="none" />
                             <circle cx="64" cy="64" r="40" stroke="#172A45" stroke-width="8" fill="none" />
-                            <circle id="ring-review" cx="64" cy="64" r="54" stroke="#3AB0FF" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29" class="transition-all duration-1000" />
-                            <circle id="ring-new" cx="64" cy="64" r="40" stroke="#34D399" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="251.32" stroke-dashoffset="251.32" class="transition-all duration-1000" />
+                            <circle id="ring-review" cx="64" cy="64" r="54" stroke="#3AB0FF" stroke-width="8"
+                                fill="none" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"
+                                class="transition-all duration-1000" />
+                            <circle id="ring-new" cx="64" cy="64" r="40" stroke="#34D399" stroke-width="8" fill="none"
+                                stroke-linecap="round" stroke-dasharray="251.32" stroke-dashoffset="251.32"
+                                class="transition-all duration-1000" />
                         </svg>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-center gap-6 mt-2">
-                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400"><div class="w-3 h-3 rounded-full bg-[#34D399] shadow-[0_0_5px_#34D399]"></div> Новые (<span id="prof-new-text">0/10</span>)</div>
-                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400"><div class="w-3 h-3 rounded-full bg-[#3AB0FF] shadow-[0_0_5px_#3AB0FF]"></div> Повтор (<span id="prof-rev-text">0/20</span>)</div>
+                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400">
+                        <div class="w-3 h-3 rounded-full bg-[#34D399] shadow-[0_0_5px_#34D399]"></div> Новые <span
+                            id="prof-new-text">0/10</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400">
+                        <div class="w-3 h-3 rounded-full bg-[#3AB0FF] shadow-[0_0_5px_#3AB0FF]"></div> Повтор <span
+                            id="prof-rev-text">0/20</span>
+                    </div>
                 </div>
             </div>
-            
+
             <div id="stats-container" class="w-full"></div>
-            
+
         </section>
 
     </main>
@@ -746,9 +822,15 @@
             </div>
 
             <div class="w-full h-px bg-gray-100 dark:bg-gray-800 my-4"></div>
-            
-            <button id="dev-mode-btn" onclick="toggleDevMode()" class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-[#172A45] transition-all hover:bg-[#112240] text-gray-400 mb-6">
-                <div class="flex items-center gap-2 min-w-0"><span class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span class="font-bold text-base truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2" data-orig-ru="Выключен">Выключен</span>
+
+            <button id="dev-mode-btn" onclick="toggleDevMode()"
+                class="w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-[#172A45] transition-all hover:bg-[#112240] text-gray-400 mb-6">
+                <div class="flex items-center gap-2 min-w-0"><span
+                        class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span
+                        class="font-bold text-base truncate" data-orig-ru="Режим разработчика">Режим разработчика</span>
+                </div><span
+                    class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2"
+                    data-orig-ru="Выключен">Выключен</span>
             </button>
 
             <button onclick="document.getElementById('profile-modal').classList.add('hidden')"
@@ -928,35 +1010,59 @@
             </button>
         </div>
     </nav>
-    
-    
 
-    <div id="premium-confirm-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity" onclick="if(event.target === this) closePremiumConfirm()">
-        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-red-500/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+
+
+    <div id="premium-confirm-modal"
+        class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity"
+        onclick="if(event.target === this) closePremiumConfirm()">
+        <div
+            class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-red-500/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
             <div class="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent pointer-events-none"></div>
-            <div class="w-16 h-16 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-                <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <div
+                class="w-16 h-16 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+                <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
             </div>
-            <h2 class="text-xl font-bold text-white mb-2" id="premium-confirm-title" data-orig-ru="Подтверждение удаления">Подтверждение удаления</h2>
+            <h2 class="text-xl font-bold text-white mb-2" id="premium-confirm-title"
+                data-orig-ru="Подтверждение удаления">Подтверждение удаления</h2>
             <p class="text-[#D4AF37] text-sm mb-6" id="premium-confirm-message"></p>
             <div class="flex gap-3 relative z-10">
-                <button onclick="closePremiumConfirm()" class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
-                <button onclick="executePremiumConfirm()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]" data-orig-ru="Удалить">Удалить</button>
+                <button onclick="closePremiumConfirm()"
+                    class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600"
+                    data-orig-ru="Отмена">Отмена</button>
+                <button onclick="executePremiumConfirm()"
+                    class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                    data-orig-ru="Удалить">Удалить</button>
             </div>
         </div>
     </div>
 
-    <div id="premium-prompt-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity" onclick="if(event.target === this) closePremiumPrompt()">
-        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+    <div id="premium-prompt-modal"
+        class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex justify-center items-center p-4 transition-opacity"
+        onclick="if(event.target === this) closePremiumPrompt()">
+        <div
+            class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/30 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
             <div class="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/10 to-transparent pointer-events-none"></div>
-            <div class="w-16 h-16 mx-auto bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-4 border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+            <div
+                class="w-16 h-16 mx-auto bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-4 border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.4)]">
                 <span class="text-2xl drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]">✏️</span>
             </div>
-            <h2 class="text-xl font-bold text-white mb-4 whitespace-pre-line leading-tight" id="premium-prompt-title">Редактировать</h2>
-            <input type="text" id="premium-prompt-input" class="w-full bg-[#172A45] border border-gray-600 rounded-xl py-3 px-4 text-white font-medium mb-6 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all shadow-inner" autocomplete="off">
+            <h2 class="text-xl font-bold text-white mb-4 whitespace-pre-line leading-tight" id="premium-prompt-title">
+                Редактировать</h2>
+            <input type="text" id="premium-prompt-input"
+                class="w-full bg-[#172A45] border border-gray-600 rounded-xl py-3 px-4 text-white font-medium mb-6 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all shadow-inner"
+                autocomplete="off">
             <div class="flex gap-3 relative z-10">
-                <button onclick="closePremiumPrompt()" class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600" data-orig-ru="Отмена">Отмена</button>
-                <button onclick="executePremiumPrompt()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] text-[#112240] font-black hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]" data-orig-ru="Сохранить">Сохранить</button>
+                <button onclick="closePremiumPrompt()"
+                    class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600"
+                    data-orig-ru="Отмена">Отмена</button>
+                <button onclick="executePremiumPrompt()"
+                    class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] text-[#112240] font-black hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                    data-orig-ru="Сохранить">Сохранить</button>
             </div>
         </div>
     </div>
@@ -1143,16 +1249,16 @@
         window.toggleDevMode = () => {
             isDevMode = !isDevMode;
             localStorage.setItem('devMode', isDevMode);
-            
+
             triggerVibration(15);
-            
+
             if (isDevMode) {
                 playTone(600, 'sine', 0.1); setTimeout(() => playTone(800, 'sine', 0.15), 100);
             }
-            
+
             updateDevModeUI();
             updateProfileUI();
-            if(!document.getElementById('view-dict').classList.contains('hidden')) renderDict();
+            if (!document.getElementById('view-dict').classList.contains('hidden')) renderDict();
         };
         updateDevModeUI();
         let premiumConfirmCallback = null;
@@ -1483,23 +1589,23 @@
         const navBtns = { dict: document.getElementById('nav-dict'), train: document.getElementById('nav-train'), stats: document.getElementById('nav-stats') };
         const isWordDue = (w) => Date.now() >= (w.next_review || 0);
 
-        
+
         window.getDailyStats = () => {
             const dateStr = new Date().toISOString().slice(0, 10);
             const key = `dailyActivity_${currentUser}_${dateStr}`;
             let stats = { newWords: 0, reviews: 0 };
             try {
                 if (localStorage.getItem(key)) stats = JSON.parse(localStorage.getItem(key));
-            } catch(e){}
+            } catch (e) { }
             return { key, stats, dateStr };
         };
 
-        
+
         window.updateDailyActivity = (isNew, eventX, eventY) => {
             const { key, stats } = getDailyStats();
             if (isNew) stats.newWords++; else stats.reviews++;
             localStorage.setItem(key, JSON.stringify(stats));
-            
+
             const xpGain = isNew ? 10 : 5;
             // Add XP to persistent counter — this is the single source of truth
             const xpKey = `total_xp_${currentUser}`;
@@ -1516,7 +1622,7 @@
             const targetRev = parseInt(localStorage.getItem(`goal_rev_${currentUser}`) || '20', 10);
             if (stats.newWords >= targetNew && stats.reviews >= targetRev && lastStreakDate !== dateStr) {
                 let d = new Date(); d.setDate(d.getDate() - 1);
-                let yest = d.toISOString().slice(0,10);
+                let yest = d.toISOString().slice(0, 10);
                 if (lastStreakDate === yest || lastStreakDate == null) { currentStreak++; }
                 else { currentStreak = 1; }
                 localStorage.setItem(`lastStreakDate_${currentUser}`, dateStr);
@@ -1525,7 +1631,7 @@
             updateExperience();
         };
 
-        
+
         window.showXPFloat = (xp, x, y) => {
             const el = document.createElement('div');
             el.className = 'xp-float';
@@ -1535,7 +1641,7 @@
             document.body.appendChild(el);
             setTimeout(() => el.remove(), 1200);
         };
-        
+
         window.showLevelUp = (lvl) => {
             if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             const toast = document.createElement('div');
@@ -1553,7 +1659,7 @@
         };
 
         window.updateExperience = () => {
-            if(!globalWords) return;
+            if (!globalWords) return;
             // Use persistent XP counter — single source of truth, always matches floats
             const xpKey = `total_xp_${currentUser}`;
             let totalXP = parseInt(localStorage.getItem(xpKey) || '0', 10);
@@ -1562,7 +1668,7 @@
                 totalXP = globalWords.reduce((sum, w) => sum + (w.score > 0 ? w.score * 5 : 0) + (w.repetitions > 1 ? (w.repetitions - 1) * 5 : 0), 0);
                 localStorage.setItem(xpKey, totalXP);
             }
-            
+
             let lvl = 1;
             let xpForNext = 150;
             let accumulated = 0;
@@ -1574,15 +1680,15 @@
             }
             const currentLevelXP = totalXP - accumulated;
             const pct = lvl === 80 ? 100 : Math.min(100, (currentLevelXP / xpForNext) * 100);
-            
+
             // Level Up logic
             const prevLvl = parseInt(localStorage.getItem(`current_level_${currentUser}`) || '1', 10);
             if (lvl > prevLvl) {
                 showLevelUp(lvl);
                 localStorage.setItem(`current_level_${currentUser}`, lvl);
             }
-            
-            let rankName = t("Турист"); let rankIcon = `🧳`; 
+
+            let rankName = t("Турист"); let rankIcon = `🧳`;
             if (lvl >= 11 && lvl <= 20) { rankName = t("Мигрант"); rankIcon = `🛂`; }
             else if (lvl >= 21 && lvl <= 30) { rankName = t("Студент"); rankIcon = `📚`; }
             else if (lvl >= 31 && lvl <= 40) { rankName = t("Соискатель"); rankIcon = `📄`; }
@@ -1596,7 +1702,7 @@
             const xpText = document.getElementById('prof-xp-text');
             const rankEl = document.getElementById('prof-rank-name');
             const rankIcoEl = document.getElementById('prof-league-icon');
-            
+
             if (badge) badge.innerText = `Lvl ${lvl}`;
             if (bar) bar.style.width = `${pct}%`;
             if (xpText) xpText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
@@ -1631,7 +1737,7 @@
                 profVerbs.innerText = vbs;
             }
 
-            
+
             // Avatar update
             const dashAvatar = document.getElementById('prof-avatar');
             if (dashAvatar) {
@@ -1649,25 +1755,25 @@
             const { stats } = getDailyStats();
             const targetNew = parseInt(localStorage.getItem(`goal_new_${currentUser}`) || '10', 10);
             const targetRev = parseInt(localStorage.getItem(`goal_rev_${currentUser}`) || '20', 10);
-            
+
             const newText = document.getElementById('prof-new-text');
             const revText = document.getElementById('prof-rev-text');
             if (newText) newText.innerText = `${stats.newWords}/${targetNew}`;
             if (revText) revText.innerText = `${stats.reviews}/${targetRev}`;
-            
+
             const ringNew = document.getElementById('ring-new');
             const ringRev = document.getElementById('ring-review');
             if (ringNew) {
                 const dashOffsetNew = 251.32 - (Math.min(stats.newWords / targetNew, 1) * 251.32);
                 ringNew.style.strokeDashoffset = dashOffsetNew;
-                if(stats.newWords >= targetNew) ringNew.style.filter = "drop-shadow(0 0 4px #34D399)";
+                if (stats.newWords >= targetNew) ringNew.style.filter = "drop-shadow(0 0 4px #34D399)";
             }
             if (ringRev) {
                 const dashOffsetRev = 339.29 - (Math.min(stats.reviews / targetRev, 1) * 339.29);
                 ringRev.style.strokeDashoffset = dashOffsetRev;
-                if(stats.reviews >= targetRev) ringRev.style.filter = "drop-shadow(0 0 4px #3AB0FF)";
+                if (stats.reviews >= targetRev) ringRev.style.filter = "drop-shadow(0 0 4px #3AB0FF)";
             }
-            
+
             // Streak computation (based on daily goals)
             let currentStreak = parseInt(localStorage.getItem(`streak_${currentUser}`) || '0', 10);
             const streakEl = document.getElementById('prof-streak');
@@ -1911,7 +2017,7 @@
                                 </div>
                             </div>`;
                         });
-                        html += `</div>`;
+                        html += `</div></div>`;
                     });
                     html += `</div></div>`;
                 });
@@ -1920,7 +2026,7 @@
                 container.innerHTML = html;
                 // Init sortable after render
                 setTimeout(initSortable, 100);
-            } catch (err) { container.innerHTML = `<div class="text-center py-20 text-[#9C5A5A]">Ошибка рендера. Очистите кэш.</div>`; }
+            } catch (err) { console.error('RenderDict error:', err); container.innerHTML = `<div class="text-center py-20 text-[#9C5A5A]">Ошибка рендера. Очистите кэш.</div>`; }
         }
 
         function initSortable() {
@@ -1929,10 +2035,11 @@
             if (folderContainer) {
                 new Sortable(folderContainer, {
                     handle: '.drag-handle-folder', animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: 'sortable-ghost',
-                    onEnd: function () { 
+                    onEnd: function () {
                         if (document.getElementById('search-input').value.trim().length > 0) return;
-                        const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.getAttribute('data-folder')); 
-                        localStorage.setItem('folderOrder', JSON.stringify(order)); }
+                        const order = Array.from(folderContainer.querySelectorAll('.dict-folder')).map(el => el.getAttribute('data-folder'));
+                        localStorage.setItem('folderOrder', JSON.stringify(order));
+                    }
                 });
                 folderContainer._sortableInited = true;
             }
@@ -2198,37 +2305,37 @@
         window.deleteWord = async (id, event) => {
             if (event) event.stopPropagation();
             premiumConfirm(t('Удалить слово навсегда?'), async () => {
-                await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); 
-                await fetchWords(); renderDict(); 
+                await apiFetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                await fetchWords(); renderDict();
             });
         };
 
         window.deleteFolder = async (f, l, s) => {
             try {
-                await apiFetch('/words/delete_folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) }); 
+                await apiFetch('/words/delete_folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l, subfolder: s }) });
                 await fetchWords(); renderDict();
-            } catch(e) { alert(t('Ошибка сети!')); }
+            } catch (e) { alert(t('Ошибка сети!')); }
         };
 
         window.deleteCourse = async (f) => {
             try {
-                await apiFetch('/words/delete_course', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f }) }); 
+                await apiFetch('/words/delete_course', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f }) });
                 await fetchWords(); renderDict();
-            } catch(e) { alert(t('Ошибка сети!')); }
+            } catch (e) { alert(t('Ошибка сети!')); }
         };
 
         window.deleteLevel = async (f, l) => {
             try {
-                await apiFetch('/words/delete_level', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l }) }); 
+                await apiFetch('/words/delete_level', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, level: l }) });
                 await fetchWords(); renderDict();
-            } catch(e) { alert(t('Ошибка сети!')); }
+            } catch (e) { alert(t('Ошибка сети!')); }
         };
 
         window.renameLevel = async (f, oldL, newL) => {
             try {
-                await apiFetch('/words/rename_level', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, old_level: oldL, new_level: newL }) }); 
+                await apiFetch('/words/rename_level', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: f, old_level: oldL, new_level: newL }) });
                 await fetchWords(); renderDict();
-            } catch(e) { alert(t('Ошибка сети!')); }
+            } catch (e) { alert(t('Ошибка сети!')); }
         };
 
         window.manageLevel = (f, l, event) => {
@@ -2485,11 +2592,11 @@
             if (!trainList.length) return alert(t('На сегодня слов нет! Отдыхай.'));
             trainList.sort(() => 0.5 - Math.random()); curIdx = 0; sessionStartMs = Date.now();
             document.getElementById('train-setup-block').classList.add('hidden'); document.getElementById('train-card-block').classList.remove('hidden');
-            const pnl = document.getElementById('train-xp-panel'); if(pnl) { pnl.style.display = 'flex'; } renderCard();
+            const pnl = document.getElementById('train-xp-panel'); if (pnl) { pnl.style.display = 'flex'; } renderCard();
         };
 
         document.getElementById('btn-stop-training').onclick = () => {
-            const pnl = document.getElementById('train-xp-panel'); if(pnl) pnl.style.display = 'none';
+            const pnl = document.getElementById('train-xp-panel'); if (pnl) pnl.style.display = 'none';
             if (cardTimeout) clearTimeout(cardTimeout);
             saveSessionTime(); setupTrainMenu();
         };
@@ -2563,7 +2670,7 @@
             if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-400 font-medium mr-1 notranslate">die</span><span class="text-gray-400 notranslate">${escapeStr(w.plural)}</span>`;
             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
                 // Determine auxiliary verb (haben/sein) - common sein verbs
-                const seinVerbs = ['gehen','fahren','laufen','fliegen','kommen','ankommen','werden','sein','bleiben','passieren','fallen','steigen','aufstehen','einschlafen','aufwachen','wachsen','entstehen','sterben'];
+                const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
                 const inf = (w.word_de || '').toLowerCase();
                 const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
                 // Only add aux if partizip doesn't already start with 'hat' or 'ist' or 'haben'/'sein'
@@ -2622,97 +2729,97 @@
             const w = trainList[curIdx];
             if (!w) return;
             _isScoring = true;
-            
-            try {
-            const cardBlock = document.getElementById('train-card-block');
-            if (!_swipeInProgress) {
-                cardBlock.classList.add('animate-fold-up');
-            }
-
-            const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor, w.score);
-
-            let nextReviewMs = 0;
-            if (sm2Result.interval === 0) nextReviewMs = Date.now() + 10 * 60 * 1000;
-            else nextReviewMs = Date.now() + sm2Result.interval * 24 * 60 * 60 * 1000;
-
-            let newScore = w.score;
-            if (quality >= 3) newScore = Math.min(w.score + 1, MAX_SCORE);
-            else newScore = 0;
-
-        // ТУРБО: Если забыл, возвращаем карточку в конец колоды с ОБНОВЛЕННЫМИ статами
-        if (quality === 0) {
-            trainList.push({ ...w, score: newScore, interval: sm2Result.interval, repetitions: sm2Result.repetitions, ease_factor: sm2Result.easeFactor, next_review: nextReviewMs });
-        }
 
             try {
-                await apiFetch(`${API_URL}/${w.id}/score`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ score: newScore, next_review: nextReviewMs, ease_factor: sm2Result.easeFactor, interval: sm2Result.interval, repetitions: sm2Result.repetitions })
-                });
-            } catch (e) { }
+                const cardBlock = document.getElementById('train-card-block');
+                if (!_swipeInProgress) {
+                    cardBlock.classList.add('animate-fold-up');
+                }
 
-            w.score = newScore;
-            w.next_review = nextReviewMs;
-            w.ease_factor = sm2Result.easeFactor;
-            w.interval = sm2Result.interval;
-            w.repetitions = sm2Result.repetitions;
-            
-            // Only give XP when user answered correctly (quality >= 3)
-            if (quality >= 3) {
-                updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
-            } else {
-                // No XP — just update streak/rings without the float animation
+                const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor, w.score);
+
+                let nextReviewMs = 0;
+                if (sm2Result.interval === 0) nextReviewMs = Date.now() + 10 * 60 * 1000;
+                else nextReviewMs = Date.now() + sm2Result.interval * 24 * 60 * 60 * 1000;
+
+                let newScore = w.score;
+                if (quality >= 3) newScore = Math.min(w.score + 1, MAX_SCORE);
+                else newScore = 0;
+
+                // ТУРБО: Если забыл, возвращаем карточку в конец колоды с ОБНОВЛЕННЫМИ статами
+                if (quality === 0) {
+                    trainList.push({ ...w, score: newScore, interval: sm2Result.interval, repetitions: sm2Result.repetitions, ease_factor: sm2Result.easeFactor, next_review: nextReviewMs });
+                }
+
+                try {
+                    await apiFetch(`${API_URL}/${w.id}/score`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ score: newScore, next_review: nextReviewMs, ease_factor: sm2Result.easeFactor, interval: sm2Result.interval, repetitions: sm2Result.repetitions })
+                    });
+                } catch (e) { }
+
+                w.score = newScore;
+                w.next_review = nextReviewMs;
+                w.ease_factor = sm2Result.easeFactor;
+                w.interval = sm2Result.interval;
+                w.repetitions = sm2Result.repetitions;
+
+                // Only give XP when user answered correctly (quality >= 3)
+                if (quality >= 3) {
+                    updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
+                } else {
+                    // No XP — just update streak/rings without the float animation
+                    updateExperience();
+                }
+
+
+                const gwItem = globalWords.find(gw => gw.id === w.id);
+                if (gwItem && gwItem !== w) {
+                    gwItem.score = newScore; gwItem.next_review = nextReviewMs;
+                    gwItem.ease_factor = sm2Result.easeFactor; gwItem.interval = sm2Result.interval; gwItem.repetitions = sm2Result.repetitions;
+                }
+
+                idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
                 updateExperience();
-            }
-
-
-            const gwItem = globalWords.find(gw => gw.id === w.id);
-            if (gwItem && gwItem !== w) {
-                gwItem.score = newScore; gwItem.next_review = nextReviewMs;
-                gwItem.ease_factor = sm2Result.easeFactor; gwItem.interval = sm2Result.interval; gwItem.repetitions = sm2Result.repetitions;
-            }
-
-            idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
-            updateExperience();
-            curIdx++; _swipeInProgress = false; 
-            setTimeout(() => { 
-                try { renderCard(); } catch(e) { console.error(e); } finally { _isScoring = false; }
-            }, 250);
-            } catch(err) {
+                curIdx++; _swipeInProgress = false;
+                setTimeout(() => {
+                    try { renderCard(); } catch (e) { console.error(e); } finally { _isScoring = false; }
+                }, 250);
+            } catch (err) {
                 console.error("SM2 critical:", err);
                 _isScoring = false;
                 _swipeInProgress = false;
             }
         }
 
-    let _isFlipping = false;
+        let _isFlipping = false;
         document.getElementById('btn-show-answer').onclick = () => {
-        if (_isFlipping) return;
-        _isFlipping = true;
+            if (_isFlipping) return;
+            _isFlipping = true;
             try {
-            triggerVibration(15);
-            const card = document.getElementById('train-card-block');
-            card.classList.add('perspective-1000', 'transform-style-3d');
-            card.style.transform = 'rotateX(90deg)';
-            card.style.transition = 'transform 0.15s ease-in';
+                triggerVibration(15);
+                const card = document.getElementById('train-card-block');
+                card.classList.add('perspective-1000', 'transform-style-3d');
+                card.style.transform = 'rotateX(90deg)';
+                card.style.transition = 'transform 0.15s ease-in';
 
-            setTimeout(() => {
-                try {
-                document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden');
-                const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
+                setTimeout(() => {
+                    try {
+                        document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden');
+                        const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
 
-                if (!currentIsGermanQuestion) {
-                    const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
-                    setTimeout(() => speakWord(fullGerman), 100);
-                }
+                        if (!currentIsGermanQuestion) {
+                            const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
+                            setTimeout(() => speakWord(fullGerman), 100);
+                        }
 
-                card.style.transform = 'rotateX(0deg)';
-                card.style.transition = 'transform 0.2s ease-out';
-                } catch(e) { console.error(e); } finally {
-            setTimeout(() => { _isFlipping = false; }, 200);
-                }
-            }, 150);
-            } catch(err) { _isFlipping = false; }
+                        card.style.transform = 'rotateX(0deg)';
+                        card.style.transition = 'transform 0.2s ease-out';
+                    } catch (e) { console.error(e); } finally {
+                        setTimeout(() => { _isFlipping = false; }, 200);
+                    }
+                }, 150);
+            } catch (err) { _isFlipping = false; }
         };
 
         // --- МИНИ-ИГРА 1: КОНСТРУКТОР ФРАЗ ---
@@ -2805,7 +2912,7 @@
                 document.getElementById('vt-answer').innerText = w.praeteritum || '—';
             } else {
                 // Partizip II / Perfekt mode: show with haben/sein helper
-                const seinVerbs = ['gehen','fahren','laufen','fliegen','kommen','ankommen','werden','sein','bleiben','passieren','fallen','steigen','aufstehen','einschlafen','aufwachen','wachsen','entstehen','sterben'];
+                const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
                 const inf = (w.word_de || '').toLowerCase();
                 const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
                 const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
@@ -2831,11 +2938,11 @@
                 const { key, stats } = getDailyStats();
                 stats.reviews++;
                 localStorage.setItem(key, JSON.stringify(stats));
-                
+
                 const xpKey = `total_xp_${currentUser}`;
                 const newTotal = (parseInt(localStorage.getItem(xpKey) || '0', 10)) + 5;
                 localStorage.setItem(xpKey, newTotal);
-                
+
                 showXPFloat(5, window.innerWidth / 2, window.innerHeight / 3);
                 updateExperience();
             } else {
@@ -2893,13 +3000,13 @@
             const totalCount = globalWords.length;
             const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
             const learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= MAX_SCORE).length;
-            
+
             try {
                 const historyResult = await Promise.allSettled([
                     apiFetch('/history').then(r => r.json())
                 ]);
                 let serverHistory = historyResult[0].status === 'fulfilled' ? historyResult[0].value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
-                
+
                 const statsContainer = document.getElementById('stats-container');
                 if (statsContainer) {
                     statsContainer.innerHTML = `
@@ -3384,15 +3491,15 @@
                 { max: 70, name: "Гражданин", icon: "🏛️", desc: "Уровни 61-70" },
                 { max: 80, name: "Местный", icon: "👑", desc: "Уровни 71-80" }
             ];
-            
+
             let html = '';
             ranks.forEach(r => {
                 const isPast = currentLvl > r.max;
                 const isCurrent = currentLvl <= r.max && (currentLvl > (r.max - 10) || r.max === 999 && currentLvl > 40);
-                
+
                 let colorClass = isCurrent ? "bg-[#172A45] border-[#D4AF37]" : (isPast ? "bg-[#112240] border-green-500/30 opacity-70" : "bg-[#112240] border-gray-700 opacity-50 grayscale");
                 let textClass = isCurrent ? "text-[#D4AF37]" : "text-gray-400";
-                
+
                 html += `
                     <div class="flex items-center gap-4 p-4 rounded-2xl border-2 ${colorClass} transition-all">
                         <div class="w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-black/20">${r.icon}</div>
@@ -3405,11 +3512,11 @@
                 `;
             });
             const rmList = document.getElementById('roadmap-list');
-            if(rmList) rmList.innerHTML = html;
+            if (rmList) rmList.innerHTML = html;
         };
-        
+
         const origUpdateExp = window.updateExperience;
-        
+
         window.showXPFloat = (xp, x, y) => {
             const el = document.createElement('div');
             el.className = 'xp-float';
@@ -3419,7 +3526,7 @@
             document.body.appendChild(el);
             setTimeout(() => el.remove(), 1200);
         };
-        
+
         window.showLevelUp = (lvl) => {
             if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             const toast = document.createElement('div');
@@ -3443,7 +3550,7 @@
             let lvl = 1; let xpForNext = 150; let accumulated = 0;
             while (totalXP >= accumulated + xpForNext && lvl < 80) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
             renderRoadmap(lvl);
-            
+
             // set goal inputs
             const inpNew = document.getElementById('input-goal-new');
             const inpRev = document.getElementById('input-goal-rev');
@@ -3453,29 +3560,41 @@
     </script>
 
     <!-- Goal Edit Modal -->
-    <div id="goal-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all" onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-white/10 text-center relative">
+    <div id="goal-modal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div
+            class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-white/10 text-center relative">
             <h2 class="text-xl font-bold mb-4 text-white">Редактировать цели</h2>
             <div class="space-y-4 mb-6">
                 <div>
                     <label class="block text-left text-xs text-gray-400 mb-1">Новых слов в день (зеленое кольцо)</label>
-                    <input type="number" id="input-goal-new" class="w-full bg-[#172A45] rounded-xl py-3 px-4 outline-none border border-gray-700 text-white font-medium" value="10">
+                    <input type="number" id="input-goal-new"
+                        class="w-full bg-[#172A45] rounded-xl py-3 px-4 outline-none border border-gray-700 text-white font-medium"
+                        value="10">
                 </div>
                 <div>
                     <label class="block text-left text-xs text-gray-400 mb-1">Слов на повторение (синее кольцо)</label>
-                    <input type="number" id="input-goal-rev" class="w-full bg-[#172A45] rounded-xl py-3 px-4 outline-none border border-gray-700 text-white font-medium" value="20">
+                    <input type="number" id="input-goal-rev"
+                        class="w-full bg-[#172A45] rounded-xl py-3 px-4 outline-none border border-gray-700 text-white font-medium"
+                        value="20">
                 </div>
             </div>
-            <button onclick="saveGoals()" class="w-full bg-[#D4AF37] text-[#112240] font-bold py-3.5 rounded-xl hover:bg-[#FDE08B] transition-all">Сохранить</button>
+            <button onclick="saveGoals()"
+                class="w-full bg-[#D4AF37] text-[#112240] font-bold py-3.5 rounded-xl hover:bg-[#FDE08B] transition-all">Сохранить</button>
         </div>
     </div>
 
     <!-- Roadmap Modal -->
-    <div id="roadmap-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all" onclick="if(event.target === this) this.classList.add('hidden')">
-        <div class="bg-[#112240] w-full max-w-md rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/20 relative max-h-[80vh] overflow-y-auto">
+    <div id="roadmap-modal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex justify-center items-center p-4 transition-all"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div
+            class="bg-[#112240] w-full max-w-md rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/20 relative max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white">Ранги</h2>
-                <button onclick="document.getElementById('roadmap-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-[#172A45] text-gray-400 hover:text-white flex items-center justify-center">×</button>
+                <button onclick="document.getElementById('roadmap-modal').classList.add('hidden')"
+                    class="w-8 h-8 rounded-full bg-[#172A45] text-gray-400 hover:text-white flex items-center justify-center">×</button>
             </div>
             <div class="space-y-4 relative" id="roadmap-list">
                 <!-- Injected via JS -->
