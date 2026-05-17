@@ -1920,6 +1920,16 @@
             }
         };
 
+        window.toggleTopic = (topicKey) => {
+            const wordsContainer = document.getElementById(`topic-words-${topicKey}`);
+            if (wordsContainer) {
+                const isNowHidden = wordsContainer.classList.toggle('hidden');
+                collapsedDictTopics[topicKey] = isNowHidden;
+                const chevron = document.querySelector(`.dict-topic[data-topic="${CSS.escape(topicKey)}"] .topic-chevron`);
+                if (chevron) chevron.classList.toggle('rotate-180', !isNowHidden);
+            }
+        };
+
         function renderDict(query = searchInp.value.toLowerCase()) {
             const container = document.getElementById('dict-list');
             try {
@@ -1978,12 +1988,15 @@
                     topics.forEach(topic => {
                         const l = topic.l; const s = topic.s; const wordsInTopic = topic.words; const topicKey = topic.key;
                         const safeL = escapeStr(l); const safeS = escapeStr(s); const safeTopicKey = escapeStr(topicKey);
+                        if (collapsedDictTopics[topicKey] === undefined) collapsedDictTopics[topicKey] = true;
+                        const isTopicCollapsed = collapsedDictTopics[topicKey];
+                        const topicChevronClass = isTopicCollapsed ? '' : 'rotate-180';
 
                         html += `
                         <div class="dict-topic bg-[#112240] rounded-xl border border-white/5 mb-2 overflow-hidden" data-topic="${safeTopicKey}">
-                            <div class="flex items-center justify-between px-4 py-2 bg-[#172A45]/50 border-b border-white/5">
+                            <div class="flex items-center justify-between px-4 py-2 bg-[#172A45]/50 border-b border-white/5 cursor-pointer hover:bg-[#1e3357] transition-colors" onclick="toggleTopic('${safeTopicKey}')">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
-                                    <div class="cursor-move drag-handle-topic text-gray-600 hover:text-white transition-colors flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
+                                    <div class="cursor-move drag-handle-topic text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
                                     ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
                                     <span class="text-sm font-bold text-[#D4AF37] truncate notranslate">${s}</span>
                                     <span class="text-xs text-gray-500 flex-shrink-0 ml-1">${wordsInTopic.length} ${t('слов')}</span>
@@ -1991,9 +2004,10 @@
                                 <div class="flex items-center gap-1 flex-shrink-0">
                                     ${isDevMode ? `<button onclick="renameSubfolder('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>` : ''}
                                     <button onclick="addWordToTopic('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
+                                    <svg class="topic-chevron w-5 h-5 text-gray-500 transition-transform ${topicChevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
-                            <div id="topic-words-${safeTopicKey}" class="p-2 space-y-1 bg-[#0A192F]">
+                            <div id="topic-words-${safeTopicKey}" class="p-2 space-y-1 bg-[#0A192F]${isTopicCollapsed ? ' hidden' : ''}">
                         `;
 
                         wordsInTopic.forEach(w => {
