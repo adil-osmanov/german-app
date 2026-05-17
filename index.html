@@ -1566,13 +1566,14 @@
             let lvl = 1;
             let xpForNext = 150;
             let accumulated = 0;
-            while (totalXP >= accumulated + xpForNext) {
+            // Cap at 80 levels
+            while (totalXP >= accumulated + xpForNext && lvl < 80) {
                 accumulated += xpForNext;
                 lvl++;
                 xpForNext = (lvl * 100) + 50;
             }
             const currentLevelXP = totalXP - accumulated;
-            const pct = Math.min(100, (currentLevelXP / xpForNext) * 100);
+            const pct = lvl === 80 ? 100 : Math.min(100, (currentLevelXP / xpForNext) * 100);
             
             // Level Up logic
             const prevLvl = parseInt(localStorage.getItem(`current_level_${currentUser}`) || '1', 10);
@@ -1581,21 +1582,14 @@
                 localStorage.setItem(`current_level_${currentUser}`, lvl);
             }
             
-            let rankName = t("Турист");
-            let rankIcon = `🧭`; 
-            if (lvl >= 11 && lvl <= 20) {
-                rankName = t("Студент");
-                rankIcon = `📚`;
-            } else if (lvl >= 21 && lvl <= 30) {
-                rankName = t("Полиглот");
-                rankIcon = `🌍`;
-            } else if (lvl >= 31 && lvl <= 40) {
-                rankName = t("Лингвист");
-                rankIcon = `✒️`;
-            } else if (lvl > 40) {
-                rankName = t("Амбассадор");
-                rankIcon = `👑`;
-            }
+            let rankName = t("Турист"); let rankIcon = `🧳`; 
+            if (lvl >= 11 && lvl <= 20) { rankName = t("Мигрант"); rankIcon = `🛂`; }
+            else if (lvl >= 21 && lvl <= 30) { rankName = t("Студент"); rankIcon = `📚`; }
+            else if (lvl >= 31 && lvl <= 40) { rankName = t("Соискатель"); rankIcon = `📄`; }
+            else if (lvl >= 41 && lvl <= 50) { rankName = t("Работник"); rankIcon = `💼`; }
+            else if (lvl >= 51 && lvl <= 60) { rankName = t("Резидент"); rankIcon = `🏠`; }
+            else if (lvl >= 61 && lvl <= 70) { rankName = t("Гражданин"); rankIcon = `🏛️`; }
+            else if (lvl >= 71) { rankName = t("Местный"); rankIcon = `👑`; }
 
             const badge = document.getElementById('prof-lvl');
             const bar = document.getElementById('prof-xp-bar');
@@ -1810,19 +1804,13 @@
                 renderDict(searchInp.value.toLowerCase());
             }, 250);
         };
-        window.toggleTopic = (topicKey) => {
-            // Toggle without full re-render: just toggle hidden class on the words container
-            const wordsDiv = document.getElementById('topic-words-' + topicKey);
-            if (wordsDiv) {
-                const isNowHidden = wordsDiv.classList.toggle('hidden');
-                if (!isNowHidden) wordsDiv.classList.add('p-2', 'space-y-1', 'bg-[#0A192F]', 'border-t', 'border-gray-800/50');
-                collapsedDictTopics[topicKey] = isNowHidden;
-                // Rotate chevron
-                const chevron = document.querySelector(`[data-topic="${CSS.escape(topicKey)}"] .topic-chevron`);
+        window.toggleFolder = (folderName) => {
+            const topicsContainer = document.querySelector(`.dict-topics-container[data-folder="${CSS.escape(folderName)}"]`);
+            if (topicsContainer) {
+                const isNowHidden = topicsContainer.classList.toggle('hidden');
+                collapsedDictTopics['folder_' + folderName] = isNowHidden;
+                const chevron = document.querySelector(`[data-folder-header="${CSS.escape(folderName)}"] .folder-chevron`);
                 if (chevron) chevron.classList.toggle('rotate-180', !isNowHidden);
-            } else {
-                collapsedDictTopics[topicKey] = !collapsedDictTopics[topicKey];
-                renderDict(searchInp.value.toLowerCase());
             }
         };
 
@@ -1854,20 +1842,27 @@
                 let html = '<div id="dict-folders-container">';
                 folderNames.forEach(f => {
                     const safeF = escapeStr(f);
+                    if (collapsedDictTopics['folder_' + f] === undefined) collapsedDictTopics['folder_' + f] = false;
+                    const isFolderCollapsed = collapsedDictTopics['folder_' + f];
+                    const folderChevronClass = isFolderCollapsed ? '' : 'rotate-180';
+
                     html += `
                     <div class="dict-folder mb-4 bg-[#112240] rounded-2xl overflow-hidden border border-white/5" data-folder="${safeF}">
-                        <div class="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-white/5 cursor-pointer hover:bg-[#172A45] transition-colors" data-folder-header="${safeF}" onclick="toggleFolder('${safeF}')">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                <div class="cursor-move drag-handle-folder text-gray-600 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
-                                <h2 class="text-base font-bold text-white truncate notranslate" ${isDevMode ? `onclick="renameFolder('${safeF}')" style="cursor:pointer;" title="Переименовать"` : ''}>${f}</h2>
+                                <div class="cursor-move drag-handle-folder text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
+                                <h2 class="text-base font-bold text-white truncate notranslate" ${isDevMode ? `onclick="event.stopPropagation(); renameFolder('${safeF}')" style="cursor:pointer;" title="Переименовать"` : ''}>${f}</h2>
                             </div>
+                            <div class="flex items-center gap-2">
                             ${isDevMode ? `<div class="flex items-center gap-1">
                                 <button onclick="fastAddCourse('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#34d399] hover:bg-[#34d399]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
                                 <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37]/60 hover:text-[#D4AF37] rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
                                 <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400/60 hover:text-red-400 rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                             </div>` : ''}
+                            <svg class="folder-chevron w-5 h-5 text-gray-500 transition-transform ${folderChevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
                         </div>
-                        <div class="dict-topics-container p-2 space-y-1" data-folder="${safeF}">
+                        <div class="dict-topics-container p-2 space-y-1${isFolderCollapsed ? ' hidden' : ''}" data-folder="${safeF}">
                     `;
 
                     let topics = [];
@@ -1877,24 +1872,22 @@
                     topics.forEach(t => {
                         const l = t.l; const s = t.s; const wordsInTopic = t.words; const topicKey = t.key;
                         const safeL = escapeStr(l); const safeS = escapeStr(s); const safeTopicKey = escapeStr(topicKey);
-                        if (collapsedDictTopics[topicKey] === undefined) collapsedDictTopics[topicKey] = true;
-                        const isCollapsed = collapsedDictTopics[topicKey]; const chevronClass = isCollapsed ? '' : 'rotate-180';
 
                         html += `
-                        <div class="dict-topic bg-[#112240] rounded-xl border border-white/5 mb-1 overflow-hidden" data-topic="${safeTopicKey}">
-                            <div class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-[#172A45] transition-colors" onclick="toggleTopic('${safeTopicKey}')">
+                        <div class="dict-topic bg-[#112240] rounded-xl border border-white/5 mb-2 overflow-hidden" data-topic="${safeTopicKey}">
+                            <div class="flex items-center justify-between px-4 py-2 bg-[#172A45]/50 border-b border-white/5">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <div class="cursor-move drag-handle-topic text-gray-600 hover:text-white transition-colors flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
                                     ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
-                                    <span class="text-sm font-medium text-gray-200 truncate notranslate">${s}</span>
-                                    <span class="text-xs text-gray-600 flex-shrink-0">${wordsInTopic.length}</span>
+                                    <span class="text-sm font-bold text-[#D4AF37] truncate notranslate">${s}</span>
+                                    <span class="text-xs text-gray-500 flex-shrink-0 ml-1">${wordsInTopic.length} ${t('слов')}</span>
                                 </div>
                                 <div class="flex items-center gap-1 flex-shrink-0">
                                     ${isDevMode ? `<button onclick="renameSubfolder('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>` : ''}
                                     <button onclick="addWordToTopic('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
-                                    <svg class="topic-chevron w-4 h-4 text-gray-600 transition-transform ${chevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
-                            <div id="topic-words-${safeTopicKey}" class="px-2 pb-2 space-y-1${isCollapsed ? ' hidden' : ''}">
+                            <div id="topic-words-${safeTopicKey}" class="p-2 space-y-1 bg-[#0A192F]">
                         `;
 
                         wordsInTopic.forEach(w => {
@@ -2835,10 +2828,14 @@
         window.answerVerb = (remembered) => {
             if (remembered) {
                 playTone(800, 'sine', 0.3);
-                // +5 XP for correct verb form (same as review)
                 const { key, stats } = getDailyStats();
                 stats.reviews++;
                 localStorage.setItem(key, JSON.stringify(stats));
+                
+                const xpKey = `total_xp_${currentUser}`;
+                const newTotal = (parseInt(localStorage.getItem(xpKey) || '0', 10)) + 5;
+                localStorage.setItem(xpKey, newTotal);
+                
                 showXPFloat(5, window.innerWidth / 2, window.innerHeight / 3);
                 updateExperience();
             } else {
@@ -3074,10 +3071,13 @@
     <script>
         window.i18nDict = {
             "Турист": { en: "Tourist", de: "Tourist" },
+            "Мигрант": { en: "Migrant", de: "Migrant" },
             "Студент": { en: "Student", de: "Student" },
-            "Полиглот": { en: "Polyglot", de: "Polyglott" },
-            "Лингвист": { en: "Linguist", de: "Linguist" },
-            "Амбассадор": { en: "Ambassador", de: "Botschafter" },
+            "Соискатель": { en: "Job Seeker", de: "Bewerber" },
+            "Работник": { en: "Worker", de: "Arbeitnehmer" },
+            "Резидент": { en: "Resident", de: "Einwohner" },
+            "Гражданин": { en: "Citizen", de: "Bürger" },
+            "Местный": { en: "Local", de: "Einheimische" },
             "Уровень повышен!": { en: "Level Up!", de: "Levelaufstieg!" },
             "Цели на день": { en: "Daily Goals", de: "Tagesziele" },
             "Профиль": { en: "Profile", de: "Profil" },
@@ -3092,7 +3092,10 @@
             "Уровни 11-20": { en: "Levels 11-20", de: "Stufen 11-20" },
             "Уровни 21-30": { en: "Levels 21-30", de: "Stufen 21-30" },
             "Уровни 31-40": { en: "Levels 31-40", de: "Stufen 31-40" },
-            "Уровни 41+": { en: "Levels 41+", de: "Stufen 41+" },
+            "Уровни 41-50": { en: "Levels 41-50", de: "Stufen 41-50" },
+            "Уровни 51-60": { en: "Levels 51-60", de: "Stufen 51-60" },
+            "Уровни 61-70": { en: "Levels 61-70", de: "Stufen 61-70" },
+            "Уровни 71-80": { en: "Levels 71-80", de: "Stufen 71-80" },
 
             "Словарь": { en: "Dictionary", de: "Wörterbuch" },
             "Учить": { en: "Learn", de: "Lernen" },
@@ -3372,11 +3375,14 @@
 
         window.renderRoadmap = (currentLvl) => {
             const ranks = [
-                { max: 10, name: "Турист", icon: "🧭", desc: "Уровни 1-10" },
-                { max: 20, name: "Студент", icon: "📚", desc: "Уровни 11-20" },
-                { max: 30, name: "Полиглот", icon: "🌍", desc: "Уровни 21-30" },
-                { max: 40, name: "Лингвист", icon: "✒️", desc: "Уровни 31-40" },
-                { max: 999, name: "Амбассадор", icon: "👑", desc: "Уровни 41+" }
+                { max: 10, name: "Турист", icon: "🧳", desc: "Уровни 1-10" },
+                { max: 20, name: "Мигрант", icon: "🛂", desc: "Уровни 11-20" },
+                { max: 30, name: "Студент", icon: "📚", desc: "Уровни 21-30" },
+                { max: 40, name: "Соискатель", icon: "📄", desc: "Уровни 31-40" },
+                { max: 50, name: "Работник", icon: "💼", desc: "Уровни 41-50" },
+                { max: 60, name: "Резидент", icon: "🏠", desc: "Уровни 51-60" },
+                { max: 70, name: "Гражданин", icon: "🏛️", desc: "Уровни 61-70" },
+                { max: 80, name: "Местный", icon: "👑", desc: "Уровни 71-80" }
             ];
             
             let html = '';
@@ -3432,9 +3438,10 @@
 
         window.updateExperience = () => {
             if (origUpdateExp) origUpdateExp();
-            const totalXP = globalWords.reduce((sum, w) => sum + ((w.score > 0 ? w.score * 5 : 0) + (w.interval > 0 ? 10 : 0) + (w.repetitions || 0) * 5), 0);
+            const xpKey = `total_xp_${currentUser}`;
+            let totalXP = parseInt(localStorage.getItem(xpKey) || '0', 10);
             let lvl = 1; let xpForNext = 150; let accumulated = 0;
-            while (totalXP >= accumulated + xpForNext) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
+            while (totalXP >= accumulated + xpForNext && lvl < 80) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
             renderRoadmap(lvl);
             
             // set goal inputs
