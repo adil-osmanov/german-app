@@ -1975,8 +1975,8 @@
                     for (const l in grouped[f]) { for (const s in grouped[f][l]) { topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` }); } }
                     topics.sort((a, b) => { let orderArr = savedTopicOrder[f] || []; let idxA = orderArr.indexOf(a.key); let idxB = orderArr.indexOf(b.key); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
 
-                    topics.forEach(t => {
-                        const l = t.l; const s = t.s; const wordsInTopic = t.words; const topicKey = t.key;
+                    topics.forEach(topic => {
+                        const l = topic.l; const s = topic.s; const wordsInTopic = topic.words; const topicKey = topic.key;
                         const safeL = escapeStr(l); const safeS = escapeStr(s); const safeTopicKey = escapeStr(topicKey);
 
                         html += `
