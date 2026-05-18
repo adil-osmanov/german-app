@@ -644,9 +644,6 @@
             </div>
         </section>
 
-
-
-
         <section id="view-stats" class="hidden relative pt-4 pb-6 flex flex-col items-center select-none">
 
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 relative">
@@ -668,14 +665,15 @@
                             onclick="event.stopPropagation(); document.getElementById('roadmap-modal').classList.remove('hidden')">
                             🧭
                         </div>
+                        <div id="prof-buff-spark" class="absolute -left-2 top-0 text-2xl drop-shadow-[0_0_10px_#FDE08B] hidden" title="Бафф Интеллекта (+10% XP)">✨</div>
                     </div>
                 </div>
 
                 <div class="w-full max-w-[280px] mx-auto flex flex-col items-center mb-6">
                     <div
                         class="flex justify-between w-full text-[11px] text-[#D4AF37] font-medium tracking-widest uppercase mb-2">
-                        <span id="prof-lvl" class="text-white font-bold">Lvl 1</span>
-                        <span id="prof-xp-text">0 / 150 XP</span>
+                        <span id="prof-lvl" class="text-white font-bold">Уровень 17</span>
+                        <span id="prof-xp-text">0 / 0 XP</span>
                     </div>
                     <div
                         class="w-full h-2 bg-[#172A45] rounded-full overflow-hidden border border-[#D4AF37]/20 shadow-inner">
@@ -683,47 +681,37 @@
                             class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000"
                             style="width: 0%"></div>
                     </div>
-                    <div class="mt-2 text-[10px] text-gray-400 uppercase tracking-widest cursor-pointer hover:text-[#D4AF37] transition-colors"
+                    <div class="mt-2 text-[10px] text-gray-400 uppercase tracking-widest cursor-pointer hover:text-[#D4AF37] transition-colors notranslate"
                         id="prof-rank-name"
-                        onclick="document.getElementById('roadmap-modal').classList.remove('hidden')">Турист</div>
+                        onclick="document.getElementById('roadmap-modal').classList.remove('hidden')"></div>
+                    <div id="prof-rested-text" class="mt-2 text-xs text-[#8A2BE2] font-bold hidden text-center">Отдых: следующие 25 слов принесут x1.5 опыта</div>
                 </div>
             </div>
 
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-white" data-orig-ru="Цели на день">Цели на день</h2>
-                    <button onclick="document.getElementById('goal-modal').classList.remove('hidden')"
-                        class="text-xs text-[#D4AF37] hover:underline flex items-center gap-1"><svg class="w-3 h-3"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg> Изменить</button>
+                    <h2 class="text-lg font-bold text-white" data-orig-ru="Ежедневный квест">Ежедневный квест</h2>
                 </div>
                 <div class="flex justify-center w-full mb-4">
                     <div class="relative w-32 h-32 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90 drop-shadow-md">
                             <circle cx="64" cy="64" r="54" stroke="#172A45" stroke-width="8" fill="none" />
-                            <circle cx="64" cy="64" r="40" stroke="#172A45" stroke-width="8" fill="none" />
-                            <circle id="ring-review" cx="64" cy="64" r="54" stroke="#3AB0FF" stroke-width="8"
+                            <circle id="ring-quest" cx="64" cy="64" r="54" stroke="#D4AF37" stroke-width="8"
                                 fill="none" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"
-                                class="transition-all duration-1000" />
-                            <circle id="ring-new" cx="64" cy="64" r="40" stroke="#34D399" stroke-width="8" fill="none"
-                                stroke-linecap="round" stroke-dasharray="251.32" stroke-dashoffset="251.32"
                                 class="transition-all duration-1000" />
                         </svg>
                     </div>
                 </div>
-
                 <div class="flex justify-center gap-6 mt-2">
                     <div class="flex items-center gap-2 text-xs font-medium text-gray-400">
-                        <div class="w-3 h-3 rounded-full bg-[#34D399] shadow-[0_0_5px_#34D399]"></div> Новые <span
-                            id="prof-new-text">0/10</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400">
-                        <div class="w-3 h-3 rounded-full bg-[#3AB0FF] shadow-[0_0_5px_#3AB0FF]"></div> Повтор <span
-                            id="prof-rev-text">0/20</span>
+                        Слов: <span id="prof-quest-text">0/200</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
+                <h2 class="text-lg font-bold text-white mb-4" data-orig-ru="Репутация колод">Репутация колод</h2>
+                <div id="prof-reputation" class="w-full space-y-3"></div>
             </div>
 
             <div id="stats-container" class="w-full"></div>
@@ -1601,34 +1589,26 @@
         };
 
 
-        window.updateDailyActivity = (isNew, eventX, eventY) => {
-            const { key, stats } = getDailyStats();
-            if (isNew) stats.newWords++; else stats.reviews++;
-            localStorage.setItem(key, JSON.stringify(stats));
-
-            const xpGain = isNew ? 10 : 5;
-            // Add XP to persistent counter — this is the single source of truth
-            const xpKey = `total_xp_${currentUser}`;
-            const newTotal = (parseInt(localStorage.getItem(xpKey) || '0', 10)) + xpGain;
-            localStorage.setItem(xpKey, newTotal);
-
-            showXPFloat(xpGain, eventX || (window.innerWidth / 2), (eventY || (window.innerHeight / 2 - 50)) - 20);
-
-            // Update Streak logic
-            let currentStreak = parseInt(localStorage.getItem(`streak_${currentUser}`) || '0', 10);
-            let lastStreakDate = localStorage.getItem(`lastStreakDate_${currentUser}`);
-            const dateStr = new Date().toISOString().slice(0, 10);
-            const targetNew = parseInt(localStorage.getItem(`goal_new_${currentUser}`) || '10', 10);
-            const targetRev = parseInt(localStorage.getItem(`goal_rev_${currentUser}`) || '20', 10);
-            if (stats.newWords >= targetNew && stats.reviews >= targetRev && lastStreakDate !== dateStr) {
-                let d = new Date(); d.setDate(d.getDate() - 1);
-                let yest = d.toISOString().slice(0, 10);
-                if (lastStreakDate === yest || lastStreakDate == null) { currentStreak++; }
-                else { currentStreak = 1; }
-                localStorage.setItem(`lastStreakDate_${currentUser}`, dateStr);
-                localStorage.setItem(`streak_${currentUser}`, currentStreak);
-            }
-            updateExperience();
+        window.updateDailyActivity = async (isNew, eventX, eventY) => {
+            try {
+                const res = await apiFetch('/progress/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action_type: isNew ? 'new' : 'review' })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showXPFloat(data.xp_added, eventX || (window.innerWidth / 2), (eventY || (window.innerHeight / 2 - 50)) - 20);
+                    if (data.leveled_up) showLevelUp(data.new_level);
+                    if (data.quest_completed) {
+                        setTimeout(() => {
+                            showXPFloat(500, window.innerWidth / 2, window.innerHeight / 2);
+                            showLevelUp('Квест сдан!');
+                        }, 500);
+                    }
+                    await window.updateExperience();
+                }
+            } catch(e) { console.error('Error posting progress action', e); }
         };
 
 
@@ -1658,74 +1638,69 @@
             }, 3000);
         };
 
-        window.updateExperience = () => {
-            if (!globalWords) return;
-            // Use persistent XP counter — single source of truth, always matches floats
-            const xpKey = `total_xp_${currentUser}`;
-            let totalXP = parseInt(localStorage.getItem(xpKey) || '0', 10);
-            // Bootstrap: if no counter yet, seed from word data (one-time migration)
-            if (totalXP === 0 && globalWords.length > 0) {
-                totalXP = globalWords.reduce((sum, w) => sum + (w.score > 0 ? w.score * 5 : 0) + (w.repetitions > 1 ? (w.repetitions - 1) * 5 : 0), 0);
-                localStorage.setItem(xpKey, totalXP);
-            }
+        window.userProgressState = null;
+        window.updateExperience = async () => {
+            try {
+                const res = await apiFetch('/progress');
+                window.userProgressState = await res.json();
+                
+                let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active } = window.userProgressState;
+                level = parseInt(level, 10);
+                current_xp = parseInt(current_xp, 10);
+                xp_for_next = parseInt(xp_for_next, 10);
+                
+                const pct = Math.min(100, (current_xp / xp_for_next) * 100);
 
-            let lvl = 1;
-            let xpForNext = 150;
-            let accumulated = 0;
-            // Cap at 80 levels
-            while (totalXP >= accumulated + xpForNext && lvl < 80) {
-                accumulated += xpForNext;
-                lvl++;
-                xpForNext = (lvl * 100) + 50;
-            }
-            const currentLevelXP = totalXP - accumulated;
-            const pct = lvl === 80 ? 100 : Math.min(100, (currentLevelXP / xpForNext) * 100);
+                let rankName = "Турист"; let rankIcon = `🧳`;
+                if (level >= 11 && level <= 20) { rankName = "Мигрант"; rankIcon = `🛂`; }
+                else if (level >= 21 && level <= 30) { rankName = "Студент"; rankIcon = `📚`; }
+                else if (level >= 31 && level <= 40) { rankName = "Соискатель"; rankIcon = `📄`; }
+                else if (level >= 41 && level <= 50) { rankName = "Работник"; rankIcon = `💼`; }
+                else if (level >= 51 && level <= 60) { rankName = "Резидент"; rankIcon = `🏠`; }
+                else if (level >= 61 && level <= 70) { rankName = "Гражданин"; rankIcon = `🏛️`; }
+                else if (level >= 71) { rankName = "Местный"; rankIcon = `👑`; }
 
-            // Level Up logic
-            const prevLvl = parseInt(localStorage.getItem(`current_level_${currentUser}`) || '1', 10);
-            if (lvl > prevLvl) {
-                showLevelUp(lvl);
-                localStorage.setItem(`current_level_${currentUser}`, lvl);
-            }
+                ['prof-lvl', 'train-xp-lvl', 'vt-xp-lvl'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.innerText = id === 'prof-lvl' ? `Уровень ${level}` : `Lvl ${level}`;
+                });
+                ['prof-xp-text', 'train-xp-text', 'vt-xp-text'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.innerText = `${current_xp} / ${xp_for_next} XP`;
+                });
+                ['prof-xp-bar', 'train-xp-bar', 'vt-xp-bar'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.style.width = `${pct}%`;
+                        if (rested_words_left > 0) el.className = "h-full bg-gradient-to-r from-[#8A2BE2] to-[#4B0082] transition-all duration-1000";
+                        else el.className = "h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000";
+                    }
+                });
 
-            let rankName = t("Турист"); let rankIcon = `🧳`;
-            if (lvl >= 11 && lvl <= 20) { rankName = t("Мигрант"); rankIcon = `🛂`; }
-            else if (lvl >= 21 && lvl <= 30) { rankName = t("Студент"); rankIcon = `📚`; }
-            else if (lvl >= 31 && lvl <= 40) { rankName = t("Соискатель"); rankIcon = `📄`; }
-            else if (lvl >= 41 && lvl <= 50) { rankName = t("Работник"); rankIcon = `💼`; }
-            else if (lvl >= 51 && lvl <= 60) { rankName = t("Резидент"); rankIcon = `🏠`; }
-            else if (lvl >= 61 && lvl <= 70) { rankName = t("Гражданин"); rankIcon = `🏛️`; }
-            else if (lvl >= 71) { rankName = t("Местный"); rankIcon = `👑`; }
+                if (document.getElementById('prof-rank-name')) document.getElementById('prof-rank-name').innerText = rankName;
+                if (document.getElementById('prof-league-icon')) document.getElementById('prof-league-icon').innerHTML = rankIcon;
 
-            const badge = document.getElementById('prof-lvl');
-            const bar = document.getElementById('prof-xp-bar');
-            const xpText = document.getElementById('prof-xp-text');
-            const rankEl = document.getElementById('prof-rank-name');
-            const rankIcoEl = document.getElementById('prof-league-icon');
+                const buffSpark = document.getElementById('prof-buff-spark');
+                if (buffSpark) buffSpark.classList.toggle('hidden', !buff_active);
+                
+                const restedText = document.getElementById('prof-rested-text');
+                if (restedText) restedText.classList.toggle('hidden', rested_words_left === 0);
 
-            if (badge) badge.innerText = `Lvl ${lvl}`;
-            if (bar) bar.style.width = `${pct}%`;
-            if (xpText) xpText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
-            if (rankEl) rankEl.innerText = rankName;
-            if (rankIcoEl) rankIcoEl.innerHTML = rankIcon;
+                const ringQuest = document.getElementById('ring-quest');
+                const questText = document.getElementById('prof-quest-text');
+                const totalDaily = daily_new_words + daily_reviews;
+                
+                if (ringQuest) {
+                    const maxLen = 339.29; 
+                    const pctQuest = Math.min(1, totalDaily / 200);
+                    ringQuest.style.strokeDashoffset = maxLen - (maxLen * pctQuest);
+                }
+                if (questText) questText.innerText = `${totalDaily}/200`;
 
-            // Real-time XP panel inside view-train (flashcard trainer)
-            const trainLvl = document.getElementById('train-xp-lvl');
-            const trainBar = document.getElementById('train-xp-bar');
-            const trainXPText = document.getElementById('train-xp-text');
-            if (trainLvl) trainLvl.innerText = `Lvl ${lvl}`;
-            if (trainBar) trainBar.style.width = `${pct}%`;
-            if (trainXPText) trainXPText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
+                renderReputation();
 
-            // Real-time XP panel inside verb trainer
-            const vtLvl = document.getElementById('vt-xp-lvl');
-            const vtBar = document.getElementById('vt-xp-bar');
-            const vtXPText = document.getElementById('vt-xp-text');
-            if (vtLvl) vtLvl.innerText = `Lvl ${lvl}`;
-            if (vtBar) vtBar.style.width = `${pct}%`;
-            if (vtXPText) vtXPText.innerText = `${currentLevelXP} / ${xpForNext} XP`;
+            } catch(e) { console.error('XP fetch error', e); }
 
-            // Fix Archive stats dynamically
             const profMastered = document.getElementById('prof-mastered-text');
             const profTotal = document.getElementById('prof-total-text');
             const profVerbs = document.getElementById('prof-verbs-text');
@@ -1737,8 +1712,6 @@
                 profVerbs.innerText = vbs;
             }
 
-
-            // Avatar update
             const dashAvatar = document.getElementById('prof-avatar');
             if (dashAvatar) {
                 const currentAv = localStorage.getItem('avatar_' + currentUser);
@@ -1750,35 +1723,38 @@
                     dashAvatar.innerText = currentUser === 'osman' ? 'О' : (currentUser === 'girlfriend' ? 'Д' : 'U');
                 }
             }
-
-            // Daily Stats
-            const { stats } = getDailyStats();
-            const targetNew = parseInt(localStorage.getItem(`goal_new_${currentUser}`) || '10', 10);
-            const targetRev = parseInt(localStorage.getItem(`goal_rev_${currentUser}`) || '20', 10);
-
-            const newText = document.getElementById('prof-new-text');
-            const revText = document.getElementById('prof-rev-text');
-            if (newText) newText.innerText = `${stats.newWords}/${targetNew}`;
-            if (revText) revText.innerText = `${stats.reviews}/${targetRev}`;
-
-            const ringNew = document.getElementById('ring-new');
-            const ringRev = document.getElementById('ring-review');
-            if (ringNew) {
-                const dashOffsetNew = 251.32 - (Math.min(stats.newWords / targetNew, 1) * 251.32);
-                ringNew.style.strokeDashoffset = dashOffsetNew;
-                if (stats.newWords >= targetNew) ringNew.style.filter = "drop-shadow(0 0 4px #34D399)";
-            }
-            if (ringRev) {
-                const dashOffsetRev = 339.29 - (Math.min(stats.reviews / targetRev, 1) * 339.29);
-                ringRev.style.strokeDashoffset = dashOffsetRev;
-                if (stats.reviews >= targetRev) ringRev.style.filter = "drop-shadow(0 0 4px #3AB0FF)";
-            }
-
-            // Streak computation (based on daily goals)
-            let currentStreak = parseInt(localStorage.getItem(`streak_${currentUser}`) || '0', 10);
-            const streakEl = document.getElementById('prof-streak');
-            if (streakEl) streakEl.innerText = `${currentStreak}`;
         };
+
+        function renderReputation() {
+            const container = document.getElementById('prof-reputation');
+            if (!container) return;
+            const folders = {};
+            globalWords.forEach(w => {
+                if (!folders[w.folder]) folders[w.folder] = { total: 0, mastered: 0 };
+                folders[w.folder].total++;
+                if (w.score >= MAX_SCORE) folders[w.folder].mastered++;
+            });
+            let html = '';
+            for (let f in folders) {
+                const pct = Math.floor((folders[f].mastered / folders[f].total) * 100) || 0;
+                let repText = '', colorCls = '';
+                if (pct <= 20) { repText = 'Равнодушие'; colorCls = 'text-red-500'; }
+                else if (pct <= 40) { repText = 'Дружелюбие'; colorCls = 'text-orange-500'; }
+                else if (pct <= 60) { repText = 'Уважение'; colorCls = 'text-yellow-500'; }
+                else if (pct <= 80) { repText = 'Почтение'; colorCls = 'text-lime-500'; }
+                else { repText = 'Превознесение'; colorCls = 'text-green-500'; }
+
+                html += `
+                <div class="flex justify-between items-center bg-[#172A45]/50 p-3 rounded-xl border border-white/5">
+                    <span class="text-sm text-gray-300 font-bold truncate pr-2">${escapeStr(f)}</span>
+                    <div class="flex flex-col items-end">
+                        <span class="text-[10px] uppercase font-bold tracking-widest ${colorCls}">${t(repText)}</span>
+                        <span class="text-xs text-gray-500">Выучено: ${pct}%</span>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+        }
 
         window.fetchWords = async () => {
             try {
@@ -1998,7 +1974,7 @@
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
                                     <div class="cursor-move drag-handle-topic text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
                                     ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
-                                    <span class="text-sm font-bold text-[#D4AF37] truncate notranslate">${s}</span>
+                                    <span class="text-sm font-semibold text-gray-200 truncate notranslate">${s}</span>
                                     <span class="text-xs text-gray-500 flex-shrink-0 ml-1">${wordsInTopic.length} ${t('слов')}</span>
                                 </div>
                                 <div class="flex items-center gap-1 flex-shrink-0">
@@ -3557,19 +3533,12 @@
             }, 3000);
         };
 
-        window.updateExperience = () => {
-            if (origUpdateExp) origUpdateExp();
-            const xpKey = `total_xp_${currentUser}`;
-            let totalXP = parseInt(localStorage.getItem(xpKey) || '0', 10);
-            let lvl = 1; let xpForNext = 150; let accumulated = 0;
-            while (totalXP >= accumulated + xpForNext && lvl < 80) { accumulated += xpForNext; lvl++; xpForNext = (lvl * 100) + 50; }
+        // Roadmap hook: patch updateExperience to also render roadmap after fetching progress
+        const _baseUpdateExp = window.updateExperience;
+        window.updateExperience = async () => {
+            await _baseUpdateExp();
+            const lvl = window.userProgressState ? parseInt(window.userProgressState.level, 10) : 1;
             renderRoadmap(lvl);
-
-            // set goal inputs
-            const inpNew = document.getElementById('input-goal-new');
-            const inpRev = document.getElementById('input-goal-rev');
-            if (inpNew) inpNew.value = localStorage.getItem(`goal_new_${currentUser}`) || '10';
-            if (inpRev) inpRev.value = localStorage.getItem(`goal_rev_${currentUser}`) || '20';
         };
     </script>
 

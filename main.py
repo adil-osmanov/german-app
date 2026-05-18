@@ -116,6 +116,21 @@ def init_db():
     """)
     conn.commit()
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_progress (
+            username TEXT PRIMARY KEY,
+            level INTEGER DEFAULT 17,
+            current_xp BIGINT DEFAULT 0,
+            last_action_time TIMESTAMP DEFAULT NOW(),
+            rested_words_left INTEGER DEFAULT 0,
+            daily_new_words INTEGER DEFAULT 0,
+            daily_reviews INTEGER DEFAULT 0,
+            last_daily_date TEXT DEFAULT '',
+            buff_active BOOLEAN DEFAULT FALSE
+        )
+    """)
+    conn.commit()
+
     # Миграция: добавление username в старые таблицы
     try:
         cur.execute("ALTER TABLE words ADD COLUMN username TEXT DEFAULT 'osman'")
@@ -205,6 +220,12 @@ class HistoryUpdate(BaseModel):
 class AvatarUpdate(BaseModel):
     avatar_base64: str
 
+class ProgressAction(BaseModel):
+    action_type: str
+
+def xp_needed_for_next(lvl):
+    return 5 * (lvl ** 2) + 100 * lvl
+
 @app.get("/profiles")
 def get_profiles():
     conn = get_db_connection()
@@ -254,6 +275,130 @@ def update_history(data: HistoryUpdate, x_user: str = Header("osman")):
     cur.close()
     conn.close()
     return {"status": "success"}
+
+@app.get("/progress")
+def get_progress(x_user: str = Header("osman")):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM user_progress WHERE username = %s", (x_user,))
+    row = cur.fetchone()
+    
+    from datetime import datetime, timedelta
+    now = datetime.now()
+    today_str = now.date().isoformat()
+    
+    if not row:
+        cur.execute("INSERT INTO user_progress (username, level, current_xp, last_action_time, last_daily_date) VALUES (%s, 17, 0, NOW(), %s) RETURNING *", (x_user, today_str))
+        row = cur.fetchone()
+        conn.commit()
+    
+    last_time = row['last_action_time']
+    last_daily = row['last_daily_date']
+    
+    updates = {}
+    if last_time:
+        diff = now - last_time
+        if diff.total_seconds() > 8 * 3600 and row['rested_words_left'] == 0:
+            updates['rested_words_left'] = 25
+            row['rested_words_left'] = 25
+
+    if last_daily != today_str:
+        yesterday_str = (now.date() - timedelta(days=1)).isoformat()
+        quest_completed = ((row['daily_new_words'] + row['daily_reviews']) >= 200)
+        buff_active = quest_completed and (last_daily == yesterday_str)
+        
+        updates['daily_new_words'] = 0
+        updates['daily_reviews'] = 0
+        updates['last_daily_date'] = today_str
+        updates['buff_active'] = buff_active
+        
+        row['daily_new_words'] = 0
+        row['daily_reviews'] = 0
+        row['last_daily_date'] = today_str
+        row['buff_active'] = buff_active
+
+    if updates:
+        set_clauses = ", ".join([f"{k} = %s" for k in updates.keys()])
+        values = list(updates.values()) + [x_user]
+        cur.execute(f"UPDATE user_progress SET {set_clauses} WHERE username = %s", values)
+        conn.commit()
+
+    row['xp_for_next'] = xp_needed_for_next(row['level'])
+    
+    cur.close()
+    conn.close()
+    return dict(row)
+
+@app.post("/progress/action")
+def progress_action(data: ProgressAction, x_user: str = Header("osman")):
+    import math
+    state = get_progress(x_user)
+    
+    base_xp = 10 if data.action_type == "new" else 5
+    
+    rested = False
+    if state['rested_words_left'] > 0:
+        base_xp = base_xp * 1.5
+        rested = True
+        
+    if state['buff_active']:
+        base_xp = base_xp * 1.1
+        
+    final_xp = math.ceil(base_xp)
+    
+    new_xp = state['current_xp'] + final_xp
+    new_level = state['level']
+    leveled_up = False
+    
+    while new_level < 80:
+        needed = xp_needed_for_next(new_level)
+        if new_xp >= needed:
+            new_xp -= needed
+            new_level += 1
+            leveled_up = True
+        else:
+            break
+            
+    new_daily_new = state['daily_new_words'] + (1 if data.action_type == "new" else 0)
+    new_daily_rev = state['daily_reviews'] + (1 if data.action_type == "review" else 0)
+    
+    quest_just_completed = False
+    if (state['daily_new_words'] + state['daily_reviews']) < 200:
+        if (new_daily_new + new_daily_rev) >= 200:
+            quest_just_completed = True
+            new_xp += 500
+            while new_level < 80:
+                needed = xp_needed_for_next(new_level)
+                if new_xp >= needed:
+                    new_xp -= needed
+                    new_level += 1
+                    leveled_up = True
+                else:
+                    break
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    new_rested_left = max(0, state['rested_words_left'] - 1) if rested else 0
+    
+    cur.execute("""
+        UPDATE user_progress 
+        SET level = %s, current_xp = %s, daily_new_words = %s, daily_reviews = %s, 
+            rested_words_left = %s, last_action_time = NOW()
+        WHERE username = %s
+    """, (new_level, new_xp, new_daily_new, new_daily_rev, new_rested_left, x_user))
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return {
+        "status": "success", 
+        "xp_added": final_xp, 
+        "leveled_up": leveled_up, 
+        "new_level": new_level, 
+        "quest_completed": quest_just_completed,
+        "current_xp": new_xp,
+        "xp_for_next": xp_needed_for_next(new_level)
+    }
 
 @app.get("/leaderboard")
 def get_leaderboard():
