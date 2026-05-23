@@ -314,7 +314,7 @@
         }
 
         .xp-float {
-            position: absolute;
+            position: fixed;
             color: #D4AF37;
             font-weight: 900;
             font-size: 1.5rem;
@@ -1737,7 +1737,10 @@
                         }, 500);
                     }
                     if (data.artifact) {
-                        setTimeout(() => showArtifactDrop(data.artifact), 1000);
+                        setTimeout(() => {
+                            showArtifactDrop(data.artifact);
+                            if (typeof renderArtifacts === 'function') renderArtifacts();
+                        }, 1000);
                     }
                     window.updateExperience();
                 }
@@ -1796,11 +1799,16 @@
                 const res = await apiFetch('/progress');
                 window.userProgressState = await res.json();
                 
-                let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active, paragon_completions, bonuses } = window.userProgressState;
+                let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active, paragon_completions, bonuses, streak } = window.userProgressState;
                 level = parseInt(level, 10);
                 current_xp = parseInt(current_xp, 10);
                 xp_for_next = parseInt(xp_for_next, 10);
                 paragon_completions = parseInt(paragon_completions, 10) || 0;
+                
+                const todayCount = (parseInt(daily_new_words, 10) || 0) + (parseInt(daily_reviews, 10) || 0);
+                const currentStreak = (parseInt(streak, 10) || 0) + (todayCount >= 200 ? 1 : 0);
+                const streakEl = document.getElementById('prof-streak');
+                if (streakEl) streakEl.innerText = currentStreak;
                 
                 const pct = Math.min(100, Math.max(0, (current_xp / xp_for_next) * 100));
 
@@ -1999,11 +2007,15 @@
                 `;
                 html += '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">';
                 
-                ALL_ARTIFACTS.forEach(art => {
+                ALL_ARTIFACTS.forEach((art, i) => {
                     const obtained = obtainedNames.has(art.name);
                     const borderCol = obtained ? art.color : '#4B5563'; // Gray border if missing
                     const opacityCls = obtained ? '' : 'opacity-40 grayscale';
                     const glowCls = obtained ? `box-shadow: 0 0 15px ${art.color}60 inset` : '';
+                    
+                    let posCls = "left-1/2 transform -translate-x-1/2";
+                    if (i % 3 === 0) posCls = "left-0 transform-none"; // Prevent left clipping on mobile
+                    else if (i % 3 === 2) posCls = "right-0 left-auto transform-none"; // Prevent right clipping
                     
                     html += `
                         <div class="aspect-square rounded-xl bg-[#0a1128] border-2 flex flex-col items-center justify-center p-2 relative group transition-transform ${obtained ? 'hover:scale-105 cursor-help' : 'cursor-not-allowed'} ${opacityCls}" 
@@ -2011,7 +2023,7 @@
                             <span class="text-3xl drop-shadow-md mb-2">${art.emoji}</span>
                             <span class="text-[9px] text-center font-bold text-gray-300 leading-tight uppercase tracking-wider hidden sm:block">${escapeStr(art.name)}</span>
                             
-                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-50 pointer-events-none">
+                            <div class="absolute bottom-full ${posCls} mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-[100] pointer-events-none">
                                 <p class="font-bold mb-1" style="color:${art.color}">${escapeStr(art.rarity)}</p>
                                 <p>${escapeStr(art.name)}</p>
                                 <p class="text-[10px] text-gray-400 mt-1">Шанс: ${art.dropRate}%</p>
@@ -2059,11 +2071,15 @@
                         }
                         
                         const artName = art.artifact_name || art.name;
+                        let posCls = "left-1/2 transform -translate-x-1/2";
+                        if (i % 4 === 0) posCls = "left-0 transform-none";
+                        else if (i % 4 === 3) posCls = "right-0 left-auto transform-none";
+
                         html += `
                         <div class="w-full aspect-square rounded-xl bg-[#0a1128] border-2 shadow-inner flex items-center justify-center relative cursor-help group transition-transform hover:scale-105" 
                             style="border-color: ${colorHex}; box-shadow: 0 0 10px ${colorHex}40 inset" title="${escapeStr(artName)} (${escapeStr(art.rarity)})">
                             <span class="text-2xl drop-shadow-md">${emoji}</span>
-                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-50 pointer-events-none">
+                            <div class="absolute bottom-full ${posCls} mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-[100] pointer-events-none">
                                 <p class="font-bold" style="color:${colorHex}">${escapeStr(art.rarity)}</p>
                                 <p>${escapeStr(artName)}</p>
                             </div>
@@ -3378,6 +3394,8 @@
                 ]);
                 let serverHistory = historyResult[0].status === 'fulfilled' ? historyResult[0].value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
 
+
+
                 const statsContainer = document.getElementById('stats-container');
                 if (statsContainer) {
                     statsContainer.innerHTML = `
@@ -3394,6 +3412,7 @@
                     `;
                 }
             } catch (e) { console.error('Stats error:', e); }
+            if (typeof renderArtifacts === 'function') renderArtifacts();
         }
 
         window.resetFolderStats = async (f, l, s) => {

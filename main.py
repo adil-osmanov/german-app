@@ -366,8 +366,14 @@ def get_progress(x_user: str = Header("osman")):
         if last_daily == yesterday_str:
             yesterday_quest_completed = ((row['daily_new_words'] + row['daily_reviews']) >= 200)
             buff_active = yesterday_quest_completed
+            
+            if yesterday_quest_completed:
+                updates['streak'] = row.get('streak', 0) + 1
+            else:
+                updates['streak'] = 0
         else:
             buff_active = False
+            updates['streak'] = 0
         
         updates['daily_new_words'] = 0
         updates['daily_reviews'] = 0
@@ -380,6 +386,7 @@ def get_progress(x_user: str = Header("osman")):
         row['last_daily_date'] = today_str
         row['buff_active'] = buff_active
         row['paragon_completions'] = 0
+        row['streak'] = updates['streak']
 
     if updates:
         set_clauses = ", ".join([f"{k} = %s" for k in updates.keys()])
