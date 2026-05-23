@@ -13,6 +13,7 @@ import urllib.request
 import urllib.parse
 import json
 import re
+import random
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -126,7 +127,19 @@ def init_db():
             daily_new_words INTEGER DEFAULT 0,
             daily_reviews INTEGER DEFAULT 0,
             last_daily_date TEXT DEFAULT '',
-            buff_active BOOLEAN DEFAULT FALSE
+            buff_active BOOLEAN DEFAULT FALSE,
+            paragon_completions INTEGER DEFAULT 0
+        )
+    """)
+    conn.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_artifacts (
+            id SERIAL PRIMARY KEY,
+            username TEXT,
+            artifact_name TEXT,
+            rarity TEXT,
+            dropped_at TIMESTAMP DEFAULT NOW()
         )
     """)
     conn.commit()
@@ -160,6 +173,18 @@ def init_db():
     except Exception:
         conn.rollback()
 
+    try:
+        cur.execute("ALTER TABLE user_progress ADD COLUMN paragon_completions INTEGER DEFAULT 0")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
+    try:
+        cur.execute("ALTER TABLE words ADD COLUMN example_ru TEXT DEFAULT ''")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
     cur.close()
     conn.close()
 
@@ -175,6 +200,7 @@ class WordCreate(BaseModel):
     level: str = ""
     subfolder: str
     example: str = ""
+    example_ru: str = ""
     praeteritum: str = ""
     partizip: str = ""
     target_lang: str = "de"
@@ -222,6 +248,34 @@ class AvatarUpdate(BaseModel):
 
 class ProgressAction(BaseModel):
     action_type: str
+
+def get_user_bonuses(username):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT artifact_name, rarity FROM user_artifacts WHERE username = %s", (username,))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    names = set(r['artifact_name'] for r in rows)
+    rarities = set(r['rarity'] for r in rows)
+    
+    bonuses = {
+        "xp_multiplier": 1.0,
+        "rested_words_cap": 25,
+        "unlocked_themes": ["default"]
+    }
+    
+    if {"Загадочная призма", "Искрящийся кристалл", "Темный оникс"}.issubset(names):
+        bonuses["xp_multiplier"] += 0.02
+        
+    if {"Сердце сумрака", "Слеза Сильваны", "Амулет бесконечности"}.issubset(names):
+        bonuses["rested_words_cap"] = 30
+        
+    if "Легендарный" in rarities or "Мифический" in rarities:
+        bonuses["unlocked_themes"].append("golden_abyss")
+        
+    return bonuses
 
 def xp_needed_for_next(lvl):
     return 5 * (lvl ** 2) + 100 * lvl
@@ -295,27 +349,37 @@ def get_progress(x_user: str = Header("osman")):
     last_time = row['last_action_time']
     last_daily = row['last_daily_date']
     
+    bonuses = get_user_bonuses(x_user)
+    
     updates = {}
     if last_time:
         diff = now - last_time
         if diff.total_seconds() > 8 * 3600 and row['rested_words_left'] == 0:
-            updates['rested_words_left'] = 25
-            row['rested_words_left'] = 25
+            cap = bonuses["rested_words_cap"]
+            updates['rested_words_left'] = cap
+            row['rested_words_left'] = cap
 
     if last_daily != today_str:
         yesterday_str = (now.date() - timedelta(days=1)).isoformat()
-        quest_completed = ((row['daily_new_words'] + row['daily_reviews']) >= 200)
-        buff_active = quest_completed and (last_daily == yesterday_str)
+        
+        # If last_daily is yesterday, check if they closed the ring yesterday.
+        if last_daily == yesterday_str:
+            yesterday_quest_completed = ((row['daily_new_words'] + row['daily_reviews']) >= 200)
+            buff_active = yesterday_quest_completed
+        else:
+            buff_active = False
         
         updates['daily_new_words'] = 0
         updates['daily_reviews'] = 0
         updates['last_daily_date'] = today_str
         updates['buff_active'] = buff_active
+        updates['paragon_completions'] = 0
         
         row['daily_new_words'] = 0
         row['daily_reviews'] = 0
         row['last_daily_date'] = today_str
         row['buff_active'] = buff_active
+        row['paragon_completions'] = 0
 
     if updates:
         set_clauses = ", ".join([f"{k} = %s" for k in updates.keys()])
@@ -324,6 +388,7 @@ def get_progress(x_user: str = Header("osman")):
         conn.commit()
 
     row['xp_for_next'] = xp_needed_for_next(row['level'])
+    row['bonuses'] = bonuses
     
     cur.close()
     conn.close()
@@ -332,6 +397,7 @@ def get_progress(x_user: str = Header("osman")):
 @app.post("/progress/action")
 def progress_action(data: ProgressAction, x_user: str = Header("osman")):
     import math
+    import random
     state = get_progress(x_user)
     
     base_xp = 10 if data.action_type == "new" else 5
@@ -343,6 +409,9 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
         
     if state['buff_active']:
         base_xp = base_xp * 1.1
+        
+    xp_mult = state.get('bonuses', {}).get('xp_multiplier', 1.0)
+    base_xp = base_xp * xp_mult
         
     final_xp = math.ceil(base_xp)
     
@@ -361,20 +430,76 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
             
     new_daily_new = state['daily_new_words'] + (1 if data.action_type == "new" else 0)
     new_daily_rev = state['daily_reviews'] + (1 if data.action_type == "review" else 0)
+    total_actions = new_daily_new + new_daily_rev
     
     quest_just_completed = False
-    if (state['daily_new_words'] + state['daily_reviews']) < 200:
-        if (new_daily_new + new_daily_rev) >= 200:
+    paragon_completed = False
+    new_paragon = state.get('paragon_completions', 0)
+    
+    if total_actions > 0 and total_actions % 200 == 0:
+        if total_actions == 200:
             quest_just_completed = True
             new_xp += 500
-            while new_level < 80:
-                needed = xp_needed_for_next(new_level)
-                if new_xp >= needed:
-                    new_xp -= needed
-                    new_level += 1
-                    leveled_up = True
-                else:
-                    break
+        else:
+            paragon_completed = True
+            new_paragon += 1
+            new_xp += 1000
+            
+        while new_level < 80:
+            needed = xp_needed_for_next(new_level)
+            if new_xp >= needed:
+                new_xp -= needed
+                new_level += 1
+                leveled_up = True
+            else:
+                break
+                
+    # RNG Drop System
+    dropped_artifact = None
+    if total_actions > 200:
+        roll = random.uniform(0, 100)
+        rarity = None
+        # Mythic: 0.001%, Legendary: 0.005%, Epic: 0.02%, Rare: 0.1%, Uncommon: 0.5%, Common: 1.0%
+        if roll <= 0.001:
+            rarity = "Мифический"
+        elif roll <= 0.006:
+            rarity = "Легендарный"
+        elif roll <= 0.026:
+            rarity = "Эпический"
+        elif roll <= 0.126:
+            rarity = "Редкий"
+        elif roll <= 0.626:
+            rarity = "Необычный"
+        elif roll <= 1.626:
+            rarity = "Обычный"
+            
+        if rarity:
+            names = {
+                "Обычный": ["Ржавый меч", "Старый фолиант", "Надколотый щит", "Медный кубок", "Потускневшее кольцо"],
+                "Необычный": ["Загадочная призма", "Искрящийся кристалл", "Темный оникс", "Серебряный кинжал", "Плащ теней"],
+                "Редкий": ["Сердце сумрака", "Слеза Сильваны", "Амулет бесконечности", "Посох лунного света", "Лазурный талисман"],
+                "Эпический": ["Осколок пустоты", "Глаз бури", "Корона падшего короля", "Рунический клинок", "Чаша прозрения"],
+                "Легендарный": ["Испепелитель", "Клык Смертокрыла", "Свет Элуны", "Книга вечности"],
+                "Мифический": ["Око Саурона", "Клинок Хаоса", "Сфера мироздания"]
+            }
+            artifact_name = random.choice(names[rarity])
+            
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO user_artifacts (username, artifact_name, rarity)
+                VALUES (%s, %s, %s) RETURNING id
+            """, (x_user, artifact_name, rarity))
+            art_id = cur.fetchone()['id']
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            dropped_artifact = {
+                "id": art_id,
+                "name": artifact_name,
+                "rarity": rarity
+            }
     
     conn = get_db_connection()
     cur = conn.cursor()
@@ -383,9 +508,9 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
     cur.execute("""
         UPDATE user_progress 
         SET level = %s, current_xp = %s, daily_new_words = %s, daily_reviews = %s, 
-            rested_words_left = %s, last_action_time = NOW()
+            rested_words_left = %s, last_action_time = NOW(), paragon_completions = %s
         WHERE username = %s
-    """, (new_level, new_xp, new_daily_new, new_daily_rev, new_rested_left, x_user))
+    """, (new_level, new_xp, new_daily_new, new_daily_rev, new_rested_left, new_paragon, x_user))
     conn.commit()
     cur.close()
     conn.close()
@@ -396,9 +521,26 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
         "leveled_up": leveled_up, 
         "new_level": new_level, 
         "quest_completed": quest_just_completed,
+        "paragon_completed": paragon_completed,
         "current_xp": new_xp,
-        "xp_for_next": xp_needed_for_next(new_level)
+        "xp_for_next": xp_needed_for_next(new_level),
+        "artifact": dropped_artifact
     }
+
+@app.get("/artifacts")
+def get_artifacts(x_user: str = Header("osman")):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT id, artifact_name, rarity, dropped_at 
+        FROM user_artifacts 
+        WHERE username = %s 
+        ORDER BY dropped_at DESC
+    """, (x_user,))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
 
 @app.get("/leaderboard")
 def get_leaderboard():
@@ -478,8 +620,8 @@ def add_word(word: WordCreate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, next_review, praeteritum, partizip, target_lang, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, 0, %s, %s, %s, %s)", 
-        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word.target_lang, x_user)
+        "INSERT INTO words (word_type, article, word_de, plural, word_ru, folder, level, subfolder, score, example, example_ru, next_review, praeteritum, partizip, target_lang, username) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s, %s, 0, %s, %s, %s, %s)", 
+        (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.example_ru, word.praeteritum, word.partizip, word.target_lang, x_user)
     )
     conn.commit()
     cur.close()
@@ -496,8 +638,8 @@ def edit_word(word_id: int, word: WordCreate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, praeteritum=%s, partizip=%s, target_lang=%s WHERE id=%s AND username=%s
-    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.praeteritum, word.partizip, word.target_lang, word_id, x_user))
+        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, example_ru=%s, praeteritum=%s, partizip=%s, target_lang=%s WHERE id=%s AND username=%s
+    """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.example_ru, word.praeteritum, word.partizip, word.target_lang, word_id, x_user))
     conn.commit()
     cur.close()
     conn.close()

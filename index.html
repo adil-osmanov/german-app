@@ -58,9 +58,13 @@
             --ac-500: 212 175 55;
             /* #D4AF37 Brushed Gold */
             --ac-600: 192 125 24;
-            --ac-700: 153 92 21;
-            --ac-800: 125 72 23;
-            --ac-900: 104 59 23;
+            --ac-700: 161 97 20;
+            --ac-800: 132 77 22;
+            --ac-900: 111 62 23;
+            --rarity-green: 16 185 129;
+            --rarity-blue: 59 130 246;
+            --rarity-purple: 139 92 246;
+            --rarity-orange: 245 158 11;
         }
 
         body {
@@ -368,6 +372,10 @@
     class="bg-[#0a1128] text-gray-100 transition-colors duration-300 min-h-screen flex flex-col relative selection:bg-[#ffc300] selection:text-[#0f1423]">
 
     <!-- Ambient Background Blobs -->
+    <div id="premium-toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[100] bg-[#172A45]/90 backdrop-blur-md border border-[#D4AF37]/50 text-white px-6 py-4 rounded-2xl shadow-[0_0_20px_rgba(212,175,55,0.2)] transform transition-all duration-300 scale-95 opacity-0 pointer-events-none flex flex-col items-center gap-1">
+        <span class="text-[#D4AF37] text-[10px] font-bold tracking-widest uppercase">Ошибка</span>
+        <span id="toast-msg" class="text-sm font-bold notranslate text-center"></span>
+    </div>
     <div class="fixed inset-0 z-0 pointer-events-none opacity-40">
         <div class="absolute top-[-10%] left-[-10%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] rounded-full bg-[#003566] blur-[90px] md:blur-[120px]"
             style="animation: blobFloat1 20s infinite ease-in-out;"></div>
@@ -452,6 +460,10 @@
 
         <section id="view-train" class="hidden relative pt-4 pb-6 flex-1 flex flex-col">
             <div id="train-setup-block" class="w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div class="mb-4 bg-[#112240] rounded-[1.5rem] p-2 flex justify-between gap-1 border border-white/5 shadow-md overflow-x-auto hide-scrollbar">
+                    <button onclick="window.setTrainingMode('classic')" id="mode-btn-classic" class="flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-colors bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 whitespace-nowrap">🃏 Карточки</button>
+                    <button onclick="window.setTrainingMode('blitz')" id="mode-btn-blitz" class="flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition-colors border border-transparent whitespace-nowrap">🎯 Артикли</button>
+                </div>
                 <!-- Скрыто: настройки направления (MIX, RU>DE, DE>RU) для лаконичности -->
                 <div id="train-topics-container" class="space-y-3"></div>
             </div>
@@ -530,6 +542,14 @@
                     <button id="btn-show-answer"
                         class="w-full bg-[#172A45] dark:bg-[#172A45] text-gray-700 dark:text-gray-200 font-bold py-3.5 rounded-xl active:scale-95 transition-all mt-2 text-sm border border-gray-200 dark:border-gray-700 hover:bg-[#112240] backdrop-blur-md bg-opacity-80 dark:hover:bg-gray-700">Показать
                         ответ</button>
+
+                    <div id="train-blitz-block" class="hidden w-full flex gap-2 mt-4">
+                        <button onclick="checkBlitz('der')" class="flex-1 py-4 bg-[#112240] rounded-xl text-blue-400 font-bold border border-blue-400/30 hover:bg-blue-900/40">Der</button>
+                        <button onclick="checkBlitz('die')" class="flex-1 py-4 bg-[#112240] rounded-xl text-red-400 font-bold border border-red-400/30 hover:bg-red-900/40">Die</button>
+                        <button onclick="checkBlitz('das')" class="flex-1 py-4 bg-[#112240] rounded-xl text-green-400 font-bold border border-green-400/30 hover:bg-green-900/40">Das</button>
+                    </div>
+
+
 
                     <div id="train-answer-block" class="hidden w-full mt-3">
                         <div
@@ -654,18 +674,27 @@
 
                 <h2 class="text-xl font-bold mb-6 text-white" data-orig-ru="Профиль">Профиль</h2>
 
-                <div class="relative flex items-center justify-center mb-4">
+                <div class="relative flex items-center justify-center mb-4 gap-4">
+                    <!-- Left Icon: Artifacts -->
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#9D4EDD] to-[#5A189A] border-4 border-[#112240] shadow-[0_0_15px_rgba(157,78,221,0.5)] flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform"
+                        title="Каталог артефактов" id="prof-artifact-icon"
+                        onclick="openArtifactsCatalogModal()">
+                        💎
+                    </div>
+
                     <div class="relative cursor-pointer group"
                         onclick="document.getElementById('profile-modal').classList.remove('hidden')">
                         <div id="prof-avatar"
                             class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center text-4xl font-bold bg-[#172A45] text-[#D4AF37] group-hover:scale-105 transition-transform">
                         </div>
-                        <div class="absolute -right-3 -bottom-2 w-12 h-12 rounded-full bg-gradient-to-br from-[#FDE08B] to-[#AA7C11] border-4 border-[#112240] shadow-md flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform"
-                            title="Дорожная карта рангов" id="prof-league-icon"
-                            onclick="event.stopPropagation(); document.getElementById('roadmap-modal').classList.remove('hidden')">
-                            🧭
-                        </div>
                         <div id="prof-buff-spark" class="absolute -left-2 top-0 text-2xl drop-shadow-[0_0_10px_#FDE08B] hidden" title="Бафф Интеллекта (+10% XP)">✨</div>
+                    </div>
+                    
+                    <!-- Right Icon: Ranks -->
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#FDE08B] to-[#AA7C11] border-4 border-[#112240] shadow-md flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform"
+                        title="Дорожная карта рангов" id="prof-league-icon"
+                        onclick="document.getElementById('roadmap-modal').classList.remove('hidden')">
+                        🧭
                     </div>
                 </div>
 
@@ -707,11 +736,30 @@
                         Слов: <span id="prof-quest-text">0/200</span>
                     </div>
                 </div>
+                <div id="prof-artifact-chance-indicator" class="hidden text-center mt-3 text-[10px] font-bold text-[#9D4EDD] drop-shadow-[0_0_5px_rgba(157,78,221,0.8)] animate-pulse uppercase tracking-wider">
+                    ✨ Активен шанс выпадения артефакта!
+                </div>
             </div>
 
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
                 <h2 class="text-lg font-bold text-white mb-4" data-orig-ru="Репутация колод">Репутация колод</h2>
                 <div id="prof-reputation" class="w-full space-y-3"></div>
+            </div>
+
+            <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
+                <h2 class="text-lg font-bold text-white mb-4" data-orig-ru="Артефакты">Артефакты</h2>
+                <div id="prof-artifacts" class="grid grid-cols-4 gap-3 w-full">
+                    <!-- Artifacts will be loaded here -->
+                </div>
+            </div>
+
+            <div id="theme-selector-container" class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-[#D4AF37]/30 mb-6 hidden">
+                <h2 class="text-lg font-bold text-[#D4AF37] mb-4 flex items-center gap-2"><span>✨</span> <span data-orig-ru="Эстетическая награда">Эстетическая награда</span></h2>
+                <p class="text-[11px] text-gray-400 mb-4">Вы разблокировали эксклюзивную тему оформления!</p>
+                <div class="flex gap-4">
+                    <button onclick="window.setTheme('default')" id="theme-btn-default" class="flex-1 py-2 rounded-xl text-xs font-bold border-2 border-gray-600 text-gray-400 hover:border-gray-400 transition-colors">Стандарт</button>
+                    <button onclick="window.setTheme('golden-abyss')" id="theme-btn-golden" class="flex-1 py-2 rounded-xl text-xs font-bold border-2 border-[#D4AF37]/50 text-[#D4AF37] hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-colors bg-[#050505]">Золотая бездна</button>
+                </div>
             </div>
 
             <div id="stats-container" class="w-full"></div>
@@ -1052,6 +1100,25 @@
                     class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] text-[#112240] font-black hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]"
                     data-orig-ru="Сохранить">Сохранить</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Artifact Drop Modal -->
+    <div id="artifact-drop-modal"
+        class="hidden fixed inset-0 bg-black/80 backdrop-blur-xl z-[150] flex justify-center items-center p-4 transition-opacity"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div id="artifact-drop-content"
+            class="bg-[#112240] w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border-2 text-center relative overflow-hidden animate-in zoom-in duration-500">
+            <div id="artifact-drop-bg" class="absolute inset-0 pointer-events-none opacity-20"></div>
+            <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="artifact-drop-rarity-text">Эпический дроп!</p>
+            <div id="artifact-drop-icon-wrap"
+                class="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 border-4 relative z-10 bg-[#0a1128] transition-transform hover:scale-110 duration-300">
+                <span class="text-4xl" id="artifact-drop-icon">💎</span>
+            </div>
+            <h2 class="text-2xl font-black text-white mb-2 relative z-10" id="artifact-drop-name">Название</h2>
+            <button onclick="document.getElementById('artifact-drop-modal').classList.add('hidden')"
+                class="w-full mt-6 py-4 rounded-2xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all border border-white/20 relative z-10"
+                data-orig-ru="Продолжить">Продолжить</button>
         </div>
     </div>
 
@@ -1589,16 +1656,73 @@
         };
 
 
-        window.updateDailyActivity = async (isNew, eventX, eventY) => {
-            try {
-                const res = await apiFetch('/progress/action', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action_type: isNew ? 'new' : 'review' })
+        window.showArtifactDrop = (artifact) => {
+            if (!artifact) return;
+            const modal = document.getElementById('artifact-drop-modal');
+            const content = document.getElementById('artifact-drop-content');
+            const bg = document.getElementById('artifact-drop-bg');
+            const rarityText = document.getElementById('artifact-drop-rarity-text');
+            const iconWrap = document.getElementById('artifact-drop-icon-wrap');
+            const icon = document.getElementById('artifact-drop-icon');
+            const nameEl = document.getElementById('artifact-drop-name');
+            
+            let colorHex = '#10B981'; // Green
+            let shadowColor = 'rgba(16, 185, 129, 0.5)';
+            let emoji = '💠';
+            
+            if (artifact.rarity === 'Необычный') {
+                colorHex = '#10B981'; shadowColor = 'rgba(16, 185, 129, 0.5)'; emoji = '🌿';
+            } else if (artifact.rarity === 'Редкий') {
+                colorHex = '#3B82F6'; shadowColor = 'rgba(59, 130, 246, 0.5)'; emoji = '💧';
+            } else if (artifact.rarity === 'Эпический') {
+                colorHex = '#8B5CF6'; shadowColor = 'rgba(139, 92, 246, 0.5)'; emoji = '🔮';
+            } else if (artifact.rarity === 'Легендарный') {
+                colorHex = '#F59E0B'; shadowColor = 'rgba(245, 158, 11, 0.5)'; emoji = '👑';
+            }
+            
+            content.style.borderColor = colorHex;
+            content.style.boxShadow = `0 0 40px ${shadowColor}`;
+            bg.style.background = `radial-gradient(circle at center, ${colorHex}, transparent 70%)`;
+            rarityText.innerText = artifact.rarity;
+            rarityText.style.color = colorHex;
+            iconWrap.style.borderColor = colorHex;
+            iconWrap.style.boxShadow = `0 0 20px ${shadowColor} inset, 0 0 20px ${shadowColor}`;
+            icon.innerText = emoji;
+            nameEl.innerText = artifact.name;
+            
+            modal.classList.remove('hidden');
+            triggerVibration([100, 50, 100, 50, 200]);
+            
+            if (window.confetti) {
+                confetti({
+                    particleCount: 100,
+                    spread: 80,
+                    origin: { y: 0.5 },
+                    colors: [colorHex, '#ffffff']
                 });
-                const data = await res.json();
+            }
+        };
+
+        window.updateDailyActivity = (isNew, eventX, eventY) => {
+            let predictedXP = isNew ? 10 : 5;
+            if (window.userProgressState) {
+                let xpMult = 1.0;
+                if (window.userProgressState.bonuses && window.userProgressState.bonuses.xp_multiplier) {
+                    xpMult = window.userProgressState.bonuses.xp_multiplier;
+                }
+                let baseXP = (isNew ? 10 : 5);
+                if (window.userProgressState.rested_words_left > 0) baseXP *= 1.5;
+                if (window.userProgressState.buff_active) baseXP *= 1.1;
+                predictedXP = Math.ceil(baseXP * xpMult);
+            }
+            showXPFloat(predictedXP, eventX || (window.innerWidth / 2), (eventY || (window.innerHeight / 2 - 50)) - 20);
+
+            apiFetch('/progress/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action_type: isNew ? 'new' : 'review' })
+            }).then(res => res.json()).then(data => {
                 if (data.status === 'success') {
-                    showXPFloat(data.xp_added, eventX || (window.innerWidth / 2), (eventY || (window.innerHeight / 2 - 50)) - 20);
                     if (data.leveled_up) showLevelUp(data.new_level);
                     if (data.quest_completed) {
                         setTimeout(() => {
@@ -1606,9 +1730,18 @@
                             showLevelUp('Квест сдан!');
                         }, 500);
                     }
-                    await window.updateExperience();
+                    if (data.paragon_completed) {
+                        setTimeout(() => {
+                            showXPFloat(1000, window.innerWidth / 2, window.innerHeight / 2);
+                            showLevelUp('Парагон!');
+                        }, 500);
+                    }
+                    if (data.artifact) {
+                        setTimeout(() => showArtifactDrop(data.artifact), 1000);
+                    }
+                    window.updateExperience();
                 }
-            } catch(e) { console.error('Error posting progress action', e); }
+            }).catch(e => console.error('Error posting progress action', e));
         };
 
 
@@ -1639,17 +1772,37 @@
         };
 
         window.userProgressState = null;
+        window.setTheme = function(theme) {
+            localStorage.setItem('kraft_theme', theme);
+            const btnD = document.getElementById('theme-btn-default');
+            const btnG = document.getElementById('theme-btn-golden');
+            if (theme === 'golden-abyss') {
+                document.body.classList.add('theme-golden-abyss');
+                if (btnG) btnG.classList.add('ring-2', 'ring-[#D4AF37]');
+                if (btnD) btnD.classList.remove('ring-2', 'ring-gray-400');
+            } else {
+                document.body.classList.remove('theme-golden-abyss');
+                if (btnD) btnD.classList.add('ring-2', 'ring-gray-400');
+                if (btnG) btnG.classList.remove('ring-2', 'ring-[#D4AF37]');
+            }
+        };
+        // Initial theme load
+        if (localStorage.getItem('kraft_theme') === 'golden-abyss') {
+            document.body.classList.add('theme-golden-abyss');
+        }
+
         window.updateExperience = async () => {
             try {
                 const res = await apiFetch('/progress');
                 window.userProgressState = await res.json();
                 
-                let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active } = window.userProgressState;
+                let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active, paragon_completions, bonuses } = window.userProgressState;
                 level = parseInt(level, 10);
                 current_xp = parseInt(current_xp, 10);
                 xp_for_next = parseInt(xp_for_next, 10);
+                paragon_completions = parseInt(paragon_completions, 10) || 0;
                 
-                const pct = Math.min(100, (current_xp / xp_for_next) * 100);
+                const pct = Math.min(100, Math.max(0, (current_xp / xp_for_next) * 100));
 
                 let rankName = "Турист"; let rankIcon = `🧳`;
                 if (level >= 11 && level <= 20) { rankName = "Мигрант"; rankIcon = `🛂`; }
@@ -1688,14 +1841,38 @@
 
                 const ringQuest = document.getElementById('ring-quest');
                 const questText = document.getElementById('prof-quest-text');
+                const artifactIndicator = document.getElementById('prof-artifact-chance-indicator');
                 const totalDaily = daily_new_words + daily_reviews;
                 
                 if (ringQuest) {
                     const maxLen = 339.29; 
-                    const pctQuest = Math.min(1, totalDaily / 200);
-                    ringQuest.style.strokeDashoffset = maxLen - (maxLen * pctQuest);
+                    const baseTotal = totalDaily % 200;
+                    if (paragon_completions > 0 || totalDaily >= 200) {
+                        ringQuest.setAttribute('stroke', '#8B5CF6');
+                        const pctQuest = (totalDaily % 200 === 0 && totalDaily > 0) ? 1 : Math.min(1, baseTotal / 200);
+                        ringQuest.style.strokeDashoffset = maxLen - (maxLen * pctQuest);
+                        if (questText) questText.innerHTML = `<span class="text-[#8B5CF6]">P${paragon_completions}</span> ${baseTotal}/200`;
+                        if (artifactIndicator) artifactIndicator.classList.remove('hidden');
+                    } else {
+                        ringQuest.setAttribute('stroke', '#D4AF37');
+                        const pctQuest = Math.min(1, totalDaily / 200);
+                        ringQuest.style.strokeDashoffset = maxLen - (maxLen * pctQuest);
+                        if (questText) questText.innerText = `${totalDaily}/200`;
+                        if (artifactIndicator) artifactIndicator.classList.add('hidden');
+                    }
                 }
-                if (questText) questText.innerText = `${totalDaily}/200`;
+
+                const unlockedThemes = (bonuses && bonuses.unlocked_themes) ? bonuses.unlocked_themes : [];
+                const themeContainer = document.getElementById('theme-selector-container');
+                if (themeContainer) {
+                    if (unlockedThemes.includes('golden_abyss')) {
+                        themeContainer.classList.remove('hidden');
+                        if (!localStorage.getItem('kraft_theme')) localStorage.setItem('kraft_theme', 'default');
+                        window.setTheme(localStorage.getItem('kraft_theme'));
+                    } else {
+                        themeContainer.classList.add('hidden');
+                    }
+                }
 
                 renderReputation();
 
@@ -1734,26 +1911,173 @@
                 folders[w.folder].total++;
                 if (w.score >= MAX_SCORE) folders[w.folder].mastered++;
             });
-            let html = '';
-            for (let f in folders) {
-                const pct = Math.floor((folders[f].mastered / folders[f].total) * 100) || 0;
-                let repText = '', colorCls = '';
-                if (pct <= 20) { repText = 'Равнодушие'; colorCls = 'text-red-500'; }
-                else if (pct <= 40) { repText = 'Дружелюбие'; colorCls = 'text-orange-500'; }
-                else if (pct <= 60) { repText = 'Уважение'; colorCls = 'text-yellow-500'; }
-                else if (pct <= 80) { repText = 'Почтение'; colorCls = 'text-lime-500'; }
-                else { repText = 'Превознесение'; colorCls = 'text-green-500'; }
+                let html = '';
+                for (let f in folders) {
+                    const pct = Math.floor((folders[f].mastered / folders[f].total) * 100) || 0;
+                    let repText = '', colorCls = '';
+                    if (pct <= 20) { repText = 'Равнодушие'; colorCls = 'text-red-500'; }
+                    else if (pct <= 40) { repText = 'Дружелюбие'; colorCls = 'text-orange-500'; }
+                    else if (pct <= 60) { repText = 'Уважение'; colorCls = 'text-yellow-500'; }
+                    else if (pct <= 80) { repText = 'Почтение'; colorCls = 'text-lime-500'; }
+                    else { repText = 'Превознесение'; colorCls = 'text-green-500'; }
 
-                html += `
-                <div class="flex justify-between items-center bg-[#172A45]/50 p-3 rounded-xl border border-white/5">
-                    <span class="text-sm text-gray-300 font-bold truncate pr-2">${escapeStr(f)}</span>
-                    <div class="flex flex-col items-end">
+                    html += `
+                    <div class="flex justify-between items-center bg-[#172A45]/50 p-3 rounded-xl border border-white/5">
+                        <span class="text-sm text-gray-300 font-bold truncate pr-2">${escapeStr(f)}</span>
+                        <div class="flex flex-col items-end">
                         <span class="text-[10px] uppercase font-bold tracking-widest ${colorCls}">${t(repText)}</span>
                         <span class="text-xs text-gray-500">Выучено: ${pct}%</span>
                     </div>
                 </div>`;
             }
             container.innerHTML = html;
+        }
+
+        const ALL_ARTIFACTS = [
+            { name: "Ржавый меч", rarity: "Обычный", emoji: "🗡️", color: "#6B7280", dropRate: "1.0" },
+            { name: "Старый фолиант", rarity: "Обычный", emoji: "📓", color: "#6B7280", dropRate: "1.0" },
+            { name: "Надколотый щит", rarity: "Обычный", emoji: "🛡️", color: "#6B7280", dropRate: "1.0" },
+            { name: "Медный кубок", rarity: "Обычный", emoji: "🍷", color: "#6B7280", dropRate: "1.0" },
+            { name: "Потускневшее кольцо", rarity: "Обычный", emoji: "💍", color: "#6B7280", dropRate: "1.0" },
+            
+            { name: "Загадочная призма", rarity: "Необычный", emoji: "🧊", color: "#10B981", dropRate: "0.5" },
+            { name: "Искрящийся кристалл", rarity: "Необычный", emoji: "✨", color: "#10B981", dropRate: "0.5" },
+            { name: "Темный оникс", rarity: "Необычный", emoji: "🌑", color: "#10B981", dropRate: "0.5" },
+            { name: "Серебряный кинжал", rarity: "Необычный", emoji: "🔪", color: "#10B981", dropRate: "0.5" },
+            { name: "Плащ теней", rarity: "Необычный", emoji: "🧥", color: "#10B981", dropRate: "0.5" },
+            
+            { name: "Сердце сумрака", rarity: "Редкий", emoji: "💜", color: "#3B82F6", dropRate: "0.1" },
+            { name: "Слеза Сильваны", rarity: "Редкий", emoji: "💧", color: "#3B82F6", dropRate: "0.1" },
+            { name: "Амулет бесконечности", rarity: "Редкий", emoji: "🧿", color: "#3B82F6", dropRate: "0.1" },
+            { name: "Посох лунного света", rarity: "Редкий", emoji: "🦯", color: "#3B82F6", dropRate: "0.1" },
+            { name: "Лазурный талисман", rarity: "Редкий", emoji: "💠", color: "#3B82F6", dropRate: "0.1" },
+            
+            { name: "Осколок пустоты", rarity: "Эпический", emoji: "🌌", color: "#8B5CF6", dropRate: "0.02" },
+            { name: "Глаз бури", rarity: "Эпический", emoji: "👁️", color: "#8B5CF6", dropRate: "0.02" },
+            { name: "Корона падшего короля", rarity: "Эпический", emoji: "👑", color: "#8B5CF6", dropRate: "0.02" },
+            { name: "Рунический клинок", rarity: "Эпический", emoji: "⚔️", color: "#8B5CF6", dropRate: "0.02" },
+            { name: "Чаша прозрения", rarity: "Эпический", emoji: "🏆", color: "#8B5CF6", dropRate: "0.02" },
+            
+            { name: "Испепелитель", rarity: "Легендарный", emoji: "🔥", color: "#F59E0B", dropRate: "0.005" },
+            { name: "Клык Смертокрыла", rarity: "Легендарный", emoji: "🦷", color: "#F59E0B", dropRate: "0.005" },
+            { name: "Свет Элуны", rarity: "Легендарный", emoji: "🌟", color: "#F59E0B", dropRate: "0.005" },
+            { name: "Книга вечности", rarity: "Легендарный", emoji: "📖", color: "#F59E0B", dropRate: "0.005" },
+            
+            { name: "Око Саурона", rarity: "Мифический", emoji: "👁️‍🗨️", color: "#EF4444", dropRate: "0.001" },
+            { name: "Клинок Хаоса", rarity: "Мифический", emoji: "🔥", color: "#EF4444", dropRate: "0.001" },
+            { name: "Сфера мироздания", rarity: "Мифический", emoji: "🔮", color: "#EF4444", dropRate: "0.001" }
+        ];
+
+        async function openArtifactsCatalogModal() {
+            try {
+                const res = await apiFetch('/artifacts');
+                const userArtifacts = await res.json();
+                const obtainedNames = new Set(userArtifacts.map(a => a.artifact_name || a.name));
+                
+                const listEl = document.getElementById('artifacts-catalog-list');
+                if (!listEl) return;
+                
+                const tenacitySet = ["Загадочная призма", "Искрящийся кристалл", "Темный оникс"];
+                const tenacityCount = tenacitySet.filter(n => obtainedNames.has(n)).length;
+                const tenacityActive = tenacityCount >= 3;
+                
+                const restSet = ["Сердце сумрака", "Слеза Сильваны", "Амулет бесконечности"];
+                const restCount = restSet.filter(n => obtainedNames.has(n)).length;
+                const restActive = restCount >= 3;
+                
+                let html = `
+                    <div class="mb-4 bg-[#172A45]/30 p-3 rounded-xl border border-white/5 space-y-2">
+                        <div class="flex justify-between items-center text-[10px] sm:text-xs">
+                            <div><span class="font-bold text-[#10B981]">Сет «Упорство»</span> <span class="text-gray-400 ml-1">(+2% XP)</span></div>
+                            <div class="font-bold ${tenacityActive ? 'text-[#10B981]' : 'text-gray-500'}">${tenacityCount}/3 ${tenacityActive ? '✓' : ''}</div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px] sm:text-xs">
+                            <div><span class="font-bold text-[#3B82F6]">Сет «Пробуждение»</span> <span class="text-gray-400 ml-1">(Отдых 30 слов)</span></div>
+                            <div class="font-bold ${restActive ? 'text-[#3B82F6]' : 'text-gray-500'}">${restCount}/3 ${restActive ? '✓' : ''}</div>
+                        </div>
+                    </div>
+                `;
+                html += '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">';
+                
+                ALL_ARTIFACTS.forEach(art => {
+                    const obtained = obtainedNames.has(art.name);
+                    const borderCol = obtained ? art.color : '#4B5563'; // Gray border if missing
+                    const opacityCls = obtained ? '' : 'opacity-40 grayscale';
+                    const glowCls = obtained ? `box-shadow: 0 0 15px ${art.color}60 inset` : '';
+                    
+                    html += `
+                        <div class="aspect-square rounded-xl bg-[#0a1128] border-2 flex flex-col items-center justify-center p-2 relative group transition-transform ${obtained ? 'hover:scale-105 cursor-help' : 'cursor-not-allowed'} ${opacityCls}" 
+                            style="border-color: ${borderCol}; ${glowCls}" title="${escapeStr(art.name)} (${escapeStr(art.rarity)})">
+                            <span class="text-3xl drop-shadow-md mb-2">${art.emoji}</span>
+                            <span class="text-[9px] text-center font-bold text-gray-300 leading-tight uppercase tracking-wider hidden sm:block">${escapeStr(art.name)}</span>
+                            
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-50 pointer-events-none">
+                                <p class="font-bold mb-1" style="color:${art.color}">${escapeStr(art.rarity)}</p>
+                                <p>${escapeStr(art.name)}</p>
+                                <p class="text-[10px] text-gray-400 mt-1">Шанс: ${art.dropRate}%</p>
+                                ${!obtained ? '<p class="text-gray-500 mt-1 text-[10px]">Не получено</p>' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                listEl.innerHTML = html;
+                
+                document.getElementById('artifacts-catalog-modal').classList.remove('hidden');
+            } catch(e) { console.error('Error opening artifacts catalog', e); }
+        }
+
+        async function renderArtifacts() {
+            const container = document.getElementById('prof-artifacts');
+            if (!container) return;
+            
+            try {
+                const res = await apiFetch('/artifacts');
+                const artifacts = await res.json();
+                
+                let html = '';
+                const totalSlots = Math.max(8, Math.ceil(artifacts.length / 4) * 4);
+                
+                for (let i = 0; i < totalSlots; i++) {
+                    if (i < artifacts.length) {
+                        const art = artifacts[i];
+                        let colorHex = '#10B981';
+                        let emoji = '💠';
+                        
+                        const globalArt = ALL_ARTIFACTS.find(a => a.name === (art.artifact_name || art.name));
+                        if (globalArt) {
+                            colorHex = globalArt.color;
+                            emoji = globalArt.emoji;
+                        } else {
+                            if (art.rarity === 'Обычный') { colorHex = '#6B7280'; emoji = '🗡️'; }
+                            else if (art.rarity === 'Необычный') { colorHex = '#10B981'; emoji = '🌿'; }
+                            else if (art.rarity === 'Редкий') { colorHex = '#3B82F6'; emoji = '💧'; }
+                            else if (art.rarity === 'Эпический') { colorHex = '#8B5CF6'; emoji = '🔮'; }
+                            else if (art.rarity === 'Легендарный') { colorHex = '#F59E0B'; emoji = '👑'; }
+                            else if (art.rarity === 'Мифический') { colorHex = '#EF4444'; emoji = '👁️‍🗨️'; }
+                        }
+                        
+                        const artName = art.artifact_name || art.name;
+                        html += `
+                        <div class="w-full aspect-square rounded-xl bg-[#0a1128] border-2 shadow-inner flex items-center justify-center relative cursor-help group transition-transform hover:scale-105" 
+                            style="border-color: ${colorHex}; box-shadow: 0 0 10px ${colorHex}40 inset" title="${escapeStr(artName)} (${escapeStr(art.rarity)})">
+                            <span class="text-2xl drop-shadow-md">${emoji}</span>
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-50 pointer-events-none">
+                                <p class="font-bold" style="color:${colorHex}">${escapeStr(art.rarity)}</p>
+                                <p>${escapeStr(artName)}</p>
+                            </div>
+                        </div>
+                        `;
+                    } else {
+                        html += `
+                        <div class="w-full aspect-square rounded-xl bg-[#172A45]/30 border border-white/5 flex items-center justify-center opacity-50">
+                        </div>
+                        `;
+                    }
+                }
+                container.innerHTML = html;
+            } catch(e) { console.error('Error fetching artifacts', e); }
         }
 
         window.fetchWords = async () => {
@@ -2352,7 +2676,7 @@
                     word_type: currentType, article: currentType === 'noun' ? currentArticle : '',
                     word_de: document.getElementById('word-de').value.trim(), plural: currentType === 'noun' ? document.getElementById('word-plural').value.trim() : '',
                     praeteritum: currentType === 'verb' ? document.getElementById('word-praeteritum').value.trim() : '', partizip: currentType === 'verb' ? document.getElementById('word-partizip').value.trim() : '',
-                    word_ru: document.getElementById('word-ru').value.trim(), example: document.getElementById('word-example').value.trim(),
+                    word_ru: document.getElementById('word-ru').value.trim(), example: document.getElementById('word-example').value.trim(), example_ru: "",
                     folder: document.getElementById('word-folder').value.trim(), level: document.getElementById('word-level').value.trim(), subfolder: document.getElementById('word-subfolder').value.trim(),
                     target_lang: currentStudyLang
                 };
@@ -2415,6 +2739,24 @@
 
         let trainList = []; let curIdx = 0; let cardTimeout = null;
 
+        window.currentTrainingMode = localStorage.getItem('kraft_train_mode') || 'classic';
+        if (window.currentTrainingMode === 'listening' || window.currentTrainingMode === 'context') window.currentTrainingMode = 'classic';
+        
+        window.setTrainingMode = function(mode) {
+            window.currentTrainingMode = mode;
+            localStorage.setItem('kraft_train_mode', mode);
+            ['classic', 'blitz'].forEach(m => {
+                const btn = document.getElementById('mode-btn-' + m);
+                if (!btn) return;
+                if (m === mode) {
+                    btn.className = "flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-colors bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 whitespace-nowrap";
+                } else {
+                    btn.className = "flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition-colors border border-transparent whitespace-nowrap";
+                }
+            });
+            setupTrainMenu();
+        };
+
         window.setDirection = (dir) => {
             trainDirection = dir;
             const activeCls = "flex-1 py-2 text-[10px] font-bold rounded-lg bg-[#2A3B5E] text-[#D4AF37] shadow-sm transition-all uppercase";
@@ -2432,10 +2774,13 @@
             if (document.getElementById('train-card-block')) document.getElementById('train-card-block').classList.add('hidden');
             try {
                 container.innerHTML = '';
-                const availableCount = globalWords.filter(w => isWordDue(w)).length;
-                const masteredCount = globalWords.filter(w => w.score >= MAX_SCORE).length;
-                const waitingCount = globalWords.filter(w => !isWordDue(w)).length;
-                const weakWordsCount = globalWords.filter(w => w.score < 2 && isWordDue(w)).length;
+                let eligibleWords = globalWords;
+                if (window.currentTrainingMode === 'blitz') eligibleWords = globalWords.filter(w => w.word_type === 'noun' && w.target_lang === 'de');
+
+                const availableCount = eligibleWords.filter(w => isWordDue(w)).length;
+                const masteredCount = eligibleWords.filter(w => w.score >= MAX_SCORE).length;
+                const waitingCount = eligibleWords.filter(w => !isWordDue(w)).length;
+                const weakWordsCount = eligibleWords.filter(w => w.score < 2 && isWordDue(w)).length;
 
                 const verbAvailableCount = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip).length;
 
@@ -2447,7 +2792,7 @@
                         </div>
                         <div class="bg-[#112240] backdrop-blur-md bg-opacity-80/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                     </button>
-                    ${currentStudyLang === 'de' ? `
+                    ${currentStudyLang === 'de' && window.currentTrainingMode === 'classic' ? `
                     <button onclick="startVerbTrainer()" class="w-full text-left bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-sm font-bold text-white flex items-center gap-2">${t('Формы глаголов')}</h3>
@@ -2568,14 +2913,17 @@
         }
 
         window.startTraining = (sel, forceArchive = false) => {
-            let availableWords = globalWords.filter(w => isWordDue(w));
+            let eligibleWords = globalWords;
+            if (window.currentTrainingMode === 'blitz') eligibleWords = globalWords.filter(w => w.word_type === 'noun' && w.target_lang === 'de');
+            
+            let availableWords = eligibleWords.filter(w => isWordDue(w));
 
             if (sel === 'all') { trainList = availableWords; }
             else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 2); }
             else if (sel.startsWith('course|')) { const courseName = sel.split('|')[1]; trainList = availableWords.filter(w => (w.folder || 'Без курса') === courseName); }
             else if (sel === 'mastered' || forceArchive) {
-                if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = globalWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
-                else { trainList = globalWords.filter(w => w.score >= MAX_SCORE); }
+                if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = eligibleWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
+                else { trainList = eligibleWords.filter(w => w.score >= MAX_SCORE); }
             }
             else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
 
@@ -2615,6 +2963,9 @@
             document.getElementById('train-answer-block').classList.add('hidden');
             document.getElementById('btn-show-answer').classList.add('hidden');
             document.getElementById('train-de-plural').classList.add('hidden');
+            document.getElementById('train-blitz-block').classList.add('hidden');
+
+
             // Set remaining label using t() to correctly translate
             const remLabel = document.getElementById('train-remaining-label');
             if (remLabel) remLabel.innerText = t('Осталось:');
@@ -2628,42 +2979,12 @@
             const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
             let state = w.score < (MAX_SCORE - 1) ? 'L1' : w.score < MAX_SCORE ? 'L2' : 'Archive';
 
-            if (trainDirection === 'de-ru') currentIsGermanQuestion = true;
-            else if (trainDirection === 'ru-de') currentIsGermanQuestion = false;
-            else currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
-
-            if (currentIsGermanQuestion) {
-                if (btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
-                if (btnSpeakAns) btnSpeakAns.classList.add('hidden');
-                setTimeout(() => speakWord(fullGerman), 100);
-            } else {
-                if (btnSpeakQ) btnSpeakQ.classList.add('hidden');
-                if (btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
-            }
-
-            const ansEx = document.getElementById('train-answer-example');
-            if (w.example && ansEx) {
-                const sentence = extractGermanSentence(w.example);
-                const safeSentence = escapeStr(sentence);
-                ansEx.innerHTML = `
-                    <div class="flex items-center justify-center gap-2">
-                        <span class="italic text-center">"${sentence}"</span>
-                        <button onclick="speakWord('${safeSentence}', event)" class="p-1.5 bg-[#112240] rounded-full text-gray-400 hover:text-[#D4AF37] transition-all flex-shrink-0 border border-gray-700 shadow-sm" title="Прослушать пример">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"></path></svg>
-                        </button>
-                    </div>
-                `;
-                ansEx.classList.remove('hidden');
-            } else if (ansEx) ansEx.classList.add('hidden');
-
-            document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru || '') : fullGerman;
+            document.getElementById('train-de-word').innerText = fullGerman;
             if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-400 font-medium mr-1 notranslate">die</span><span class="text-gray-400 notranslate">${escapeStr(w.plural)}</span>`;
             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
-                // Determine auxiliary verb (haben/sein) - common sein verbs
                 const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
                 const inf = (w.word_de || '').toLowerCase();
                 const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
-                // Only add aux if partizip doesn't already start with 'hat' or 'ist' or 'haben'/'sein'
                 const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
                 const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
                 const partizipDisplay = w.partizip
@@ -2674,27 +2995,62 @@
                 document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-400 notranslate">${escapeStr(w.praeteritum) || '-'}</span><span class="text-gray-600 mx-2">·</span><span class="text-gray-400 notranslate">${partizipDisplay}</span>`;
             }
 
-            if (state === 'L1' || state === 'L2' || state === 'Archive') {
-                if (badge) {
-                    if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] dark:bg-[#172A45] text-gray-500"; }
-                    else {
-                        // Show word type label
-                        const typeLabel = w.word_type === 'verb' ? (currentStudyLang === 'de' ? 'Verb' : t('Глагол')) : (w.word_type === 'noun' ? (currentStudyLang === 'de' ? 'Nomen' : t('Существительное')) : '');
-                        badge.innerText = typeLabel || '';
-                        badge.className = typeLabel ? "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]" : "hidden";
-                    }
+            if (window.currentTrainingMode === 'blitz') {
+                if (qEl) qEl.innerHTML = (w.word_de || '') + `<br><span class="text-sm font-normal text-gray-500 mt-2 block">${escapeStr(w.word_ru || '')}</span>`;
+                document.getElementById('train-blitz-block').classList.remove('hidden');
+                if (btnSpeakQ) btnSpeakQ.classList.add('hidden');
+                if (btnSpeakAns) btnSpeakAns.classList.add('hidden');
+                if (badge) { badge.innerText = "Артикли"; badge.className = "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]"; }
+            } else {
+                if (trainDirection === 'de-ru') currentIsGermanQuestion = true;
+                else if (trainDirection === 'ru-de') currentIsGermanQuestion = false;
+                else currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
+
+                if (currentIsGermanQuestion) {
+                    if (btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
+                    if (btnSpeakAns) btnSpeakAns.classList.add('hidden');
+                    setTimeout(() => speakWord(fullGerman), 100);
+                } else {
+                    if (btnSpeakQ) btnSpeakQ.classList.add('hidden');
+                    if (btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
                 }
-                if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
-                document.getElementById('btn-show-answer').classList.remove('hidden');
 
-                document.getElementById('btn-forgot').onclick = () => { triggerVibration([10, 20]); playTone(200, 'sawtooth', 0.2); updateScoreWithSM2(0); };
-                document.getElementById('btn-remembered').onclick = () => { triggerVibration(10); playTone(800, 'sine', 0.3); updateScoreWithSM2(4); };
+                const ansEx = document.getElementById('train-answer-example');
+                if (w.example && ansEx) {
+                    const sentence = extractGermanSentence(w.example);
+                    const safeSentence = escapeStr(sentence);
+                    ansEx.innerHTML = `
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="italic text-center">"${sentence}"</span>
+                            <button onclick="speakWord('${safeSentence}', event)" class="p-1.5 bg-[#112240] rounded-full text-gray-400 hover:text-[#D4AF37] transition-all flex-shrink-0 border border-gray-700 shadow-sm" title="Прослушать пример">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"></path></svg>
+                            </button>
+                        </div>
+                    `;
+                    ansEx.classList.remove('hidden');
+                } else if (ansEx) ansEx.classList.add('hidden');
 
-                const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
-                // formatInterval uses currentLang directly - always instant
-                const sm2El = document.getElementById('sm2-good-time');
-                sm2El.innerText = formatInterval(goodCalc.interval);
-                sm2El._interval = goodCalc.interval; // store for language switch updates
+                document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru || '') : fullGerman;
+
+                if (state === 'L1' || state === 'L2' || state === 'Archive') {
+                    if (badge) {
+                        if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] dark:bg-[#172A45] text-gray-500"; }
+                        else {
+                            const typeLabel = w.word_type === 'verb' ? (currentStudyLang === 'de' ? 'Verb' : t('Глагол')) : (w.word_type === 'noun' ? (currentStudyLang === 'de' ? 'Nomen' : t('Существительное')) : '');
+                            badge.innerText = typeLabel || '';
+                            badge.className = typeLabel ? "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]" : "hidden";
+                        }
+                    }
+                    if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
+                    document.getElementById('btn-show-answer').classList.remove('hidden');
+
+                    document.getElementById('btn-forgot').onclick = () => { triggerVibration([10, 20]); playTone(200, 'sawtooth', 0.2); updateScoreWithSM2(0); };
+                    document.getElementById('btn-remembered').onclick = () => { triggerVibration(10); playTone(800, 'sine', 0.3); updateScoreWithSM2(4); };
+
+                    const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
+                    const sm2El = document.getElementById('sm2-good-time');
+                    if (sm2El) { sm2El.innerText = formatInterval(goodCalc.interval); sm2El._interval = goodCalc.interval; }
+                }
             }
             // Instantly translate any UI labels in the card (don't wait for MutationObserver)
             if (typeof translateNode === 'function') translateNode(cardBlock);
@@ -2712,6 +3068,33 @@
         }
 
         let _swipeInProgress = false;
+
+        let _toastTimeout;
+        window.showPremiumToast = function(msg) {
+            const toast = document.getElementById('premium-toast');
+            document.getElementById('toast-msg').innerHTML = msg;
+            toast.classList.remove('scale-95', 'opacity-0');
+            toast.classList.add('scale-100', 'opacity-100');
+            clearTimeout(_toastTimeout);
+            _toastTimeout = setTimeout(() => {
+                toast.classList.remove('scale-100', 'opacity-100');
+                toast.classList.add('scale-95', 'opacity-0');
+            }, 3000);
+        };
+
+        window.checkBlitz = function(selectedArticle) {
+            const w = trainList[curIdx];
+            if (!w) return;
+            const correct = (w.article || '').toLowerCase() === selectedArticle.toLowerCase();
+            if (correct) {
+                triggerVibration(10); playTone(800, 'sine', 0.3);
+                updateScoreWithSM2(4);
+            } else {
+                triggerVibration([10, 20]); playTone(200, 'sawtooth', 0.2);
+                showPremiumToast('Правильно: <span class="text-[#D4AF37]">' + escapeStr(w.article) + '</span> ' + escapeStr(w.word_de));
+                updateScoreWithSM2(0);
+            }
+        };
 
         let _isScoring = false;
         async function updateScoreWithSM2(quality) {
@@ -2741,27 +3124,25 @@
                     trainList.push({ ...w, score: newScore, interval: sm2Result.interval, repetitions: sm2Result.repetitions, ease_factor: sm2Result.easeFactor, next_review: nextReviewMs });
                 }
 
-                try {
-                    await apiFetch(`${API_URL}/${w.id}/score`, {
-                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ score: newScore, next_review: nextReviewMs, ease_factor: sm2Result.easeFactor, interval: sm2Result.interval, repetitions: sm2Result.repetitions })
-                    });
-                } catch (e) { }
-
                 w.score = newScore;
                 w.next_review = nextReviewMs;
                 w.ease_factor = sm2Result.easeFactor;
                 w.interval = sm2Result.interval;
                 w.repetitions = sm2Result.repetitions;
 
-                // Only give XP when user answered correctly (quality >= 3)
+                // Fire XP text instantly BEFORE waiting for network
                 if (quality >= 3) {
                     updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
                 } else {
-                    // No XP — just update streak/rings without the float animation
                     updateExperience();
                 }
 
+                try {
+                    apiFetch(`${API_URL}/${w.id}/score`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ score: newScore, next_review: nextReviewMs, ease_factor: sm2Result.easeFactor, interval: sm2Result.interval, repetitions: sm2Result.repetitions })
+                    }).catch(e => {}); // Do not await
+                } catch (e) { }
 
                 const gwItem = globalWords.find(gw => gw.id === w.id);
                 if (gwItem && gwItem !== w) {
@@ -3580,6 +3961,25 @@
                     class="w-8 h-8 rounded-full bg-[#172A45] text-gray-400 hover:text-white flex items-center justify-center">×</button>
             </div>
             <div class="space-y-4 relative" id="roadmap-list">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Artifacts Catalog Modal -->
+    <div id="artifacts-catalog-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] hidden flex justify-center items-center p-4 transition-all"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-[#112240] w-full max-w-2xl rounded-[2rem] p-6 shadow-2xl border border-[#9D4EDD]/30 relative max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl drop-shadow-[0_0_15px_rgba(157,78,221,0.5)]">💎</span>
+                    <h2 class="text-xl font-bold text-white uppercase tracking-widest">Каталог артефактов</h2>
+                </div>
+                <button onclick="document.getElementById('artifacts-catalog-modal').classList.add('hidden')"
+                    class="w-10 h-10 rounded-full bg-[#172A45] text-gray-400 hover:text-white hover:bg-red-500/20 flex items-center justify-center transition-all text-xl">×</button>
+            </div>
+            <div class="overflow-y-auto flex-1 pr-2 space-y-6" id="artifacts-catalog-list">
                 <!-- Injected via JS -->
             </div>
         </div>
