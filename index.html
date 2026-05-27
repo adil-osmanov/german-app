@@ -1019,7 +1019,7 @@
  </div>
  </div>
 
- <nav class="fixed bottom-0 left-0 right-0 w-full z-30 px-3"
+ <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 w-full z-30 px-3"
  style="background: rgba(15, 20, 35, 0.75); -webkit- border-top: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: env(safe-area-inset-bottom, 0px);">
  <div class="flex justify-around items-center max-w-md mx-auto" style="height: 55px;">
  <button id="nav-dict"
@@ -1128,8 +1128,8 @@
             
             <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="mount-detail-rarity">Эпическое средство передвижения</p>
             
-            <div id="mount-detail-icon-wrap" class="w-40 h-40 mx-auto rounded-2xl flex items-center justify-center mb-6 border-4 border-gray-600 relative z-10 bg-[#0a1128] overflow-hidden transition-transform duration-700 shadow-2xl">
-                <img id="mount-detail-icon" src="" class="w-full h-full object-cover pointer-events-none transition-all duration-500 scale-110">
+            <div id="mount-detail-icon-wrap" class="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-6 border-4 border-gray-600 relative z-10 bg-[#0a1128] overflow-hidden shadow-2xl">
+                <img id="mount-detail-icon" src="" class="w-full h-full object-cover pointer-events-none">
             </div>
             
             <h2 class="text-3xl font-black text-white mb-2 relative z-10 tracking-tight" id="mount-detail-name">Название</h2>
@@ -1734,8 +1734,6 @@
         
         content.style.borderColor = obtained ? effectiveColor : '#374151'; 
         content.style.boxShadow = obtained ? `0 0 50px ${shadowColor}` : 'none';
-        
-        // Radial gradient behind the icon
         bg.style.background = `radial-gradient(circle at center 30%, ${effectiveColor}, transparent 60%)`;
         
         rarityText.innerText = `${rarity} средство передвижения`;
@@ -1745,11 +1743,11 @@
         iconWrap.style.borderColor = effectiveColor;
         
         if (!obtained) {
-            iconEl.classList.add('grayscale', 'opacity-50');
+            iconEl.style.filter = 'grayscale(100%) opacity(0.5)';
             iconWrap.style.boxShadow = 'none';
         } else {
-            iconEl.classList.remove('grayscale', 'opacity-50');
-            iconWrap.style.boxShadow = `0 0 30px ${shadowColor} inset, 0 0 30px ${shadowColor}`;
+            iconEl.style.filter = 'none';
+            iconWrap.style.boxShadow = `0 0 20px ${shadowColor} inset, 0 0 20px ${shadowColor}`;
         }
         
         nameEl.innerText = name;
@@ -1762,22 +1760,12 @@
             
         statsEl.innerHTML = statusText;
         
-        // Show modal and trigger animations
         modal.classList.remove('hidden');
-        
-        // Force reflow for animations
         void modal.offsetWidth;
-        
         modal.classList.remove('opacity-0');
         modal.classList.add('opacity-100');
         content.classList.remove('scale-95');
         content.classList.add('scale-100');
-        
-        setTimeout(() => {
-            iconWrap.classList.add('scale-100');
-            iconEl.classList.add('scale-100');
-            iconEl.classList.remove('scale-110');
-        }, 50);
     };
 
  window.showArtifactDrop = (artifact) => {
@@ -2982,12 +2970,14 @@
  const verbAvailableCount = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip).length;
 
  let todayTrainedCount = 0;
+ let paragonCount = 0;
  let userLevelText = "LVL 1";
  let nextLevelText = "LVL 2";
  let userXpText = "0 / 0 XP";
  let userPct = 0;
  if (window.userProgressState) {
  todayTrainedCount = (parseInt(window.userProgressState.daily_new_words, 10) || 0) + (parseInt(window.userProgressState.daily_reviews, 10) || 0);
+ paragonCount = parseInt(window.userProgressState.paragon_completions, 10) || 0;
  const lvl = parseInt(window.userProgressState.level, 10);
  const curXp = parseInt(window.userProgressState.current_xp, 10);
  const reqXp = parseInt(window.userProgressState.xp_for_next, 10);
@@ -2996,6 +2986,12 @@
  userXpText = `${curXp} / ${reqXp} XP`;
  userPct = Math.min(100, Math.max(0, (curXp / reqXp) * 100));
  }
+ const isParagon = paragonCount > 0 || todayTrainedCount >= 200;
+ const questBase = isParagon ? (todayTrainedCount % 200) : todayTrainedCount;
+ const questColor = isParagon ? '#3B82F6' : '#D4AF37';
+ const questFill = isParagon ? 'background:linear-gradient(to right,#2563eb,#60a5fa)' : 'background:linear-gradient(to right,#ca8a04,#fde047)';
+ const questLabel = isParagon ? `Задание ${paragonCount + 1}: ${questBase} / 200 слов` : `Задание: ${questBase} / 200 слов`;
+ const questPct = Math.min((questBase / 200) * 100, 100);
 
  let html = `
  <div class="w-full mb-5 px-1">
@@ -3018,9 +3014,9 @@
  <div class="relative z-10 w-full pr-4">
  <h3 class="text-lg font-bold mb-2">${t('Слова на сегодня')}</h3>
  <div class="w-full">
- <p class="text-[10px] uppercase font-black text-[#D4AF37] tracking-wider mb-1.5">Задание: ${todayTrainedCount} / 200 слов</p>
+ <p class="text-[10px] uppercase font-black tracking-wider mb-1.5" style="color:${questColor}">${questLabel}</p>
  <div class="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5 shadow-inner">
- <div class="h-full bg-gradient-to-r from-yellow-600 to-yellow-400" style="width: ${Math.min((todayTrainedCount/200)*100, 100)}%"></div>
+ <div class="h-full transition-all duration-700" style="width:${questPct}%;${questFill}"></div>
  </div>
  </div>
  </div>
@@ -3031,7 +3027,7 @@
  <h3 class="text-sm font-bold text-white flex items-center gap-2">${t('Формы глаголов')}</h3>
  <div class="flex items-center gap-3">
  <span class="bg-white/5 text-gray-400 text-[10px] font-bold px-2 py-1 rounded-md tracking-wider shadow-inner"><span class="notranslate">${verbAvailableCount}</span></span>
- <div class="text-[#D4AF37]"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
+ <div class="text-[#D4AF37]"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
  </div>
  </button>` : ''}
  `;
@@ -3089,6 +3085,34 @@
  `);
  continue;
  }
+
+    window.startTraining = (sel, forceArchive = false) => {
+        window.currentTrainingMode = sel;
+        if (document.getElementById('bottom-nav')) document.getElementById('bottom-nav').classList.add('hidden');
+        let eligibleWords = globalWords;
+        let availableWords = eligibleWords.filter(w => isWordDue(w));
+
+        if (sel === 'all') { trainList = availableWords; }
+        else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 2); }
+        else if (sel.startsWith('course|')) { const courseName = sel.split('|')[1]; trainList = availableWords.filter(w => (w.folder || 'Без курса') === courseName); }
+        else if (sel === 'mastered' || forceArchive) {
+            if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = eligibleWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
+            else { trainList = eligibleWords.filter(w => w.score >= MAX_SCORE); }
+        }
+        else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
+
+        if (!trainList.length) return alert(t('На сегодня слов нет! Отдыхай.'));
+        trainList.sort(() => 0.5 - Math.random()); curIdx = 0; sessionStartMs = Date.now();
+        document.getElementById('train-setup-block').classList.add('hidden'); document.getElementById('train-card-block').classList.remove('hidden');
+        const pnl = document.getElementById('train-xp-panel'); if (pnl) { pnl.style.display = 'flex'; } renderCard();
+    };
+
+    document.getElementById('btn-stop-training').onclick = () => {
+        if (document.getElementById('bottom-nav')) document.getElementById('bottom-nav').classList.remove('hidden');
+        const pnl = document.getElementById('train-xp-panel'); if (pnl) pnl.style.display = 'none';
+        if (cardTimeout) clearTimeout(cardTimeout);
+        saveSessionTime(); setupTrainMenu();
+    };
 
  const cWordsCount = courseWords.filter(w => isWordDue(w)).length;
  const folderId = `details-${btoa(encodeURIComponent(folder)).replace(/=/g, '')}`;
@@ -3410,6 +3434,7 @@
 
  idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
  updateExperience();
+ updateTrainQuestBar();
  curIdx++; _swipeInProgress = false;
  setTimeout(() => {
  try { renderCard(); } catch (e) { console.error(e); } finally { _isScoring = false; }

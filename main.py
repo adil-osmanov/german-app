@@ -539,6 +539,20 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
                 
                 conn = get_db_connection()
                 cur = conn.cursor()
+                
+                # Check for duplicate — each mount is unique in collection
+                cur.execute(
+                    "SELECT COUNT(*) as cnt FROM user_artifacts WHERE username = %s AND artifact_name = %s",
+                    (x_user, artifact_name)
+                )
+                already_owned = cur.fetchone()['cnt'] > 0
+                
+                if already_owned:
+                    # Already in collection — skip, no drop
+                    cur.close()
+                    conn.close()
+                    break
+                
                 cur.execute("""
                     INSERT INTO user_artifacts (username, artifact_name, rarity)
                     VALUES (%s, %s, %s) RETURNING id
