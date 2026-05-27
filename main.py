@@ -465,48 +465,95 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
     dropped_artifact = None
     if total_actions > 200:
         roll = random.uniform(0, 100)
-        rarity = None
-        # Mythic: 0.001%, Legendary: 0.005%, Epic: 0.02%, Rare: 0.1%, Uncommon: 0.5%, Common: 1.0%
-        if roll <= 0.001:
-            rarity = "Мифический"
-        elif roll <= 0.006:
-            rarity = "Легендарный"
-        elif roll <= 0.026:
-            rarity = "Эпический"
-        elif roll <= 0.126:
-            rarity = "Редкий"
-        elif roll <= 0.626:
-            rarity = "Необычный"
-        elif roll <= 1.626:
-            rarity = "Обычный"
-            
-        if rarity:
-            names = {
-                "Обычный": ["Ржавый меч", "Старый фолиант", "Надколотый щит", "Медный кубок", "Потускневшее кольцо"],
-                "Необычный": ["Загадочная призма", "Искрящийся кристалл", "Темный оникс", "Серебряный кинжал", "Плащ теней"],
-                "Редкий": ["Сердце сумрака", "Слеза Сильваны", "Амулет бесконечности", "Посох лунного света", "Лазурный талисман"],
-                "Эпический": ["Осколок пустоты", "Глаз бури", "Корона падшего короля", "Рунический клинок", "Чаша прозрения"],
-                "Легендарный": ["Испепелитель", "Клык Смертокрыла", "Свет Элуны", "Книга вечности"],
-                "Мифический": ["Око Саурона", "Клинок Хаоса", "Сфера мироздания"]
-            }
-            artifact_name = random.choice(names[rarity])
-            
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("""
-                INSERT INTO user_artifacts (username, artifact_name, rarity)
-                VALUES (%s, %s, %s) RETURNING id
-            """, (x_user, artifact_name, rarity))
-            art_id = cur.fetchone()['id']
-            conn.commit()
-            cur.close()
-            conn.close()
-            
-            dropped_artifact = {
-                "id": art_id,
-                "name": artifact_name,
-                "rarity": rarity
-            }
+        
+        ALL_ARTIFACTS = [
+            { "name": "Кенарийский боевой гиппогриф", "rarity": "Необычный", "dropRate": 5.0, "category": "Птицы" },
+            { "name": "Бронированный бурый медведь", "rarity": "Необычный", "dropRate": 4.0, "category": "Медведи" },
+            { "name": "Ковер-самолет", "rarity": "Необычный", "dropRate": 3.5, "category": "Механизмы" },
+            { "name": "Стремительный белый крылобег", "rarity": "Необычный", "dropRate": 3.0, "category": "Птицы" },
+            { "name": "Свирепый бурый волк", "rarity": "Обычный", "dropRate": 3.0, "category": "Волки" },
+            { "name": "Свирепый лесной волк", "rarity": "Обычный", "dropRate": 3.0, "category": "Волки" },
+            { "name": "Вороной конь", "rarity": "Обычный", "dropRate": 3.0, "category": "Кони" },
+            { "name": "Гнедой конь", "rarity": "Обычный", "dropRate": 3.0, "category": "Кони" },
+            { "name": "Красный конь-скелет", "rarity": "Обычный", "dropRate": 3.0, "category": "Кони" },
+            { "name": "Черный медведь", "rarity": "Обычный", "dropRate": 3.0, "category": "Медведи" },
+            { "name": "Бурый медведь", "rarity": "Обычный", "dropRate": 3.0, "category": "Медведи" },
+            { "name": "Золотистый грифон", "rarity": "Обычный", "dropRate": 3.0, "category": "Птицы" },
+            { "name": "Белоснежный грифон", "rarity": "Обычный", "dropRate": 3.0, "category": "Птицы" },
+            { "name": "Рыжий ветрокрыл", "rarity": "Обычный", "dropRate": 3.0, "category": "Птицы" },
+            { "name": "Зеленый механодолгоног", "rarity": "Обычный", "dropRate": 3.0, "category": "Механизмы" },
+            { "name": "Полосатый рассветный саблезуб", "rarity": "Обычный", "dropRate": 3.0, "category": "Кошки" },
+            { "name": "Пятнистый ледопард", "rarity": "Обычный", "dropRate": 3.0, "category": "Кошки" },
+            { "name": "Серый баран", "rarity": "Обычный", "dropRate": 3.0, "category": "Бараны и Элекки" },
+            { "name": "Лиловый элекк", "rarity": "Обычный", "dropRate": 3.0, "category": "Бараны и Элекки" },
+            { "name": "Черный боевой медведь", "rarity": "Необычный", "dropRate": 2.5, "category": "Медведи" },
+            { "name": "Ледяной мамонт", "rarity": "Необычный", "dropRate": 2.0, "category": "Мамонты" },
+            { "name": "Стремительный лесной волк", "rarity": "Необычный", "dropRate": 2.0, "category": "Волки" },
+            { "name": "Стремительный серый волк", "rarity": "Необычный", "dropRate": 2.0, "category": "Волки" },
+            { "name": "Стремительный белый скакун", "rarity": "Необычный", "dropRate": 2.0, "category": "Кони" },
+            { "name": "Стремительный зеленый конь-скелет", "rarity": "Необычный", "dropRate": 2.0, "category": "Кони" },
+            { "name": "Стремительный синий грифон", "rarity": "Необычный", "dropRate": 2.0, "category": "Птицы" },
+            { "name": "Стремительный красный ветрокрыл", "rarity": "Необычный", "dropRate": 2.0, "category": "Птицы" },
+            { "name": "Стремительный желтый механодолгоног", "rarity": "Необычный", "dropRate": 2.0, "category": "Механизмы" },
+            { "name": "Стремительный ледопард", "rarity": "Необычный", "dropRate": 2.0, "category": "Кошки" },
+            { "name": "Стремительный белый баран", "rarity": "Необычный", "dropRate": 2.0, "category": "Бараны и Элекки" },
+            { "name": "Большой синий элекк", "rarity": "Необычный", "dropRate": 2.0, "category": "Бараны и Элекки" },
+            { "name": "Турбоветролет", "rarity": "Необычный", "dropRate": 1.5, "category": "Механизмы" },
+            { "name": "Синий скат Пустоты", "rarity": "Необычный", "dropRate": 1.5, "category": "Уникальные" },
+            { "name": "Ониксовый дракон Пустоты", "rarity": "Необычный", "dropRate": 1.5, "category": "Уникальные" },
+            { "name": "Шерстистый мамонт", "rarity": "Редкий", "dropRate": 1.0, "category": "Мамонты" },
+            { "name": "Красный дракон", "rarity": "Редкий", "dropRate": 0.9, "category": "Драконы" },
+            { "name": "Бронзовый дракон", "rarity": "Редкий", "dropRate": 0.8, "category": "Драконы" },
+            { "name": "Поводья ледопарда Зимних Ключей", "rarity": "Редкий", "dropRate": 0.8, "category": "Кошки" },
+            { "name": "Черный боевой волк", "rarity": "Редкий", "dropRate": 0.5, "category": "Волки" },
+            { "name": "Анжинерский чоппер", "rarity": "Редкий", "dropRate": 0.5, "category": "Механизмы" },
+            { "name": "Механоцикл", "rarity": "Редкий", "dropRate": 0.5, "category": "Механизмы" },
+            { "name": "Черный боевой баран", "rarity": "Редкий", "dropRate": 0.5, "category": "Уникальные" },
+            { "name": "Большой ледяной мамонт", "rarity": "Редкий", "dropRate": 0.4, "category": "Мамонты" },
+            { "name": "Белый полярный медведь", "rarity": "Редкий", "dropRate": 0.2, "category": "Медведи" },
+            { "name": "Поводья коня смерти", "rarity": "Эпический", "dropRate": 0.1, "category": "Кони" },
+            { "name": "Тундровый мамонт путешественника", "rarity": "Эпический", "dropRate": 0.1, "category": "Мамонты" },
+            { "name": "Стремительный конь Альянса", "rarity": "Эпический", "dropRate": 0.08, "category": "Кони" },
+            { "name": "Морская черепаха", "rarity": "Эпический", "dropRate": 0.08, "category": "Уникальные" },
+            { "name": "Повелитель воронов", "rarity": "Эпический", "dropRate": 0.06, "category": "Уникальные" },
+            { "name": "Черный дракон", "rarity": "Эпический", "dropRate": 0.05, "category": "Драконы" },
+            { "name": "Синий дракон", "rarity": "Эпический", "dropRate": 0.04, "category": "Драконы" },
+            { "name": "Лазурный дракон", "rarity": "Эпический", "dropRate": 0.03, "category": "Драконы" },
+            { "name": "Синий протодракон", "rarity": "Эпический", "dropRate": 0.02, "category": "Драконы" },
+            { "name": "Зеленый протодракон", "rarity": "Эпический", "dropRate": 0.015, "category": "Драконы" },
+            { "name": "Огненный боевой конь", "rarity": "Легендарный", "dropRate": 0.008, "category": "Кони" },
+            { "name": "Стремительный зулианский тигр", "rarity": "Легендарный", "dropRate": 0.006, "category": "Кошки" },
+            { "name": "Поводья дракона Ониксии", "rarity": "Легендарный", "dropRate": 0.006, "category": "Драконы" },
+            { "name": "Пепел Ал'ара", "rarity": "Легендарный", "dropRate": 0.005, "category": "Птицы" },
+            { "name": "Черный боевой мамонт", "rarity": "Легендарный", "dropRate": 0.004, "category": "Мамонты" },
+            { "name": "Затерянный во времени протодракон", "rarity": "Легендарный", "dropRate": 0.002, "category": "Драконы" },
+            { "name": "Большой черный боевой мамонт", "rarity": "Мифический", "dropRate": 0.001, "category": "Мамонты" },
+            { "name": "Голова Мимирона", "rarity": "Мифический", "dropRate": 0.001, "category": "Механизмы" },
+            { "name": "Непобедимый", "rarity": "Мифический", "dropRate": 0.0005, "category": "Кони" }
+        ]
+        
+        for mount in reversed(ALL_ARTIFACTS):
+            if roll <= mount['dropRate']:
+                artifact_name = mount['name']
+                rarity = mount['rarity']
+                
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute("""
+                    INSERT INTO user_artifacts (username, artifact_name, rarity)
+                    VALUES (%s, %s, %s) RETURNING id
+                """, (x_user, artifact_name, rarity))
+                art_id = cur.fetchone()['id']
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                dropped_artifact = {
+                    "id": art_id,
+                    "name": artifact_name,
+                    "rarity": rarity
+                }
+                break
     
     conn = get_db_connection()
     cur = conn.cursor()
@@ -548,6 +595,7 @@ def get_artifacts(x_user: str = Header("osman")):
     cur.close()
     conn.close()
     return rows
+
 
 @app.get("/leaderboard")
 def get_leaderboard():

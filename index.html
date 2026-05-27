@@ -32,7 +32,7 @@
                             200: 'rgb(var(--ac-200) / <alpha-value>)',
                             300: 'rgb(var(--ac-300) / <alpha-value>)',
                             400: 'rgb(var(--ac-400) / <alpha-value>)',
-                            500: 'rgb(var(--ac-500) / <alpha-value>)',
+                            500: 'rgb(#D4AF37 / <alpha-value>)',
                             600: 'rgb(var(--ac-600) / <alpha-value>)',
                             700: 'rgb(var(--ac-700) / <alpha-value>)',
                             800: 'rgb(var(--ac-800) / <alpha-value>)',
@@ -360,6 +360,29 @@
             z-index: 9999;
             animation: slideInDown 4s ease-in-out forwards;
         }
+    
+        
+        /* Rarity Classes */
+        .rarity-0 { color: #9ca3af; }
+        .rarity-1 { color: #22c55e; text-shadow: 0 0 5px rgba(34,197,94,0.8); }
+        .rarity-2 { color: #3b82f6; text-shadow: 0 0 5px rgba(59,130,246,0.8); }
+        .rarity-3 { color: #a855f7; text-shadow: 0 0 5px rgba(168,85,247,0.8); }
+        .rarity-4 { color: #eab308; text-shadow: 0 0 5px rgba(234,179,8,0.8); }
+
+        .card-rarity-0 { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important; border-color: rgba(255,255,255,0.08) !important; }
+        .card-rarity-1 { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(34,197,94,0.2) !important; border-color: rgba(34,197,94,0.3) !important; }
+        .card-rarity-2 { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 25px rgba(59,130,246,0.25) !important; border-color: rgba(59,130,246,0.35) !important; }
+        .card-rarity-3 { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 25px rgba(168,85,247,0.25) !important; border-color: rgba(168,85,247,0.35) !important; }
+        .card-rarity-4 { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 30px rgba(234,179,8,0.3) !important; border-color: rgba(234,179,8,0.4) !important; }
+
+        @keyframes restedGlowPulse {
+            0% { box-shadow: 0 0 8px rgba(0, 229, 255, 0.4); }
+            50% { box-shadow: 0 0 16px rgba(0, 229, 255, 0.8), 0 0 8px rgba(59, 130, 246, 0.6); }
+            100% { box-shadow: 0 0 8px rgba(0, 229, 255, 0.4); }
+        }
+        .rested-pulse {
+            animation: restedGlowPulse 2s infinite ease-in-out;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="manifest" href="/manifest.json">
@@ -419,6 +442,7 @@
     <main id="main-scroll"
         class="pt-20 pb-16 max-w-2xl mx-auto px-4 w-full flex-grow overflow-y-auto flex flex-col relative z-10">
 
+        
         <section id="view-dict" class="pt-3 pb-6">
 
             <div class="mb-4">
@@ -461,7 +485,7 @@
         <section id="view-train" class="hidden relative pt-4 pb-6 flex-1 flex flex-col">
             <div id="train-setup-block" class="w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div class="mb-4 bg-[#112240] rounded-[1.5rem] p-2 flex justify-between gap-1 border border-white/5 shadow-md overflow-x-auto hide-scrollbar">
-                    <button onclick="window.setTrainingMode('classic')" id="mode-btn-classic" class="flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-colors bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 whitespace-nowrap">🃏 Карточки</button>
+                    <button onclick="window.setTrainingMode('classic')" id="mode-btn-classic" class="flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-colors bg-[#1a233a] text-yellow-500 border border-yellow-500/50 whitespace-nowrap shadow-[0_0_10px_rgba(234,179,8,0.2)]">🃏 Карточки</button>
                     <button onclick="window.setTrainingMode('blitz')" id="mode-btn-blitz" class="flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition-colors border border-transparent whitespace-nowrap">🎯 Артикли</button>
                 </div>
                 <!-- Скрыто: настройки направления (MIX, RU>DE, DE>RU) для лаконичности -->
@@ -667,20 +691,11 @@
         <section id="view-stats" class="hidden relative pt-4 pb-6 flex flex-col items-center select-none">
 
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 relative">
-                <div class="absolute right-4 top-4 flex items-center gap-1.5 text-orange-400 font-bold text-xs bg-[#172A45] px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-sm"
-                    title="Стрик (Дней подряд)">
-                    🔥 <span id="prof-streak">0</span>
-                </div>
 
                 <h2 class="text-xl font-bold mb-6 text-white" data-orig-ru="Профиль">Профиль</h2>
 
                 <div class="relative flex items-center justify-center mb-4 gap-4">
-                    <!-- Left Icon: Artifacts -->
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#9D4EDD] to-[#5A189A] border-4 border-[#112240] shadow-[0_0_15px_rgba(157,78,221,0.5)] flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform"
-                        title="Каталог артефактов" id="prof-artifact-icon"
-                        onclick="openArtifactsCatalogModal()">
-                        💎
-                    </div>
+
 
                     <div class="relative cursor-pointer group"
                         onclick="document.getElementById('profile-modal').classList.remove('hidden')">
@@ -690,12 +705,7 @@
                         <div id="prof-buff-spark" class="absolute -left-2 top-0 text-2xl drop-shadow-[0_0_10px_#FDE08B] hidden" title="Бафф Интеллекта (+10% XP)">✨</div>
                     </div>
                     
-                    <!-- Right Icon: Ranks -->
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#FDE08B] to-[#AA7C11] border-4 border-[#112240] shadow-md flex items-center justify-center text-2xl cursor-pointer hover:scale-110 transition-transform"
-                        title="Дорожная карта рангов" id="prof-league-icon"
-                        onclick="document.getElementById('roadmap-modal').classList.remove('hidden')">
-                        🧭
-                    </div>
+                    
                 </div>
 
                 <div class="w-full max-w-[280px] mx-auto flex flex-col items-center mb-6">
@@ -710,10 +720,7 @@
                             class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000"
                             style="width: 0%"></div>
                     </div>
-                    <div class="mt-2 text-[10px] text-gray-400 uppercase tracking-widest cursor-pointer hover:text-[#D4AF37] transition-colors notranslate"
-                        id="prof-rank-name"
-                        onclick="document.getElementById('roadmap-modal').classList.remove('hidden')"></div>
-                    <div id="prof-rested-text" class="mt-2 text-xs text-[#8A2BE2] font-bold hidden text-center">Отдых: следующие 25 слов принесут x1.5 опыта</div>
+                    
                 </div>
             </div>
 
@@ -723,7 +730,11 @@
                 </div>
                 <div class="flex justify-center w-full mb-4">
                     <div class="relative w-32 h-32 flex items-center justify-center">
-                        <svg class="w-full h-full transform -rotate-90 drop-shadow-md">
+                        <!-- WoW Quest Exclamation Mark -->
+                        <div class="absolute inset-0 flex items-center justify-center pb-1">
+                            <span class="text-[#FDE08B] font-black text-6xl drop-shadow-[0_2px_10px_rgba(212,175,55,0.8)] select-none" style="text-shadow: 0 0 20px rgba(212,175,55,0.8), 0 2px 4px #000;">!</span>
+                        </div>
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90 drop-shadow-md z-10 pointer-events-none">
                             <circle cx="64" cy="64" r="54" stroke="#172A45" stroke-width="8" fill="none" />
                             <circle id="ring-quest" cx="64" cy="64" r="54" stroke="#D4AF37" stroke-width="8"
                                 fill="none" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"
@@ -736,10 +747,12 @@
                         Слов: <span id="prof-quest-text">0/200</span>
                     </div>
                 </div>
-                <div id="prof-artifact-chance-indicator" class="hidden text-center mt-3 text-[10px] font-bold text-[#9D4EDD] drop-shadow-[0_0_5px_rgba(157,78,221,0.8)] animate-pulse uppercase tracking-wider">
-                    ✨ Активен шанс выпадения артефакта!
+                <div id="prof-artifact-chance-indicator" class="hidden text-center mt-3 text-[10px] font-bold text-[#3B82F6] drop-shadow-[0_0_5px_rgba(59,130,246,0.8)] animate-pulse uppercase tracking-wider">
+                    ✨ Активен шанс выпадения транспорта!
                 </div>
             </div>
+
+
 
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
                 <h2 class="text-lg font-bold text-white mb-4" data-orig-ru="Репутация колод">Репутация колод</h2>
@@ -747,7 +760,12 @@
             </div>
 
             <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
-                <h2 class="text-lg font-bold text-white mb-4" data-orig-ru="Артефакты">Артефакты</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-white" data-orig-ru="Транспорт">Транспорт</h2>
+                    <button onclick="openArtifactsCatalogModal()" class="w-10 h-10 rounded-full bg-[#172A45] flex items-center justify-center hover:scale-110 transition-transform border border-[#D4AF37]/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]" title="Каталог Транспорта">
+                        <img src="https://wow.zamimg.com/images/wow/icons/large/wow_token01.jpg" class="w-7 h-7 rounded-full object-cover">
+                    </button>
+                </div>
                 <div id="prof-artifacts" class="grid grid-cols-4 gap-3 w-full">
                     <!-- Artifacts will be loaded here -->
                 </div>
@@ -764,7 +782,40 @@
 
             <div id="stats-container" class="w-full"></div>
 
+            <!-- Врата Цитадели: Экзамен B1 -->
+            <div class="w-full bg-[#080e1c] rounded-[2rem] p-6 mb-6 border border-[#00e5ff]/20 shadow-[0_0_30px_rgba(0,229,255,0.08)] relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-[#001a2e] via-transparent to-transparent opacity-60 pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-[#00e5ff] text-xl drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]">🏰</span>
+                        <h2 class="text-[#00e5ff] font-black uppercase tracking-widest text-sm" style="text-shadow: 0 0 12px rgba(0,229,255,0.5);">Врата Цитадели: Экзамен B1</h2>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="flex justify-between text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">
+                            <span>Готовность</span>
+                            <span id="b1-progress-text">0 / 3000 (0%)</span>
+                        </div>
+                        <div class="w-full h-3 bg-black/50 rounded-full overflow-hidden border border-white/5">
+                            <div id="b1-progress-bar" class="h-full bg-gradient-to-r from-blue-600 to-[#00e5ff] transition-all duration-700 shadow-[0_0_8px_rgba(0,229,255,0.5)]" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5 text-xs font-medium bg-black/20 p-3 rounded-xl border border-[#00e5ff]/10">
+                        <div class="flex items-center gap-2 text-gray-400">
+                            <span>⏳</span>
+                            <span id="b1-days-left">Осталось времени (31 июля): ... дней</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span>⚡</span>
+                            <span id="b1-pace" class="text-[#00e5ff] font-bold">Необходимый темп: ... слов в день</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </section>
+
 
     </main>
 
@@ -1103,6 +1154,21 @@
         </div>
     </div>
 
+    
+    <!-- Mount Detail Modal -->
+    <div id="mount-detail-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xl z-[200] flex justify-center items-center p-4 transition-opacity" onclick="if(event.target === this) this.classList.add('hidden')">
+        <div id="mount-detail-content" class="bg-[#112240] w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border-2 text-center relative overflow-hidden animate-in zoom-in duration-300">
+            <div id="mount-detail-bg" class="absolute inset-0 pointer-events-none opacity-20"></div>
+            <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="mount-detail-rarity">Эпический</p>
+            <div id="mount-detail-icon-wrap" class="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 border-4 relative z-10 bg-[#0a1128]">
+                <img id="mount-detail-icon" src="" class="w-full h-full object-cover rounded-full pointer-events-none">
+            </div>
+            <h2 class="text-2xl font-black text-white mb-2 relative z-10" id="mount-detail-name">Название</h2>
+            <p class="text-sm text-gray-400 mt-2 relative z-10" id="mount-detail-stats"></p>
+            <button onclick="document.getElementById('mount-detail-modal').classList.add('hidden')" class="w-full mt-6 py-4 rounded-2xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all border border-white/20 relative z-10">Закрыть</button>
+        </div>
+    </div>
+
     <!-- Artifact Drop Modal -->
     <div id="artifact-drop-modal"
         class="hidden fixed inset-0 bg-black/80 backdrop-blur-xl z-[150] flex justify-center items-center p-4 transition-opacity"
@@ -1252,26 +1318,33 @@
         let recognition = null;
         if (SpeechRecognition) { recognition = new SpeechRecognition(); recognition.interimResults = false; recognition.maxAlternatives = 1; }
 
-        function calculateSM2(quality, repetitions = 0, interval = 0, easeFactor = 2.5, currentScore = 0) {
-            repetitions = Number(repetitions) || 0;
-            interval = Number(interval) || 0;
-            easeFactor = Number(easeFactor) || 2.5;
-            currentScore = Number(currentScore) || 0;
+        // Modern SRS: fixed stage intervals + soft penalty
+        const SRS_INTERVALS = [0, 1, 3, 8, 21]; // days per stage 0..4
+        const SRS_ARCHIVE_MULTIPLIER = 2.0;
 
-            if (repetitions === 0 && currentScore > 0) {
-                repetitions = currentScore;
-                if (interval === 0) {
-                    if (currentScore === 1) interval = 1;
-                    else if (currentScore === 2) interval = 4;
-                    else if (currentScore === 3) interval = 12;
-                    else interval = 36;
+        function calculateSRS(quality, currentScore, currentInterval) {
+            currentScore = Number(currentScore) || 0;
+            currentInterval = Number(currentInterval) || 0;
+            let newScore, newInterval;
+            if (quality >= 3) {
+                if (currentScore >= MAX_SCORE) {
+                    newScore = MAX_SCORE;
+                    newInterval = Math.round((currentInterval || SRS_INTERVALS[MAX_SCORE]) * SRS_ARCHIVE_MULTIPLIER);
+                } else {
+                    newScore = currentScore + 1;
+                    newInterval = SRS_INTERVALS[newScore];
                 }
+            } else {
+                newScore = Math.max(currentScore - 1, 0);
+                newInterval = 0;
             }
-            if (quality < 3) { repetitions = 0; interval = 0; }
-            else { if (repetitions === 0) interval = 1; else if (repetitions === 1) interval = 4; else interval = Math.round(interval * easeFactor * 1.2); repetitions++; }
-            easeFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-            if (easeFactor < 1.3) easeFactor = 1.3;
-            return { repetitions, interval, easeFactor };
+            return { newScore, newInterval };
+        }
+
+        // Legacy wrapper
+        function calculateSM2(quality, repetitions, interval, easeFactor, currentScore) {
+            const r = calculateSRS(quality, currentScore, interval);
+            return { repetitions: r.newScore, interval: r.newInterval, easeFactor: easeFactor || 2.5 };
         }
 
         function formatInterval(days) {
@@ -1582,7 +1655,7 @@
         const getLevelColor = (level) => {
             if (!level) return 'bg-[#112240] backdrop-blur-md bg-opacity-80 text-gray-500 dark:bg-[#172A45] dark:text-gray-500';
             const l = level.toUpperCase().replace(/А/g, 'A').replace(/В/g, 'B').replace(/С/g, 'C');
-            return 'bg-[#ffc300]/10 text-[#D4AF37] border border-[#D4AF37]/20';
+            return 'bg-[#0A192F] border border-[#D4AF37]/40 text-[#D4AF37] tracking-wider shadow-[0_0_6px_rgba(212,175,55,0.2)] font-black';
         };
 
         const updateIcons = () => { };
@@ -1656,6 +1729,46 @@
         };
 
 
+        
+        window.showMountDetail = (name, rarity, icon, colorHex, dropRate, obtained) => {
+            const modal = document.getElementById('mount-detail-modal');
+            const content = document.getElementById('mount-detail-content');
+            const bg = document.getElementById('mount-detail-bg');
+            const rarityText = document.getElementById('mount-detail-rarity');
+            const iconWrap = document.getElementById('mount-detail-icon-wrap');
+            const iconEl = document.getElementById('mount-detail-icon');
+            const nameEl = document.getElementById('mount-detail-name');
+            const statsEl = document.getElementById('mount-detail-stats');
+            
+            const effectiveColor = obtained ? colorHex : '#6B7280';
+            const shadowColor = obtained ? effectiveColor + '80' : 'rgba(107,114,128,0.5)';
+            
+            content.style.borderColor = effectiveColor;
+            content.style.boxShadow = `0 0 40px ${shadowColor}`;
+            bg.style.background = `radial-gradient(circle at center, ${effectiveColor}, transparent 70%)`;
+            
+            rarityText.innerText = rarity;
+            rarityText.style.color = effectiveColor;
+            
+            iconWrap.style.borderColor = effectiveColor;
+            iconWrap.style.boxShadow = `0 0 20px ${shadowColor} inset, 0 0 20px ${shadowColor}`;
+            iconEl.src = icon;
+            
+            if (!obtained) {
+                iconEl.classList.add('opacity-40', 'grayscale');
+            } else {
+                iconEl.classList.remove('opacity-40', 'grayscale');
+            }
+            
+            nameEl.innerText = name;
+            nameEl.style.color = effectiveColor;
+            nameEl.style.textShadow = obtained ? `0 0 10px ${shadowColor}` : 'none';
+            
+            statsEl.innerHTML = dropRate ? `Шанс: ${dropRate}%<br><br>${obtained ? '' : '<span class="text-red-400 font-bold uppercase tracking-widest text-xs">Не получено</span>'}` : (obtained ? '' : '<span class="text-red-400 font-bold uppercase tracking-widest text-xs">Не получено</span>');
+            
+            modal.classList.remove('hidden');
+        };
+
         window.showArtifactDrop = (artifact) => {
             if (!artifact) return;
             const modal = document.getElementById('artifact-drop-modal');
@@ -1666,19 +1779,9 @@
             const icon = document.getElementById('artifact-drop-icon');
             const nameEl = document.getElementById('artifact-drop-name');
             
-            let colorHex = '#10B981'; // Green
-            let shadowColor = 'rgba(16, 185, 129, 0.5)';
-            let emoji = '💠';
-            
-            if (artifact.rarity === 'Необычный') {
-                colorHex = '#10B981'; shadowColor = 'rgba(16, 185, 129, 0.5)'; emoji = '🌿';
-            } else if (artifact.rarity === 'Редкий') {
-                colorHex = '#3B82F6'; shadowColor = 'rgba(59, 130, 246, 0.5)'; emoji = '💧';
-            } else if (artifact.rarity === 'Эпический') {
-                colorHex = '#8B5CF6'; shadowColor = 'rgba(139, 92, 246, 0.5)'; emoji = '🔮';
-            } else if (artifact.rarity === 'Легендарный') {
-                colorHex = '#F59E0B'; shadowColor = 'rgba(245, 158, 11, 0.5)'; emoji = '👑';
-            }
+            const globalArt = ALL_ARTIFACTS.find(a => a.name === artifact.name);
+            let colorHex = globalArt ? globalArt.color : '#F59E0B';
+            let shadowColor = colorHex + '80';
             
             content.style.borderColor = colorHex;
             content.style.boxShadow = `0 0 40px ${shadowColor}`;
@@ -1687,8 +1790,16 @@
             rarityText.style.color = colorHex;
             iconWrap.style.borderColor = colorHex;
             iconWrap.style.boxShadow = `0 0 20px ${shadowColor} inset, 0 0 20px ${shadowColor}`;
-            icon.innerText = emoji;
+            
+            if (globalArt && globalArt.icon) {
+                iconWrap.innerHTML = `<img src="${globalArt.icon}" class="w-full h-full object-cover rounded-full pointer-events-none" alt="${escapeStr(globalArt.name)}">`;
+            } else {
+                iconWrap.innerHTML = `<span class="text-4xl" id="artifact-drop-icon">🐎</span>`;
+            }
+            
             nameEl.innerText = artifact.name;
+            nameEl.style.color = colorHex;
+            nameEl.style.textShadow = `0 0 10px ${shadowColor}`;
             
             modal.classList.remove('hidden');
             triggerVibration([100, 50, 100, 50, 200]);
@@ -1833,7 +1944,7 @@
                     const el = document.getElementById(id);
                     if(el) {
                         el.style.width = `${pct}%`;
-                        if (rested_words_left > 0) el.className = "h-full bg-gradient-to-r from-[#8A2BE2] to-[#4B0082] transition-all duration-1000";
+                        if (rested_words_left > 0) el.className = "h-full bg-gradient-to-r from-[#3b82f6] to-[#00e5ff] transition-all duration-1000 rested-pulse";
                         else el.className = "h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000";
                     }
                 });
@@ -1843,9 +1954,6 @@
 
                 const buffSpark = document.getElementById('prof-buff-spark');
                 if (buffSpark) buffSpark.classList.toggle('hidden', !buff_active);
-                
-                const restedText = document.getElementById('prof-rested-text');
-                if (restedText) restedText.classList.toggle('hidden', rested_words_left === 0);
 
                 const ringQuest = document.getElementById('ring-quest');
                 const questText = document.getElementById('prof-quest-text');
@@ -1856,10 +1964,10 @@
                     const maxLen = 339.29; 
                     const baseTotal = totalDaily % 200;
                     if (paragon_completions > 0 || totalDaily >= 200) {
-                        ringQuest.setAttribute('stroke', '#8B5CF6');
+                        ringQuest.setAttribute('stroke', '#3B82F6');
                         const pctQuest = (totalDaily % 200 === 0 && totalDaily > 0) ? 1 : Math.min(1, baseTotal / 200);
                         ringQuest.style.strokeDashoffset = maxLen - (maxLen * pctQuest);
-                        if (questText) questText.innerHTML = `<span class="text-[#8B5CF6]">P${paragon_completions}</span> ${baseTotal}/200`;
+                        if (questText) questText.innerHTML = `<span class="text-[#3B82F6]">P${paragon_completions}</span> ${baseTotal}/200`;
                         if (artifactIndicator) artifactIndicator.classList.remove('hidden');
                     } else {
                         ringQuest.setAttribute('stroke', '#D4AF37');
@@ -1919,62 +2027,139 @@
                 folders[w.folder].total++;
                 if (w.score >= MAX_SCORE) folders[w.folder].mastered++;
             });
-                let html = '';
-                for (let f in folders) {
-                    const pct = Math.floor((folders[f].mastered / folders[f].total) * 100) || 0;
-                    let repText = '', colorCls = '';
-                    if (pct <= 20) { repText = 'Равнодушие'; colorCls = 'text-red-500'; }
-                    else if (pct <= 40) { repText = 'Дружелюбие'; colorCls = 'text-orange-500'; }
-                    else if (pct <= 60) { repText = 'Уважение'; colorCls = 'text-yellow-500'; }
-                    else if (pct <= 80) { repText = 'Почтение'; colorCls = 'text-lime-500'; }
-                    else { repText = 'Превознесение'; colorCls = 'text-green-500'; }
+            const folderEntries = Object.entries(folders).map(([f, data]) => ({
+                name: f,
+                pct: Math.floor((data.mastered / data.total) * 100) || 0
+            }));
+            
+            // Сортировка: выученные на 100% уходят в самый низ
+            folderEntries.sort((a, b) => {
+                if (a.pct === 100 && b.pct !== 100) return 1;
+                if (b.pct === 100 && a.pct !== 100) return -1;
+                return 0;
+            });
+            
+            let html = '';
+            for (const {name: f, pct} of folderEntries) {
+                let repText = '', colorCls = '';
+                if (pct <= 20) { repText = 'Равнодушие'; colorCls = 'text-red-500'; }
+                else if (pct <= 40) { repText = 'Дружелюбие'; colorCls = 'text-orange-500'; }
+                else if (pct <= 60) { repText = 'Уважение'; colorCls = 'text-yellow-500'; }
+                else if (pct <= 80) { repText = 'Почтение'; colorCls = 'text-lime-500'; }
+                else { repText = 'Превознесение'; colorCls = 'text-green-500'; }
 
+                if (pct === 100) {
                     html += `
-                    <div class="flex justify-between items-center bg-[#172A45]/50 p-3 rounded-xl border border-white/5">
+                    <div class="flex justify-between items-center bg-[#172A45]/30 p-3 rounded-xl border border-gray-600/30 cursor-default mb-2">
+                        <span class="text-sm text-gray-500 font-bold truncate pr-2 line-through opacity-70">${escapeStr(f)}</span>
+                        <div class="flex flex-col items-end gap-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] uppercase font-bold tracking-widest ${colorCls}">${t(repText)}</span>
+                                <div class="text-green-500 bg-green-500/10 rounded-full p-0.5 border border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.3)]">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                            </div>
+                            <span class="text-xs text-gray-500">Выучено: ${pct}%</span>
+                        </div>
+                    </div>`;
+                } else {
+                    html += `
+                    <div class="flex justify-between items-center bg-[#172A45]/50 p-3 rounded-xl border border-white/5 mb-2">
                         <span class="text-sm text-gray-300 font-bold truncate pr-2">${escapeStr(f)}</span>
-                        <div class="flex flex-col items-end">
-                        <span class="text-[10px] uppercase font-bold tracking-widest ${colorCls}">${t(repText)}</span>
-                        <span class="text-xs text-gray-500">Выучено: ${pct}%</span>
-                    </div>
-                </div>`;
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="text-[10px] uppercase font-bold tracking-widest ${colorCls}">${t(repText)}</span>
+                            <span class="text-xs text-gray-500">Выучено: ${pct}%</span>
+                        </div>
+                    </div>`;
+                }
             }
             container.innerHTML = html;
         }
 
         const ALL_ARTIFACTS = [
-            { name: "Ржавый меч", rarity: "Обычный", emoji: "🗡️", color: "#6B7280", dropRate: "1.0" },
-            { name: "Старый фолиант", rarity: "Обычный", emoji: "📓", color: "#6B7280", dropRate: "1.0" },
-            { name: "Надколотый щит", rarity: "Обычный", emoji: "🛡️", color: "#6B7280", dropRate: "1.0" },
-            { name: "Медный кубок", rarity: "Обычный", emoji: "🍷", color: "#6B7280", dropRate: "1.0" },
-            { name: "Потускневшее кольцо", rarity: "Обычный", emoji: "💍", color: "#6B7280", dropRate: "1.0" },
-            
-            { name: "Загадочная призма", rarity: "Необычный", emoji: "🧊", color: "#10B981", dropRate: "0.5" },
-            { name: "Искрящийся кристалл", rarity: "Необычный", emoji: "✨", color: "#10B981", dropRate: "0.5" },
-            { name: "Темный оникс", rarity: "Необычный", emoji: "🌑", color: "#10B981", dropRate: "0.5" },
-            { name: "Серебряный кинжал", rarity: "Необычный", emoji: "🔪", color: "#10B981", dropRate: "0.5" },
-            { name: "Плащ теней", rarity: "Необычный", emoji: "🧥", color: "#10B981", dropRate: "0.5" },
-            
-            { name: "Сердце сумрака", rarity: "Редкий", emoji: "💜", color: "#3B82F6", dropRate: "0.1" },
-            { name: "Слеза Сильваны", rarity: "Редкий", emoji: "💧", color: "#3B82F6", dropRate: "0.1" },
-            { name: "Амулет бесконечности", rarity: "Редкий", emoji: "🧿", color: "#3B82F6", dropRate: "0.1" },
-            { name: "Посох лунного света", rarity: "Редкий", emoji: "🦯", color: "#3B82F6", dropRate: "0.1" },
-            { name: "Лазурный талисман", rarity: "Редкий", emoji: "💠", color: "#3B82F6", dropRate: "0.1" },
-            
-            { name: "Осколок пустоты", rarity: "Эпический", emoji: "🌌", color: "#8B5CF6", dropRate: "0.02" },
-            { name: "Глаз бури", rarity: "Эпический", emoji: "👁️", color: "#8B5CF6", dropRate: "0.02" },
-            { name: "Корона падшего короля", rarity: "Эпический", emoji: "👑", color: "#8B5CF6", dropRate: "0.02" },
-            { name: "Рунический клинок", rarity: "Эпический", emoji: "⚔️", color: "#8B5CF6", dropRate: "0.02" },
-            { name: "Чаша прозрения", rarity: "Эпический", emoji: "🏆", color: "#8B5CF6", dropRate: "0.02" },
-            
-            { name: "Испепелитель", rarity: "Легендарный", emoji: "🔥", color: "#F59E0B", dropRate: "0.005" },
-            { name: "Клык Смертокрыла", rarity: "Легендарный", emoji: "🦷", color: "#F59E0B", dropRate: "0.005" },
-            { name: "Свет Элуны", rarity: "Легендарный", emoji: "🌟", color: "#F59E0B", dropRate: "0.005" },
-            { name: "Книга вечности", rarity: "Легендарный", emoji: "📖", color: "#F59E0B", dropRate: "0.005" },
-            
-            { name: "Око Саурона", rarity: "Мифический", emoji: "👁️‍🗨️", color: "#EF4444", dropRate: "0.001" },
-            { name: "Клинок Хаоса", rarity: "Мифический", emoji: "🔥", color: "#EF4444", dropRate: "0.001" },
-            { name: "Сфера мироздания", rarity: "Мифический", emoji: "🔮", color: "#EF4444", dropRate: "0.001" }
-        ];
+    // --- КАТЕГОРИЯ: МАМОНТЫ ---
+    { name: "Ледяной мамонт", rarity: "Необычный", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_white.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Шерстистый мамонт", rarity: "Редкий", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_brown.jpg", color: "#3B82F6", dropRate: "1.0" },
+    { name: "Большой ледяной мамонт", rarity: "Редкий", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_white.jpg", color: "#3B82F6", dropRate: "0.4" },
+    { name: "Тундровый мамонт путешественника", rarity: "Эпический", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_brown.jpg", color: "#8B5CF6", dropRate: "0.1" },
+    { name: "Черный боевой мамонт", rarity: "Легендарный", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_black.jpg", color: "#F59E0B", dropRate: "0.004" },
+    { name: "Большой черный боевой мамонт", rarity: "Мифический", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_black.jpg", color: "#EF4444", dropRate: "0.001" },
+
+    // --- КАТЕГОРИЯ: ВОЛКИ (Орки) ---
+    { name: "Свирепый бурый волк", rarity: "Обычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_blackdirewolf.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Свирепый лесной волк", rarity: "Обычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitedirewolf.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный лесной волк", rarity: "Необычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitedirewolf.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Стремительный серый волк", rarity: "Необычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitedirewolf.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Черный боевой волк", rarity: "Редкий", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_blackdirewolf.jpg", color: "#3B82F6", dropRate: "0.5" },
+
+    // --- КАТЕГОРИЯ: КОНИ (Люди / Нежить) ---
+    { name: "Вороной конь", rarity: "Обычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Гнедой конь", rarity: "Обычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный белый скакун", rarity: "Необычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Красный конь-скелет", rarity: "Обычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/spell_nature_swiftness.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный зеленый конь-скелет", rarity: "Необычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/spell_nature_swiftness.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Поводья коня смерти", rarity: "Эпический", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/spell_nature_swiftness.jpg", color: "#8B5CF6", dropRate: "0.1" },
+    { name: "Огненный боевой конь", rarity: "Легендарный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_nightmarehorse.jpg", color: "#F59E0B", dropRate: "0.008" },
+    { name: "Стремительный конь Альянса", rarity: "Эпический", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#8B5CF6", dropRate: "0.08" },
+    { name: "Непобедимый", rarity: "Мифический", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_pegasus.jpg", color: "#EF4444", dropRate: "0.0005" },
+
+    // --- КАТЕГОРИЯ: ДРАКОНЫ И ПРОТОДРАКОНЫ ---
+    { name: "Бронзовый дракон", rarity: "Редкий", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_bronze.jpg", color: "#3B82F6", dropRate: "0.8" },
+    { name: "Красный дракон", rarity: "Редкий", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_red.jpg", color: "#3B82F6", dropRate: "0.5" },
+    { name: "Черный дракон", rarity: "Эпический", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_twilight.jpg", color: "#8B5CF6", dropRate: "0.05" },
+    { name: "Синий дракон", rarity: "Эпический", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_blue.jpg", color: "#8B5CF6", dropRate: "0.04" },
+    { name: "Лазурный дракон", rarity: "Эпический", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_azure.jpg", color: "#8B5CF6", dropRate: "0.03" },
+    { name: "Синий протодракон", rarity: "Эпический", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#8B5CF6", dropRate: "0.02" },
+    { name: "Зеленый протодракон", rarity: "Эпический", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#8B5CF6", dropRate: "0.015" },
+    { name: "Поводья дракона Ониксии", rarity: "Легендарный", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_head_dragon_black.jpg", color: "#F59E0B", dropRate: "0.006" },
+    { name: "Затерянный во времени протодракон", rarity: "Легендарный", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#F59E0B", dropRate: "0.002" },
+
+    // --- КАТЕГОРИЯ: МЕДВЕДИ ---
+    { name: "Черный медведь", rarity: "Обычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_black.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Бурый медведь", rarity: "Обычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_brown.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Бронированный бурый медведь", rarity: "Необычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_brown.jpg", color: "#10B981", dropRate: "4.0" },
+    { name: "Черный боевой медведь", rarity: "Необычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_black.jpg", color: "#10B981", dropRate: "2.5" },
+    { name: "Белый полярный медведь", rarity: "Редкий", category: "Медведи", emoji: "🐻❄️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_white.jpg", color: "#3B82F6", dropRate: "0.2" },
+
+    // --- КАТЕГОРИЯ: ПТИЦЫ (Грифоны, Ветрокрылы, Ящеры) ---
+    { name: "Золотистый грифон", rarity: "Обычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_gryphon_01.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Белоснежный грифон", rarity: "Обычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_gryphon_01.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный синий грифон", rarity: "Необычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_gryphon_01.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Рыжий ветрокрыл", rarity: "Обычный", category: "Птицы", emoji: "🦇", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_wyvern_01.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный красный ветрокрыл", rarity: "Необычный", category: "Птицы", emoji: "🦇", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_wyvern_01.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Кенарийский боевой гиппогриф", rarity: "Необычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_warhippogryph.jpg", color: "#10B981", dropRate: "5.0" },
+    { name: "Стремительный белый крылобег", rarity: "Необычный", category: "Птицы", emoji: "🦩", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_cockatricemount.jpg", color: "#10B981", dropRate: "3.0" },
+    { name: "Пепел Ал'ара", rarity: "Легендарный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_summerfest_brazierorange.jpg", color: "#F59E0B", dropRate: "0.005" },
+
+    // --- КАТЕГОРИЯ: МЕХАНИЗМЫ ---
+    { name: "Ковер-самолет", rarity: "Необычный", category: "Механизмы", emoji: "🧶", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_camel_gray.jpg", color: "#10B981", dropRate: "3.5" },
+    { name: "Зеленый механодолгоног", rarity: "Обычный", category: "Механизмы", emoji: "⚙️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mechastrider.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный желтый механодолгоног", rarity: "Необычный", category: "Механизмы", emoji: "⚙️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mechastrider.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Турбоветролет", rarity: "Необычный", category: "Механизмы", emoji: "🚁", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_enggizmos_03.jpg", color: "#10B981", dropRate: "1.5" },
+    { name: "Анжинерский чоппер", rarity: "Редкий", category: "Механизмы", emoji: "🏍️", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_key_04.jpg", color: "#3B82F6", dropRate: "0.5" },
+    { name: "Механоцикл", rarity: "Редкий", category: "Механизмы", emoji: "🏍️", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_key_04.jpg", color: "#3B82F6", dropRate: "0.5" },
+    { name: "Голова Мимирона", rarity: "Мифический", category: "Механизмы", emoji: "🚁", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_enggizmos_03.jpg", color: "#EF4444", dropRate: "0.001" },
+
+    // --- КАТЕГОРИЯ: КОШКИ ---
+    { name: "Полосатый рассветный саблезуб", rarity: "Обычный", category: "Кошки", emoji: "🐅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Пятнистый ледопард", rarity: "Обычный", category: "Кошки", emoji: "🐆", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный ледопард", rarity: "Необычный", category: "Кошки", emoji: "🐆", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Поводья ледопарда Зимних Ключей", rarity: "Редкий", category: "Кошки", emoji: "🐆", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#3B82F6", dropRate: "0.8" },
+    { name: "Стремительный зулианский тигр", rarity: "Легендарный", category: "Кошки", emoji: "🐅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#F59E0B", dropRate: "0.006" },
+
+    // --- КАТЕГОРИЯ: БАРАНЫ И ЭЛЕККИ ---
+    { name: "Серый баран", rarity: "Обычный", category: "Бараны и Элекки", emoji: "🐏", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mountainram.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Стремительный белый баран", rarity: "Необычный", category: "Бараны и Элекки", emoji: "🐏", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mountainram.jpg", color: "#10B981", dropRate: "2.0" },
+    { name: "Лиловый элекк", rarity: "Обычный", category: "Бараны и Элекки", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridingelekk_purple.jpg", color: "#6B7280", dropRate: "3.0" },
+    { name: "Большой синий элекк", rarity: "Необычный", category: "Бараны и Элекки", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridingelekk.jpg", color: "#10B981", dropRate: "2.0" },
+
+    // --- КАТЕГОРИЯ: УНИКАЛЬНЫЕ И ПРОЧИЕ ---
+    { name: "Синий скат Пустоты", rarity: "Необычный", category: "Уникальные", emoji: "🐟", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_pet_netherray.jpg", color: "#10B981", dropRate: "1.5" },
+    { name: "Ониксовый дракон Пустоты", rarity: "Необычный", category: "Уникальные", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_pet_netherray.jpg", color: "#10B981", dropRate: "1.5" },
+    { name: "Черный боевой баран", rarity: "Редкий", category: "Уникальные", emoji: "🐏", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mountainram.jpg", color: "#3B82F6", dropRate: "0.5" },
+    { name: "Морская черепаха", rarity: "Эпический", category: "Уникальные", emoji: "🐢", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_pet_turtle.jpg", color: "#8B5CF6", dropRate: "0.08" },
+    { name: "Повелитель воронов", rarity: "Эпический", category: "Уникальные", emoji: "🦚", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_ravenlordmount.jpg", color: "#8B5CF6", dropRate: "0.06" }
+];
 
         async function openArtifactsCatalogModal() {
             try {
@@ -1982,56 +2167,57 @@
                 const userArtifacts = await res.json();
                 const obtainedNames = new Set(userArtifacts.map(a => a.artifact_name || a.name));
                 
-                const listEl = document.getElementById('artifacts-catalog-list');
+                                const listEl = document.getElementById('artifacts-catalog-list');
                 if (!listEl) return;
                 
-                const tenacitySet = ["Загадочная призма", "Искрящийся кристалл", "Темный оникс"];
-                const tenacityCount = tenacitySet.filter(n => obtainedNames.has(n)).length;
-                const tenacityActive = tenacityCount >= 3;
+                // Group by category
+                const grouped = {};
+                ALL_ARTIFACTS.forEach(art => {
+                    if (!grouped[art.category]) grouped[art.category] = { total: 0, obtained: 0, items: [] };
+                    grouped[art.category].total++;
+                    if (obtainedNames.has(art.name)) grouped[art.category].obtained++;
+                    grouped[art.category].items.push(art);
+                });
+
+                let html = '<div class="space-y-3">';
                 
-                const restSet = ["Сердце сумрака", "Слеза Сильваны", "Амулет бесконечности"];
-                const restCount = restSet.filter(n => obtainedNames.has(n)).length;
-                const restActive = restCount >= 3;
-                
-                let html = `
-                    <div class="mb-4 bg-[#172A45]/30 p-3 rounded-xl border border-white/5 space-y-2">
-                        <div class="flex justify-between items-center text-[10px] sm:text-xs">
-                            <div><span class="font-bold text-[#10B981]">Сет «Упорство»</span> <span class="text-gray-400 ml-1">(+2% XP)</span></div>
-                            <div class="font-bold ${tenacityActive ? 'text-[#10B981]' : 'text-gray-500'}">${tenacityCount}/3 ${tenacityActive ? '✓' : ''}</div>
-                        </div>
-                        <div class="flex justify-between items-center text-[10px] sm:text-xs">
-                            <div><span class="font-bold text-[#3B82F6]">Сет «Пробуждение»</span> <span class="text-gray-400 ml-1">(Отдых 30 слов)</span></div>
-                            <div class="font-bold ${restActive ? 'text-[#3B82F6]' : 'text-gray-500'}">${restCount}/3 ${restActive ? '✓' : ''}</div>
-                        </div>
-                    </div>
-                `;
-                html += '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">';
-                
-                ALL_ARTIFACTS.forEach((art, i) => {
-                    const obtained = obtainedNames.has(art.name);
-                    const borderCol = obtained ? art.color : '#4B5563'; // Gray border if missing
-                    const opacityCls = obtained ? '' : 'opacity-40 grayscale';
-                    const glowCls = obtained ? `box-shadow: 0 0 15px ${art.color}60 inset` : '';
+                for (const [catName, data] of Object.entries(grouped)) {
+                    html += `
+                    <details class="group bg-[#172A45]/50 border border-white/5 rounded-xl transition-all open:bg-[#172A45]">
+                        <summary class="flex justify-between items-center p-4 cursor-pointer select-none">
+                            <span class="font-bold text-white">${escapeStr(catName)}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold ${data.obtained === data.total ? 'text-[#D4AF37]' : 'text-gray-400'}">Выбито: ${data.obtained} / ${data.total}</span>
+                                <span class="text-gray-500 group-open:rotate-180 transition-transform duration-300">▼</span>
+                            </div>
+                        </summary>
+                        <div class="p-4 pt-0 border-t border-white/5 mt-2">
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mt-4">
+                    `;
                     
-                    let posCls = "left-1/2 transform -translate-x-1/2";
-                    if (i % 3 === 0) posCls = "left-0 transform-none"; // Prevent left clipping on mobile
-                    else if (i % 3 === 2) posCls = "right-0 left-auto transform-none"; // Prevent right clipping
+                    data.items.forEach((art, i) => {
+                        const obtained = obtainedNames.has(art.name);
+                        const borderCol = obtained ? art.color : '#4B5563';
+                        const opacityCls = obtained ? '' : 'opacity-40 grayscale';
+                        const glowCls = obtained ? `box-shadow: 0 0 15px ${art.color}60 inset` : '';
+                        
+                        html += `
+                            <div class="aspect-square rounded-xl bg-[#0a1128] border-2 flex flex-col items-center justify-center p-2 relative transition-transform ${obtained ? 'hover:scale-105' : ''} cursor-pointer" 
+                                style="border-color: ${borderCol}; ${glowCls}" onclick="showMountDetail('${escapeStr(art.name)}', '${escapeStr(art.rarity)}', '${art.icon}', '${art.color}', '${art.dropRate}', ${obtained})">
+                                <div class="flex flex-col items-center justify-center w-full h-full ${opacityCls}">
+                                    <img src="${art.icon}" class="w-10 h-10 object-cover rounded-md mb-2 shadow-sm pointer-events-none" alt="${escapeStr(art.name)}">
+                                    <span class="text-[8px] text-center font-bold text-gray-300 leading-tight uppercase tracking-wider block w-full px-1 overflow-hidden text-ellipsis line-clamp-2">${escapeStr(art.name)}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
                     
                     html += `
-                        <div class="aspect-square rounded-xl bg-[#0a1128] border-2 flex flex-col items-center justify-center p-2 relative group transition-transform ${obtained ? 'hover:scale-105 cursor-help' : 'cursor-not-allowed'} ${opacityCls}" 
-                            style="border-color: ${borderCol}; ${glowCls}" title="${escapeStr(art.name)} (${escapeStr(art.rarity)})">
-                            <span class="text-3xl drop-shadow-md mb-2">${art.emoji}</span>
-                            <span class="text-[9px] text-center font-bold text-gray-300 leading-tight uppercase tracking-wider hidden sm:block">${escapeStr(art.name)}</span>
-                            
-                            <div class="absolute bottom-full ${posCls} mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-[100] pointer-events-none">
-                                <p class="font-bold mb-1" style="color:${art.color}">${escapeStr(art.rarity)}</p>
-                                <p>${escapeStr(art.name)}</p>
-                                <p class="text-[10px] text-gray-400 mt-1">Шанс: ${art.dropRate}%</p>
-                                ${!obtained ? '<p class="text-gray-500 mt-1 text-[10px]">Не получено</p>' : ''}
                             </div>
                         </div>
+                    </details>
                     `;
-                });
+                }
                 
                 html += '</div>';
                 listEl.innerHTML = html;
@@ -2049,48 +2235,39 @@
                 const artifacts = await res.json();
                 
                 let html = '';
-                const totalSlots = Math.max(8, Math.ceil(artifacts.length / 4) * 4);
-                
-                for (let i = 0; i < totalSlots; i++) {
-                    if (i < artifacts.length) {
-                        const art = artifacts[i];
+                if (artifacts.length === 0) {
+                    html = '<div class="col-span-4 text-center text-gray-500 text-xs py-4">Транспорт пока не получен</div>';
+                } else {
+                    artifacts.forEach((art, i) => {
                         let colorHex = '#10B981';
-                        let emoji = '💠';
+                        let iconHtml = '<span class="text-2xl drop-shadow-md">🐎</span>';
                         
                         const globalArt = ALL_ARTIFACTS.find(a => a.name === (art.artifact_name || art.name));
                         if (globalArt) {
                             colorHex = globalArt.color;
-                            emoji = globalArt.emoji;
+                            iconHtml = `<img src="${globalArt.icon}" class="w-8 h-8 object-cover rounded-md pointer-events-none" alt="${escapeStr(globalArt.name)}">`;
                         } else {
+                            let emoji = '🐎';
                             if (art.rarity === 'Обычный') { colorHex = '#6B7280'; emoji = '🗡️'; }
                             else if (art.rarity === 'Необычный') { colorHex = '#10B981'; emoji = '🌿'; }
                             else if (art.rarity === 'Редкий') { colorHex = '#3B82F6'; emoji = '💧'; }
                             else if (art.rarity === 'Эпический') { colorHex = '#8B5CF6'; emoji = '🔮'; }
                             else if (art.rarity === 'Легендарный') { colorHex = '#F59E0B'; emoji = '👑'; }
                             else if (art.rarity === 'Мифический') { colorHex = '#EF4444'; emoji = '👁️‍🗨️'; }
+                            iconHtml = `<span class="text-2xl drop-shadow-md">${emoji}</span>`;
                         }
                         
                         const artName = art.artifact_name || art.name;
-                        let posCls = "left-1/2 transform -translate-x-1/2";
-                        if (i % 4 === 0) posCls = "left-0 transform-none";
-                        else if (i % 4 === 3) posCls = "right-0 left-auto transform-none";
-
+                        
                         html += `
-                        <div class="w-full aspect-square rounded-xl bg-[#0a1128] border-2 shadow-inner flex items-center justify-center relative cursor-help group transition-transform hover:scale-105" 
-                            style="border-color: ${colorHex}; box-shadow: 0 0 10px ${colorHex}40 inset" title="${escapeStr(artName)} (${escapeStr(art.rarity)})">
-                            <span class="text-2xl drop-shadow-md">${emoji}</span>
-                            <div class="absolute bottom-full ${posCls} mb-2 hidden group-hover:block w-32 bg-[#172A45] text-xs text-white text-center p-2 rounded-lg shadow-lg border border-gray-600 z-[100] pointer-events-none">
-                                <p class="font-bold" style="color:${colorHex}">${escapeStr(art.rarity)}</p>
-                                <p>${escapeStr(artName)}</p>
+                        <div class="w-full aspect-square rounded-xl bg-[#0a1128] border-2 shadow-inner flex flex-col items-center justify-center relative cursor-pointer transition-transform hover:scale-105" 
+                            style="border-color: ${colorHex}; box-shadow: 0 0 10px ${colorHex}40 inset" onclick="showMountDetail('${escapeStr(artName)}', '${escapeStr(art.rarity)}', '${globalArt ? globalArt.icon : ''}', '${colorHex}', '', true)">
+                            <div class="flex flex-col items-center justify-center w-full h-full pointer-events-none">
+                                ${iconHtml}
                             </div>
                         </div>
                         `;
-                    } else {
-                        html += `
-                        <div class="w-full aspect-square rounded-xl bg-[#172A45]/30 border border-white/5 flex items-center justify-center opacity-50">
-                        </div>
-                        `;
-                    }
+                    });
                 }
                 container.innerHTML = html;
             } catch(e) { console.error('Error fetching artifacts', e); }
@@ -2313,9 +2490,22 @@
                             <div class="flex items-center justify-between px-4 py-2 bg-[#172A45]/50 border-b border-white/5 cursor-pointer hover:bg-[#1e3357] transition-colors" onclick="toggleTopic('${safeTopicKey}')">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
                                     <div class="cursor-move drag-handle-topic text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
-                                    ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${getLevelColor(l)}">${l}</span>` : ''}
+                                    ${l !== 'Общее' ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-md flex-shrink-0 bg-[#0b101e] border border-[#D4AF37]/40 text-[#D4AF37] tracking-wider shadow-[0_0_6px_rgba(212,175,55,0.2)]">${l}</span>` : ''}
                                     <span class="text-sm font-semibold text-gray-200 truncate notranslate">${s}</span>
                                     <span class="text-xs text-gray-500 flex-shrink-0 ml-1">${wordsInTopic.length} ${t('слов')}</span>
+                                    ${(() => {
+                                        const tot = wordsInTopic.length;
+                                        const mst = wordsInTopic.filter(w => w.score >= MAX_SCORE).length;
+                                        const pct = tot > 0 ? Math.floor((mst / tot) * 100) : 0;
+                                        let repText = '', repColor = '';
+                                        if (pct <= 20) { repText = t('Равнодушие'); repColor = 'text-red-400'; }
+                                        else if (pct <= 40) { repText = t('Дружелюбие'); repColor = 'text-orange-400'; }
+                                        else if (pct <= 60) { repText = t('Уважение'); repColor = 'text-yellow-400'; }
+                                        else if (pct <= 80) { repText = t('Почтение'); repColor = 'text-lime-400'; }
+                                        else if (pct < 100) { repText = t('Превознесение'); repColor = 'text-[#00e5ff]'; }
+                                        else { repText = '✓'; repColor = 'text-green-400'; }
+                                        return `<span class="text-[10px] font-bold ${repColor} flex-shrink-0 ml-1">&bull; ${repText}</span>`;
+                                    })()}
                                 </div>
                                 <div class="flex items-center gap-1 flex-shrink-0">
                                     ${isDevMode ? `<button onclick="renameSubfolder('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>` : ''}
@@ -2323,7 +2513,7 @@
                                     <svg class="topic-chevron w-5 h-5 text-gray-500 transition-transform ${topicChevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
-                            <div id="topic-words-${safeTopicKey}" class="p-2 space-y-1 bg-[#0A192F]${isTopicCollapsed ? ' hidden' : ''}">
+                            <div id="topic-words-${safeTopicKey}" class="p-2 space-y-1 bg-[#0a1128]${isTopicCollapsed ? ' hidden' : ''}">
                         `;
 
                         wordsInTopic.forEach(w => {
@@ -2332,7 +2522,7 @@
                             else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
                             const safeWordDe = escapeStr(w.word_de);
                             html += `
-                            <div onclick="openEdit(${w.id})" class="bg-[#172A45] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#1e3357] transition-colors">
+                            <div onclick="openEdit(${w.id})" class="bg-[#172A45] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#1e3357] transition-colors border border-l-4 card-rarity-${Math.min(w.score, 4)} ${w.score >= MAX_SCORE ? 'border-l-yellow-500' : w.score === 3 ? 'border-l-purple-500' : w.score === 2 ? 'border-l-blue-500' : w.score === 1 ? 'border-l-green-500' : 'border-l-gray-600'}">
                                 <div class="flex-1 pr-3 min-w-0">
                                     <p class="text-base font-bold text-white leading-tight truncate notranslate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-medium mr-1">${w.article}</span>` : ''}${w.word_de} <span class="text-gray-500 text-xs font-normal">${extraInfo}</span></p>
                                     <p class="text-gray-400 text-sm mt-0.5 truncate notranslate">${w.word_ru}</p>
@@ -2343,7 +2533,7 @@
                                         <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-1.5 rounded-full text-gray-500 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"/></svg></button>
                                         <button onclick="deleteWord(${w.id}, event)" class="p-1.5 rounded-full text-gray-500 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                                     </div>
-                                    <span class="text-xs font-bold ${w.score >= MAX_SCORE ? 'text-[#5A9C78]' : (w.score >= 3 ? 'text-orange-500' : 'text-gray-600')}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+                                    <span class="text-xs font-bold rarity-${Math.min(w.score, 4)}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
                                 </div>
                             </div>`;
                         });
@@ -2765,7 +2955,7 @@
                 const btn = document.getElementById('mode-btn-' + m);
                 if (!btn) return;
                 if (m === mode) {
-                    btn.className = "flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-colors bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 whitespace-nowrap";
+                    btn.className = "flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-colors bg-[#1a233a] text-yellow-500 border border-yellow-500/50 whitespace-nowrap shadow-[0_0_10px_rgba(234,179,8,0.2)]";
                 } else {
                     btn.className = "flex-1 py-2 px-3 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition-colors border border-transparent whitespace-nowrap";
                 }
@@ -2804,9 +2994,9 @@
                     <button onclick="startTraining('all')" class="w-full text-left bg-[#172A45] border border-[#D4AF37]/30 hover:scale-[0.98] transition-all p-5 rounded-2xl shadow-md text-white flex justify-between items-center group mb-3">
                         <div>
                             <h3 class="text-lg font-bold">${t('Слова на сегодня')}</h3>
-                            <p class="text-yellow-100/70 text-[11px] font-medium mt-1"><span class="notranslate">${t('Доступно:')}</span> ${availableCount} ${waitingCount > 0 ? `<span class="opacity-60">|</span> <span class="notranslate">${t('Ожидают:')}</span> ${waitingCount}` : ''}</p>
+                            <p class="text-gray-400 text-[11px] font-medium mt-1"><span class="notranslate">${t('Доступно:')}</span> <span class="text-white font-bold">${availableCount}</span> ${waitingCount > 0 ? `<span class="opacity-60">|</span> <span class="notranslate">${t('Ожидают:')}</span> <span class="text-white font-bold">${waitingCount}</span>` : ''}</p>
                         </div>
-                        <div class="bg-[#112240] backdrop-blur-md bg-opacity-80/20 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
+                        <div class="bg-[#1a2b4c] border border-blue-400/30 w-8 h-8 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(96,165,250,0.2)]"><svg class="w-4 h-4 text-blue-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg></div>
                     </button>
                     ${currentStudyLang === 'de' && window.currentTrainingMode === 'classic' ? `
                     <button onclick="startVerbTrainer()" class="w-full text-left bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
@@ -2814,7 +3004,7 @@
                             <h3 class="text-sm font-bold text-white flex items-center gap-2">${t('Формы глаголов')}</h3>
                             <p class="text-gray-500 text-[10px] font-medium mt-0.5">${t('Тренировка Präteritum и Partizip II')}: <span class="notranslate">${verbAvailableCount}</span></p>
                         </div>
-                        <div class="text-[#D4AF37]"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
+                        <div class="text-[#c6a337] drop-shadow-[0_0_5px_rgba(198,163,55,0.4)]"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg></div>
                     </button>` : ''}
                 `;
 
@@ -2825,7 +3015,7 @@
                                 <h3 class="text-orange-700 dark:text-orange-400 text-sm font-bold">${t('Слабые места')}</h3>
                                 <p class="text-orange-600/70 dark:text-orange-500/70 text-[10px] font-medium mt-0.5"><span class="notranslate">${t('Новые или забытые:')}</span> ${weakWordsCount}</p>
                             </div>
-                            <div class="text-orange-400"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
+                            <div class="text-orange-500 drop-shadow-[0_0_6px_rgba(249,115,22,0.5)]"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg></div>
                         </button>
                     `;
                 }
@@ -2837,7 +3027,7 @@
                                 <h3 class="text-sm font-bold text-white flex items-center gap-2"> ${t('Повторить архив')}</h3>
                                 <p class="text-gray-500 text-[10px] font-medium mt-0.5"><span class="notranslate">${t('Изучено:')}</span> ${masteredCount}</p>
                             </div>
-                            <div class="text-gray-500"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                            <div class="text-blue-300 drop-shadow-[0_0_5px_rgba(147,197,253,0.4)]"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg></div>
                         </button>
                     `;
                 }
@@ -2852,6 +3042,19 @@
 
                 for (const folder in groupedTopics) {
                     const courseWords = globalWords.filter(w => (w.folder || 'Без курса') === folder);
+                    
+                    if (courseWords.length > 0 && courseWords.every(w => w.score >= MAX_SCORE)) {
+                        masteredTopicsHTML.push(`
+                            <div class="mb-2 bg-[#172A45]/30 border border-gray-600/30 rounded-xl p-4 flex justify-between items-center opacity-50 grayscale cursor-not-allowed">
+                                <h3 class="text-sm font-bold text-gray-500 line-through notranslate">${escapeStr(folder)}</h3>
+                                <div class="text-green-500 bg-green-500/10 rounded-full p-1.5 border border-green-500/30">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                            </div>
+                        `);
+                        continue;
+                    }
+
                     const cWordsCount = courseWords.filter(w => isWordDue(w)).length;
                     const folderId = `details-${btoa(encodeURIComponent(folder)).replace(/=/g, '')}`;
                     const isOpen = localStorage.getItem(folderId) === 'false' ? '' : 'open';
@@ -2863,7 +3066,7 @@
                                 <summary class="flex justify-between items-center p-4 cursor-pointer outline-none select-none list-none [&::-webkit-details-marker]:hidden">
                                     <h3 class="text-sm font-bold text-white notranslate">${folder}</h3>
                                     <div class="flex items-center gap-3">
-                                        <span class="text-[11px] text-gray-500 font-medium"><span class="notranslate">${t('Доступно:')}</span> ${cWordsCount}</span>
+                                        <span class="text-[11px] text-gray-400 font-medium"><span class="notranslate">${t('Доступно:')}</span> <span class="text-white font-bold">${cWordsCount}</span></span>
                                         <svg class="w-4 h-4 text-gray-500 transition-transform duration-300 transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7 7"/></svg>
                                     </div>
                                 </summary>
@@ -2905,7 +3108,7 @@
                                             ${l !== 'Общее' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${getLevelColor(l)}">${l}</span>` : ''}
                                             <h3 class="text-sm font-medium text-gray-100 dark:text-gray-100 notranslate">${s}</h3>
                                         </div>
-                                        <p class="text-[11px] text-gray-500"><span class="notranslate">${t('Доступно:')}</span> ${wordsCount} <span class="opacity-60">${waitingCount > 0 ? `| <span class="notranslate">${t('Ожидают:')}</span> ${waitingCount}` : ''}</span></p>
+                                        <p class="text-[11px] text-gray-400"><span class="notranslate">${t('Доступно:')}</span> <span class="text-white font-bold">${wordsCount}</span> <span class="opacity-60">${waitingCount > 0 ? `| <span class="notranslate">${t('Ожидают:')}</span> <span class="text-white font-bold">${waitingCount}</span>` : ''}</span></p>
                                     </div>
                                     <div class="text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
                                 </button>
@@ -2919,7 +3122,7 @@
                     }
                 }
 
-                container.innerHTML = html + activeTopicsHTML.join('');
+                container.innerHTML = html + activeTopicsHTML.join('') + masteredTopicsHTML.join('');
                 // Instantly translate all dynamically injected text
                 if (typeof translateNode === 'function') translateNode(container);
                 document.getElementById('train-setup-block').classList.remove('hidden'); document.getElementById('train-card-block').classList.add('hidden');
@@ -2975,6 +3178,10 @@
             const progressDots = Array.from({ length: MAX_SCORE }, (_, i) => i < Math.min(w.score, MAX_SCORE) ? '●' : '○').join('');
             document.getElementById('train-card-progress-text').innerText = progressDots;
             document.getElementById('train-card-progress-fill').style.width = `${Math.min(100, (w.score / MAX_SCORE) * 100)}%`;
+            
+            cardBlock.className = cardBlock.className.replace(/card-rarity-\d/g, '');
+            cardBlock.classList.add(`card-rarity-${Math.min(w.score, 4)}`);
+
 
             document.getElementById('train-answer-block').classList.add('hidden');
             document.getElementById('btn-show-answer').classList.add('hidden');
@@ -3050,11 +3257,11 @@
 
                 if (state === 'L1' || state === 'L2' || state === 'Archive') {
                     if (badge) {
-                        if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] dark:bg-[#172A45] text-gray-500"; }
+                        if (state === 'Archive') { badge.innerText = t("Архив"); badge.className = "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-[#112240] border border-white/5 text-gray-500"; }
                         else {
                             const typeLabel = w.word_type === 'verb' ? (currentStudyLang === 'de' ? 'Verb' : t('Глагол')) : (w.word_type === 'noun' ? (currentStudyLang === 'de' ? 'Nomen' : t('Существительное')) : '');
                             badge.innerText = typeLabel || '';
-                            badge.className = typeLabel ? "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 text-[#AA7C11] dark:text-[#FDE08B]" : "hidden";
+                            badge.className = typeLabel ? "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-[#0b101e] border border-[#D4AF37]/40 text-[#D4AF37] shadow-[0_0_6px_rgba(212,175,55,0.2)]" : "hidden";
                         }
                     }
                     if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
@@ -3063,9 +3270,9 @@
                     document.getElementById('btn-forgot').onclick = () => { triggerVibration([10, 20]); playTone(200, 'sawtooth', 0.2); updateScoreWithSM2(0); };
                     document.getElementById('btn-remembered').onclick = () => { triggerVibration(10); playTone(800, 'sine', 0.3); updateScoreWithSM2(4); };
 
-                    const goodCalc = calculateSM2(4, w.repetitions, w.interval, w.ease_factor, w.score);
+                    const goodCalc = calculateSRS(4, w.score, w.interval);
                     const sm2El = document.getElementById('sm2-good-time');
-                    if (sm2El) { sm2El.innerText = formatInterval(goodCalc.interval); sm2El._interval = goodCalc.interval; }
+                    if (sm2El) { sm2El.innerText = formatInterval(goodCalc.newInterval); sm2El._interval = goodCalc.newInterval; }
                 }
             }
             // Instantly translate any UI labels in the card (don't wait for MutationObserver)
@@ -3398,15 +3605,59 @@
 
                 const statsContainer = document.getElementById('stats-container');
                 if (statsContainer) {
+                    const levelsInfo = [
+                        { id: 'A1', name: 'Выживание', cap: 600 },
+                        { id: 'A2', name: 'Элементарный', cap: 1200 },
+                        { id: 'B1', name: 'Пороговый', cap: 2500 },
+                        { id: 'B2', name: 'Продвинутый', cap: 4000 },
+                        { id: 'C1', name: 'Профессиональный', cap: 6000 },
+                        { id: 'C2', name: 'В совершенстве', cap: 8000 }
+                    ];
+                    let currentLevelObj = levelsInfo[levelsInfo.length - 1];
+                    for (let l of levelsInfo) {
+                        if (mastered < l.cap) {
+                            currentLevelObj = l;
+                            break;
+                        }
+                    }
+                    const cap = currentLevelObj.cap;
+                    const pct = Math.min((mastered / cap) * 100, 100).toFixed(1);
+
                     statsContainer.innerHTML = `
-                        <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 text-center">
-                            <h3 class="text-lg font-bold text-white mb-2">${t('Архив')}</h3>
-                            <p class="text-sm text-gray-400">${t('Слов выучено:')} <span id="prof-mastered-text" class="text-[#D4AF37] font-bold text-xl">${mastered}</span> / <span id="prof-total-text">${totalCount}</span></p>
-                            <p class="text-sm text-gray-400 mt-2">${t('Глаголов выучено:')} <span id="prof-verbs-text" class="text-[#D4AF37] font-bold text-xl">${learnedVerbs}</span></p>
+                        <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
+                            <h3 class="text-lg font-bold text-[#D4AF37] mb-4 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5 drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                <span class="text-white" data-orig-ru="Прогресс обучения">${t('Прогресс обучения')}</span>
+                                <button onclick="openLangLevelsModal()" class="text-yellow-500/70 hover:text-yellow-500 transition-colors cursor-pointer ml-1" title="Справка по уровням">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </button>
+                            </h3>
+                            
+                            <div class="mb-5">
+                                <div class="flex justify-between text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                                    <span>${t('Текущая цель')}: ${t('Ранг')} ${currentLevelObj.id}</span>
+                                    <span class="text-[#D4AF37]"><span id="prof-mastered-text">${mastered}</span> / ${cap} ${t('слов')}</span>
+                                </div>
+                                <div class="w-full h-3 bg-black/50 rounded-full overflow-hidden border border-white/5">
+                                    <div class="h-full bg-gradient-to-r from-yellow-600 to-[#D4AF37] transition-all duration-700 shadow-[0_0_8px_rgba(212,175,55,0.5)]" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center text-xs bg-[#172A45] border border-white/10 p-3.5 rounded-2xl shadow-sm">
+                                <span class="text-gray-400 font-medium">${t('Всего выучено')}:</span>
+                                <span class="text-white font-bold">${mastered} / <span id="prof-total-text">${totalCount}</span></span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs bg-[#172A45] border border-white/10 p-3.5 rounded-2xl shadow-sm mt-2.5">
+                                <span class="text-gray-400 font-medium">${t('Из них глаголов')}:</span>
+                                <span class="text-white font-bold" id="prof-verbs-text">${learnedVerbs}</span>
+                            </div>
                         </div>
                         
                         <div class="bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
-                            <h3 class="text-lg font-bold text-white mb-2">${t('Активность')}</h3>
+                            <h3 class="text-lg font-bold text-[#D4AF37] mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                <span class="text-white">${t('Активность')}</span>
+                            </h3>
                             ${generateHeatmap(serverHistory)}
                         </div>
                     `;
@@ -3561,6 +3812,60 @@
                 navigator.serviceWorker.register('/sw.js').catch(() => { });
             });
         }
+
+        window.openLangLevelsModal = () => {
+            const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
+            const levelsInfo = [
+                { id: 'A1', name: 'Выживание', cap: 600 },
+                { id: 'A2', name: 'Элементарный', cap: 1200 },
+                { id: 'B1', name: 'Пороговый', cap: 2500 },
+                { id: 'B2', name: 'Продвинутый', cap: 4000 },
+                { id: 'C1', name: 'Профессиональный', cap: 6000 },
+                { id: 'C2', name: 'В совершенстве', cap: 8000 }
+            ];
+            
+            let currentLevelIdx = levelsInfo.length - 1;
+            for (let i = 0; i < levelsInfo.length; i++) {
+                if (mastered < levelsInfo[i].cap) {
+                    currentLevelIdx = i;
+                    break;
+                }
+            }
+
+            let html = '';
+            levelsInfo.forEach((l, idx) => {
+                const isActive = (idx === currentLevelIdx);
+                const isPast = (idx < currentLevelIdx);
+                
+                let boxClass = isActive ? 'bg-[#172A45] border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'bg-[#112240] border-white/5 opacity-60';
+                if (isPast) boxClass = 'bg-[#112240] border-green-500/30 opacity-80';
+
+                let textClass = isActive ? 'text-[#D4AF37]' : (isPast ? 'text-green-400' : 'text-gray-400');
+                let nameClass = isActive ? 'text-white' : 'text-gray-500';
+
+                html += `
+                    <div class="flex items-center justify-between p-4 rounded-xl border-2 ${boxClass} transition-all mb-2">
+                        <div class="flex flex-col gap-1 text-left">
+                            <div class="flex items-center gap-2">
+                                <span class="font-black text-xl ${textClass}">${l.id}</span>
+                                <span class="text-xs font-bold ${nameClass} uppercase tracking-wider">${t(l.name)}</span>
+                            </div>
+                            ${isActive ? `<span class="text-[10px] text-[#D4AF37] font-medium">${t('Текущая цель')}</span>` : (isPast ? `<span class="text-[10px] text-green-500 font-medium">${t('Достигнуто')}</span>` : `<span class="text-[10px] text-gray-500 font-medium">${t('Впереди')}</span>`)}
+                        </div>
+                        <div class="font-mono text-sm font-bold ${isActive ? 'text-[#D4AF37]' : (isPast ? 'text-green-400' : 'text-gray-500')}">
+                            ${l.cap === 8000 ? '8000+' : l.cap}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            const listEl = document.getElementById('lang-levels-list');
+            if (listEl) {
+                listEl.innerHTML = html;
+                if (typeof translateNode === 'function') translateNode(listEl);
+            }
+            document.getElementById('lang-levels-modal').classList.remove('hidden');
+        };
 
         switchView('dict');
     </script>
@@ -3933,14 +4238,38 @@
             }, 3000);
         };
 
-        // Roadmap hook: patch updateExperience to also render roadmap after fetching progress
+        
+    
+// Roadmap hook: patch updateExperience to also render roadmap after fetching progress
         const _baseUpdateExp = window.updateExperience;
         window.updateExperience = async () => {
             await _baseUpdateExp();
             const lvl = window.userProgressState ? parseInt(window.userProgressState.level, 10) : 1;
             renderRoadmap(lvl);
         };
-    </script>
+    
+
+
+</script>
+
+    <!-- Language Levels Modal -->
+    <div id="lang-levels-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] hidden flex justify-center items-center p-4 transition-all"
+        onclick="if(event.target === this) this.classList.add('hidden')">
+        <div class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-[#D4AF37]/30 relative max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]">ℹ️</span>
+                    <h2 class="text-xl font-bold text-white uppercase tracking-widest" data-orig-ru="Языковые уровни">Уровни</h2>
+                </div>
+                <button onclick="document.getElementById('lang-levels-modal').classList.add('hidden')"
+                    class="w-10 h-10 rounded-full bg-[#172A45] text-gray-400 hover:text-white hover:bg-red-500/20 flex items-center justify-center transition-all text-xl">×</button>
+            </div>
+            <div class="overflow-y-auto flex-1 pr-1 space-y-3" id="lang-levels-list">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- Goal Edit Modal -->
     <div id="goal-modal"
@@ -3992,8 +4321,8 @@
         <div class="bg-[#112240] w-full max-w-2xl rounded-[2rem] p-6 shadow-2xl border border-[#9D4EDD]/30 relative max-h-[85vh] flex flex-col">
             <div class="flex justify-between items-center mb-6 shrink-0">
                 <div class="flex items-center gap-3">
-                    <span class="text-3xl drop-shadow-[0_0_15px_rgba(157,78,221,0.5)]">💎</span>
-                    <h2 class="text-xl font-bold text-white uppercase tracking-widest">Каталог артефактов</h2>
+                    <img src="https://wow.zamimg.com/images/wow/icons/large/wow_token01.jpg" class="w-8 h-8 rounded-full border border-yellow-500/50">
+                    <h2 class="text-xl font-bold text-white uppercase tracking-widest">Транспорт</h2>
                 </div>
                 <button onclick="document.getElementById('artifacts-catalog-modal').classList.add('hidden')"
                     class="w-10 h-10 rounded-full bg-[#172A45] text-gray-400 hover:text-white hover:bg-red-500/20 flex items-center justify-center transition-all text-xl">×</button>
