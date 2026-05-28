@@ -686,38 +686,32 @@
 
  <section id="view-stats" class="hidden relative pt-4 pb-6 flex flex-col items-center select-none">
 
- <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 relative">
+ <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6 relative overflow-hidden">
+     <canvas id="galaxy-canvas" class="absolute inset-0 z-0 w-full h-full"></canvas>
+     
+     <div class="relative z-10 w-full">
+         <div class="relative flex items-center justify-center mb-4 gap-4">
+             <div class="relative cursor-pointer group"
+                  onclick="document.getElementById('profile-modal').classList.remove('hidden')">
+                 <div id="prof-avatar"
+                      class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center text-4xl font-bold bg-[#172A45] text-[#D4AF37] group-hover:scale-105 transition-transform">
+                 </div>
+                 <div id="prof-buff-spark" class="absolute -left-2 top-0 text-2xl hidden" title="Бафф Интеллекта (+10% XP)">✨</div>
+             </div>
+         </div>
 
- <h2 class="text-xl font-bold mb-6 text-white" data-orig-ru="Профиль">Профиль</h2>
-
- <div class="relative flex items-center justify-center mb-4 gap-4">
-
-
- <div class="relative cursor-pointer group"
- onclick="document.getElementById('profile-modal').classList.remove('hidden')">
- <div id="prof-avatar"
- class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center text-4xl font-bold bg-[#172A45] text-[#D4AF37] group-hover:scale-105 transition-transform">
- </div>
- <div id="prof-buff-spark" class="absolute -left-2 top-0 text-2xl hidden" title="Бафф Интеллекта (+10% XP)">✨</div>
- </div>
- 
- 
- </div>
-
- <div class="w-full max-w-[280px] mx-auto flex flex-col items-center mb-6">
- <div
- class="flex justify-between w-full text-[11px] text-[#D4AF37] font-medium tracking-widest uppercase mb-2">
- <span id="prof-lvl" class="text-white font-bold">Уровень 17</span>
- <span id="prof-xp-text">0 / 0 XP</span>
- </div>
- <div
- class="w-full h-2 bg-[#172A45] rounded-full overflow-hidden border border-[#D4AF37]/20 shadow-inner">
- <div id="prof-xp-bar"
- class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000"
- style="width: 0%"></div>
- </div>
- 
- </div>
+         <div class="w-full max-w-[280px] mx-auto flex flex-col items-center mb-6">
+             <div class="flex justify-between w-full text-[11px] text-[#D4AF37] font-medium tracking-widest uppercase mb-2">
+                 <span id="prof-lvl" class="text-white font-bold">Уровень 17</span>
+                 <span id="prof-xp-text">0 / 0 XP</span>
+             </div>
+             <div class="w-full h-2 bg-[#172A45] rounded-full overflow-hidden border border-[#D4AF37]/20 shadow-inner">
+                 <div id="prof-xp-bar"
+                      class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-1000"
+                      style="width: 0%"></div>
+             </div>
+         </div>
+     </div>
  </div>
 
  <div class="w-full bg-[#112240] rounded-[2rem] p-6 shadow-lg border border-white/5 mb-6">
@@ -762,7 +756,7 @@
  <img src="https://wow.zamimg.com/images/wow/icons/large/wow_token01.jpg" class="w-7 h-7 rounded-full object-cover">
  </button>
  </div>
- <div id="prof-artifacts" class="grid grid-cols-4 gap-3 w-full">
+ <div id="prof-artifacts" class="flex flex-col gap-3 w-full">
  <!-- Artifacts will be loaded here -->
  </div>
  </div>
@@ -2017,6 +2011,8 @@
  }
  };
 
+
+
  function renderReputation() {
  const container = document.getElementById('prof-reputation');
  if (!container) return;
@@ -2231,12 +2227,12 @@
  } else {
  artifacts.forEach((art, i) => {
  let colorHex = '#10B981';
- let iconHtml = '<span class="text-2xl ">🐎</span>';
+ let iconHtml = '<div class="w-full h-full flex items-center justify-center bg-[#0a1128]"><span class="text-2xl">🐎</span></div>';
  
  const globalArt = ALL_ARTIFACTS.find(a => a.name === (art.artifact_name || art.name));
  if (globalArt) {
  colorHex = globalArt.color;
- iconHtml = `<img src="${globalArt.icon}" class="w-8 h-8 object-cover rounded-md pointer-events-none" alt="${escapeStr(globalArt.name)}">`;
+ iconHtml = `<img src="${globalArt.icon}" class="w-full h-full object-cover pointer-events-none" alt="${escapeStr(globalArt.name)}">`;
  } else {
  let emoji = '🐎';
  if (art.rarity === 'Обычный') { colorHex = '#6B7280'; emoji = '🗡️'; }
@@ -2245,17 +2241,23 @@
  else if (art.rarity === 'Эпический') { colorHex = '#8B5CF6'; emoji = '🔮'; }
  else if (art.rarity === 'Легендарный') { colorHex = '#F59E0B'; emoji = '👑'; }
  else if (art.rarity === 'Мифический') { colorHex = '#EF4444'; emoji = '👁️‍🗨️'; }
- iconHtml = `<span class="text-2xl ">${emoji}</span>`;
+ iconHtml = `<div class="w-full h-full flex items-center justify-center bg-[#0a1128]"><span class="text-2xl">${emoji}</span></div>`;
  }
  
  const artName = art.artifact_name || art.name;
  
  html += `
- <div class="w-full aspect-square rounded-xl bg-[#0a1128] border-2 shadow-inner flex flex-col items-center justify-center relative cursor-pointer transition-transform hover:scale-105" 
- style="border-color: ${colorHex}; box-shadow: 0 0 10px ${colorHex}40 inset" onclick="showMountDetail('${escapeStr(artName)}', '${escapeStr(art.rarity)}', '${globalArt ? globalArt.icon : ''}', '${colorHex}', '', true)">
- <div class="flex flex-col items-center justify-center w-full h-full pointer-events-none">
- ${iconHtml}
- </div>
+ <div class="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors w-full cursor-pointer group" onclick="showMountDetail('${escapeStr(artName)}', '${escapeStr(art.rarity)}', '${globalArt ? globalArt.icon : ''}', '${colorHex}', '', true)">
+   <!-- Иконка -->
+   <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-md pointer-events-none transition-transform group-hover:scale-105" style="border-color: ${colorHex}40">
+     ${iconHtml}
+   </div>
+   
+   <!-- Текстовый блок -->
+   <div class="flex flex-col text-left pointer-events-none">
+     <span class="text-white text-base font-medium tracking-wide">${escapeStr(artName)}</span>
+     <span class="text-cyan-400 text-xs uppercase tracking-widest mt-1 opacity-80">В коллекции</span>
+   </div>
  </div>
  `;
  });
@@ -4325,6 +4327,107 @@
  
 
 
+ // --- Анимация Galaxy ---
+ (function initGalaxyAnimation() {
+     const canvas = document.getElementById('galaxy-canvas');
+     if (!canvas) return;
+     const ctx = canvas.getContext('2d');
+     
+     let stars = [];
+     let angleOffset = 0;
+     let maxRadius = 0;
+     
+     function resize() {
+         canvas.width = canvas.parentElement.clientWidth;
+         canvas.height = canvas.parentElement.clientHeight;
+         maxRadius = Math.max(canvas.width, canvas.height) * 1.2;
+     }
+     window.addEventListener('resize', resize);
+     resize();
+     
+     function generateStars(count) {
+         stars = [];
+         for (let i = 0; i < count; i++) {
+             const angle = Math.random() * Math.PI * 2;
+             // Плотное ядро, редкие края
+             const radius = Math.pow(Math.random(), 2) * maxRadius;
+             const x = Math.cos(angle) * radius;
+             const y = Math.sin(angle) * radius;
+             const size = 0.5 + Math.random() * 1.0;
+             const alpha = 0.3 + Math.random() * 0.7; // для мерцания
+             stars.push({ x, y, size, alpha, flickerSpeed: 2 + Math.random() * 5 });
+         }
+     }
+     
+     function drawGalaxy() {
+         if (canvas.width !== canvas.parentElement.clientWidth || canvas.height !== canvas.parentElement.clientHeight) {
+             resize();
+             // Перегенерация звезд при изменении размера экрана
+             if (typeof globalWords !== 'undefined' && typeof MAX_SCORE !== 'undefined') {
+                 const count = globalWords.filter(w => w.score >= MAX_SCORE).length;
+                 generateStars(count);
+             }
+         }
+         if (canvas.width === 0 || canvas.height === 0) {
+             requestAnimationFrame(drawGalaxy);
+             return;
+         }
+         
+         let archiveLength = 0;
+         if (typeof globalWords !== 'undefined' && typeof MAX_SCORE !== 'undefined') {
+             archiveLength = globalWords.filter(w => w.score >= MAX_SCORE).length;
+         }
+         
+         // Генерируем массив только если изменилось кол-во слов
+         if (stars.length !== archiveLength) {
+             generateStars(archiveLength);
+         }
+         
+         ctx.clearRect(0, 0, canvas.width, canvas.height);
+         
+         if (archiveLength === 0) {
+             requestAnimationFrame(drawGalaxy);
+             return; // Пустой фон если нет выученных слов
+         }
+         
+         // Находим центр для вращения (от центра аватарки)
+         const avatarEl = document.getElementById('prof-avatar');
+         let originX = canvas.width / 2;
+         let originY = canvas.height / 2;
+         if (avatarEl) {
+             const rect = avatarEl.getBoundingClientRect();
+             const canvasRect = canvas.getBoundingClientRect();
+             if (rect.width > 0) {
+                 originX = rect.left - canvasRect.left + rect.width / 2;
+                 originY = rect.top - canvasRect.top + rect.height / 2;
+             }
+         }
+         
+         ctx.save();
+         ctx.translate(originX, originY);
+         ctx.rotate(angleOffset);
+         
+         // Отрисовка всех статичных звезд (без пересчета координат)
+         stars.forEach(star => {
+             ctx.beginPath();
+             ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+             // Эффект мерцания на основе статичного свойства и времени
+             const currentAlpha = star.alpha * (0.6 + 0.4 * Math.sin(angleOffset * star.flickerSpeed * 100));
+             ctx.fillStyle = `rgba(56, 189, 248, ${currentAlpha})`;
+             ctx.fill();
+         });
+         
+         ctx.restore();
+         
+         angleOffset += 0.0005; // Очень плавное вращение галактики
+         requestAnimationFrame(drawGalaxy);
+     }
+     
+     requestAnimationFrame(() => {
+         resize();
+         drawGalaxy();
+     });
+ })();
 </script>
 
  <!-- Language Levels Modal -->
