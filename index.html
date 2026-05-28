@@ -3389,9 +3389,7 @@
 
  try {
  const cardBlock = document.getElementById('train-card-block');
- if (!_swipeInProgress) {
- cardBlock.classList.add('animate-fold-up');
- }
+ // Убрана анимация animate-fold-up для моментального переключения
 
  const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor, w.score);
 
@@ -3437,9 +3435,9 @@
  idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
  updateExperience();
  curIdx++; _swipeInProgress = false;
- setTimeout(() => {
+ 
+ // Моментальный рендер
  try { renderCard(); } catch (e) { console.error(e); } finally { _isScoring = false; }
- }, 250);
  } catch (err) {
  console.error("SM2 critical:", err);
  _isScoring = false;
