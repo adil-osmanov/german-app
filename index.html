@@ -3282,7 +3282,8 @@
  const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer');
 
  const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
- let state = w.score < (MAX_SCORE - 1) ? 'L1' : w.score < MAX_SCORE ? 'L2' : 'Archive';
+ const scoreNum = Number(w.score) || 0;
+ let state = scoreNum >= MAX_SCORE ? 'Archive' : (scoreNum >= (MAX_SCORE - 1) ? 'L2' : 'L1');
 
  document.getElementById('train-de-word').innerText = fullGerman;
  if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-400 font-medium mr-1 notranslate">Pl.: die</span><span class="text-gray-400 notranslate opacity-60">${escapeStr(w.plural)}</span>`;
