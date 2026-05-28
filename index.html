@@ -3436,7 +3436,6 @@
 
  idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
  updateExperience();
- updateTrainQuestBar();
  curIdx++; _swipeInProgress = false;
  setTimeout(() => {
  try { renderCard(); } catch (e) { console.error(e); } finally { _isScoring = false; }
