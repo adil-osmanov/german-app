@@ -327,7 +327,7 @@
  font-size: 1.5rem;
  
  pointer-events: none;
- animation: floatUpFade 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+ animation: floatUpFade 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
  z-index: 100;
  }
 
@@ -891,9 +891,9 @@
  onclick="if(event.target === this) closeMountDetail()">
  <div class="bg-[#112240] bg-opacity-80 dark:bg-[#112240] bg-opacity-80 w-full max-w-lg rounded-[2rem] p-5 shadow-2xl transition-all border border-gray-100 dark:border-gray-800 max-h-[90dvh] flex flex-col relative"
  onclick="event.stopPropagation()">
- <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                 <div class="flex justify-between items-center mb-4 flex-shrink-0">
  <h2 id="modal-title" class="text-xl font-bold text-white flex items-center gap-2">
- Новое слово
+ ${t('Новое слово')}
  </h2>
  <button id="close-modal"
  class="text-gray-500 bg-[#112240] bg-opacity-80 dark:bg-[#172A45] hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-colors">×</button>
@@ -902,21 +902,18 @@
  <div id="modal-tabs"
  class="flex bg-[#112240] bg-opacity-80 dark:bg-[#172A45] p-1 rounded-xl mb-4">
  <button id="tab-single"
- class="flex-1 py-2 text-sm font-medium rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white">Одно
- слово</button>
+ class="flex-1 py-2 text-sm font-medium rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white">${t('Одно слово')}</button>
  <button id="tab-bulk"
- class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">Списком
- (CSV)</button>
+ class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">${t('Списком (CSV)')}</button>
  </div>
 
  <div id="form-single">
  <div
  class="flex bg-[#172A45] dark:bg-[#172A45]/50 p-1 rounded-lg mb-3 border border-gray-100 dark:border-gray-800">
  <button id="type-noun"
- class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-[#2A3B5E] shadow-sm transition-all text-white">Существительное</button>
+ class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-md bg-[#2A3B5E] shadow-sm transition-all text-white">${t('Существительное')}</button>
  <button id="type-verb"
- class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">Глагол
- / Другое</button>
+ class="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">${t('Глагол / Другое')}</button>
  </div>
  <form id="add-form" class="space-y-3">
  <div id="article-selector" class="flex gap-1 w-full mb-1">
@@ -931,7 +928,7 @@
  <input type="text" id="word-de" placeholder="Изучаемое слово..." required autocomplete="off"
  class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 font-medium text-white transition-all text-sm">
  <span id="translate-loader-de"
- class="text-[10px] text-[#D4AF37] mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
+ class="text-[10px] text-[#D4AF37] mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">${t('Перевожу...')}</span>
  <span id="duplicate-warning"
  class="text-[10px] text-[#9C5A5A] mt-1 ml-2 hidden font-medium flex items-center gap-1"></span>
  </div>
@@ -953,7 +950,7 @@
  autocomplete="off"
  class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-white transition-all text-sm">
  <span id="translate-loader-ru"
- class="text-[10px] text-[#D4AF37] mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">Перевожу...</span>
+ class="text-[10px] text-[#D4AF37] mt-1 ml-2 hidden font-medium flex items-center gap-1 animate-pulse">${t('Перевожу...')}</span>
  </div>
  <input type="text" id="word-example" placeholder="Пример использования (необязательно)..."
  class="w-full bg-[#172A45] dark:bg-[#172A45] rounded-xl py-3 px-4 outline-none focus:ring-2 ring-blue-500/50 border border-gray-200 dark:border-gray-700 text-sm text-white transition-all">
@@ -972,11 +969,11 @@
  </div>
  </div>
  <button type="submit" id="btn-save"
- class="w-full bg-[#5A7B9C] text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-black/40">Сохранить</button>
+ class="w-full bg-[#5A7B9C] text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-blue-600 shadow-md shadow-black/40">${t('Сохранить')}</button>
  </form>
  </div>
  <div class="hidden space-y-3" id="form-bulk">
- <p class="text-xs text-gray-500 text-center mb-3">Загрузка списка слов в формате .csv</p>
+ <p class="text-xs text-gray-500 text-center mb-3">${t('Загрузка списка слов в формате .csv')}</p>
  <div class="flex w-full gap-2">
  <div class="flex-[2] min-w-0"><input type="text" id="bulk-folder" list="folder-list"
  placeholder="Курс"
@@ -1002,12 +999,11 @@
  </path>
  </svg>
  <span class="text-[#5A9C78] dark:text-green-400 font-medium text-sm"
- id="bulk-file-label">Выбрать CSV файл</span>
+ id="bulk-file-label">${t('Выбрать CSV файл')}</span>
  </div>
  </div>
  <button id="btn-upload-csv"
- class="w-full bg-[#5A9C78] text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-green-600 shadow-md shadow-black/40">Загрузить
- слова</button>
+ class="w-full bg-[#5A9C78] text-white font-medium py-3.5 rounded-xl mt-2 active:scale-95 transition-all text-sm hover:bg-green-600 shadow-md shadow-black/40">${t('Загрузить слова')}</button>
  </div>
  </div>
  </div>
@@ -1027,7 +1023,7 @@
  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
  </path>
  </svg>
- <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Словарь</span>
+ <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">${t('Словарь')}</span>
  </button>
  <button id="nav-train"
  class="flex flex-col items-center justify-center gap-1 transition-all text-gray-500 hover:text-gray-100 dark:hover:text-white group w-1/3 h-full relative">
@@ -1040,7 +1036,7 @@
  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
  </path>
  </svg>
- <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Учить</span>
+ <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">${t('Учить')}</span>
  </button>
  <button id="nav-stats"
  class="flex flex-col items-center justify-center gap-1 transition-all text-gray-500 hover:text-gray-100 dark:hover:text-white group w-1/3 h-full relative">
@@ -1053,7 +1049,7 @@
  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
  </path>
  </svg>
- <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">Профиль</span>
+ <span class="text-[9px] font-bold group-[.active-tab]:text-[#D4AF37] truncate mt-0.5">${t('Профиль')}</span>
  </button>
  </div>
  </nav>
@@ -1075,15 +1071,15 @@
  </svg>
  </div>
  <h2 class="text-xl font-bold text-white mb-2" id="premium-confirm-title"
- data-orig-ru="Подтверждение удаления">Подтверждение удаления</h2>
+ data-orig-ru="Подтверждение удаления">${t('Подтверждение удаления')}</h2>
  <p class="text-[#D4AF37] text-sm mb-6" id="premium-confirm-message"></p>
  <div class="flex gap-3 relative z-10">
  <button onclick="closePremiumConfirm()"
  class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600"
- data-orig-ru="Отмена">Отмена</button>
+ data-orig-ru="Отмена">${t('Отмена')}</button>
  <button onclick="executePremiumConfirm()"
  class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]"
- data-orig-ru="Удалить">Удалить</button>
+ data-orig-ru="Удалить">${t('Удалить')}</button>
  </div>
  </div>
  </div>
@@ -1099,17 +1095,17 @@
  <span class="text-2xl ">✏️</span>
  </div>
  <h2 class="text-xl font-bold text-white mb-4 whitespace-pre-line leading-tight" id="premium-prompt-title">
- Редактировать</h2>
+ ${t('Редактировать')}</h2>
  <input type="text" id="premium-prompt-input"
  class="w-full bg-[#172A45] border border-gray-600 rounded-xl py-3 px-4 text-white font-medium mb-6 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all shadow-inner"
  autocomplete="off">
  <div class="flex gap-3 relative z-10">
  <button onclick="closePremiumPrompt()"
  class="flex-1 py-3 rounded-xl bg-[#172A45] text-white font-bold hover:bg-[#2A3B5E] transition-all border border-gray-600"
- data-orig-ru="Отмена">Отмена</button>
+ data-orig-ru="Отмена">${t('Отмена')}</button>
  <button onclick="executePremiumPrompt()"
  class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FDE08B] to-[#AA7C11] text-[#112240] font-black hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]"
- data-orig-ru="Сохранить">Сохранить</button>
+ data-orig-ru="Сохранить">${t('Сохранить')}</button>
  </div>
  </div>
  </div>
@@ -1120,17 +1116,17 @@
         <div id="mount-detail-content" class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border-4 border-gray-700 text-center relative overflow-hidden transition-all duration-500 scale-95">
             <div id="mount-detail-bg" class="absolute inset-0 pointer-events-none opacity-30 transition-all duration-700"></div>
             
-            <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="mount-detail-rarity">Эпическое средство передвижения</p>
+            <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="mount-detail-rarity">${t('Эпическое средство передвижения')}</p>
             
             <div id="mount-detail-icon-wrap" class="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-6 border-4 border-gray-600 relative z-10 bg-[#0a1128] overflow-hidden shadow-2xl">
                 <img id="mount-detail-icon" src="" class="w-full h-full object-cover pointer-events-none">
             </div>
             
-            <h2 class="text-3xl font-black text-white mb-2 relative z-10 tracking-tight" id="mount-detail-name">Название</h2>
+            <h2 class="text-3xl font-black text-white mb-2 relative z-10 tracking-tight" id="mount-detail-name">${t('Название')}</h2>
             
             <div class="mt-4 relative z-10" id="mount-detail-stats"></div>
             
-            <button onclick="closeMountDetail()" class="w-full mt-8 py-3.5 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all border border-white/20 relative z-10 active:scale-95">Закрыть</button>
+            <button onclick="closeMountDetail()" class="w-full mt-8 py-3.5 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all border border-white/20 relative z-10 active:scale-95">${t('Закрыть')}</button>
         </div>
     </div>
 
@@ -1141,15 +1137,15 @@
  <div id="artifact-drop-content"
  class="bg-[#112240] w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border-2 text-center relative overflow-hidden animate-in zoom-in duration-500">
  <div id="artifact-drop-bg" class="absolute inset-0 pointer-events-none opacity-20"></div>
- <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="artifact-drop-rarity-text">Эпический дроп!</p>
+ <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="artifact-drop-rarity-text">${t('Эпический дроп!')}</p>
  <div id="artifact-drop-icon-wrap"
  class="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 border-4 relative z-10 bg-[#0a1128] transition-transform hover:scale-110 duration-300">
  <span class="text-4xl" id="artifact-drop-icon">💎</span>
  </div>
- <h2 class="text-2xl font-black text-white mb-2 relative z-10" id="artifact-drop-name">Название</h2>
+ <h2 class="text-2xl font-black text-white mb-2 relative z-10" id="artifact-drop-name">${t('Название')}</h2>
  <button onclick="document.getElementById('artifact-drop-modal').classList.add('hidden')"
  class="w-full mt-6 py-4 rounded-2xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all border border-white/20 relative z-10"
- data-orig-ru="Продолжить">Продолжить</button>
+ data-orig-ru="Продолжить">${t('Продолжить')}</button>
  </div>
  </div>
 
@@ -1330,10 +1326,10 @@
  if (devBtn) {
  if (isDevMode) {
  devBtn.className = "w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-[#D4AF37] bg-[#D4AF37]/10 transition-all text-white mb-6 ";
- devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl flex-shrink-0">🛠️</span><span class="font-bold text-base text-[#D4AF37] truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-black bg-[#D4AF37] text-[#112240] px-2 py-0.5 rounded uppercase shadow-md flex-shrink-0 ml-2" data-orig-ru="Включен">Включен</span>`;
+ devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl flex-shrink-0">🛠️</span><span class="font-bold text-base text-[#D4AF37] truncate" data-orig-ru="Режим разработчика">${t('Режим разработчика')}</span></div><span class="text-[10px] font-black bg-[#D4AF37] text-[#112240] px-2 py-0.5 rounded uppercase shadow-md flex-shrink-0 ml-2" data-orig-ru="Включен">${t('Включен')}</span>`;
  } else {
  devBtn.className = "w-full flex items-center justify-between p-3.5 rounded-xl border-2 border-transparent bg-[#172A45] transition-all hover:bg-[#112240] text-gray-400 mb-6";
- devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span class="font-bold text-base truncate" data-orig-ru="Режим разработчика">Режим разработчика</span></div><span class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2" data-orig-ru="Выключен">Выключен</span>`;
+ devBtn.innerHTML = `<div class="flex items-center gap-2 min-w-0"><span class="text-xl opacity-50 grayscale flex-shrink-0">🛠️</span><span class="font-bold text-base truncate" data-orig-ru="Режим разработчика">${t('Режим разработчика')}</span></div><span class="text-[10px] font-bold bg-[#112240] text-gray-500 border border-gray-700 px-2 py-0.5 rounded uppercase flex-shrink-0 ml-2" data-orig-ru="Выключен">${t('Выключен')}</span>`;
  }
  if (typeof translateNode === 'function') translateNode(devBtn);
  }
@@ -1673,7 +1669,7 @@
  const elapsedMs = Date.now() - sessionStartMs;
  const tzoffset = (new Date()).getTimezoneOffset() * 60000;
  const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
- try { await apiFetch('/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date_str: localISOTime, ms_spent: elapsedMs }) }); } catch (e) { }
+ try { await apiFetch('/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date_str: localISOTime, ms_spent: elapsedMs, target_lang: currentStudyLang }) }); } catch (e) { }
  sessionStartMs = 0;
  }
  }
@@ -1824,7 +1820,7 @@
  apiFetch('/progress/action', {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ action_type: isNew ? 'new' : 'review' })
+ body: JSON.stringify({ action_type: isNew ? 'new' : 'review', target_lang: currentStudyLang })
  }).then(res => res.json()).then(data => {
  if (data.status === 'success') {
  if (data.leveled_up) showLevelUp(data.new_level);
@@ -1859,7 +1855,7 @@
  el.style.left = `${x}px`;
  el.style.top = `${y}px`;
  document.body.appendChild(el);
- setTimeout(() => el.remove(), 1200);
+ setTimeout(() => el.remove(), 3000);
  };
 
  window.showLevelUp = (lvl) => {
@@ -1900,7 +1896,7 @@
 
  window.updateExperience = async () => {
  try {
- const res = await apiFetch('/progress');
+ const res = await apiFetch(`/progress?target_lang=${currentStudyLang}`);
  window.userProgressState = await res.json();
  
  let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active, paragon_completions, bonuses, streak } = window.userProgressState;
@@ -2150,7 +2146,7 @@
 
  async function openArtifactsCatalogModal() {
  try {
- const res = await apiFetch('/artifacts');
+ const res = await apiFetch(`/artifacts?target_lang=${currentStudyLang}`);
  const userArtifacts = await res.json();
  const obtainedNames = new Set(userArtifacts.map(a => a.artifact_name || a.name));
  
@@ -2218,12 +2214,12 @@
  if (!container) return;
  
  try {
- const res = await apiFetch('/artifacts');
+ const res = await apiFetch(`/artifacts?target_lang=${currentStudyLang}`);
  const artifacts = await res.json();
  
  let html = '';
  if (artifacts.length === 0) {
- html = '<div class="col-span-4 text-center text-gray-500 text-xs py-4">Транспорт пока не получен</div>';
+ html = `<div class="col-span-4 text-center text-gray-500 text-xs py-4">${t('Транспорт пока не получен')}</div>`;
  } else {
  artifacts.forEach((art, i) => {
  let colorHex = '#10B981';
@@ -3672,7 +3668,7 @@
 
  try {
  const historyResult = await Promise.allSettled([
- apiFetch('/history').then(r => r.json())
+ apiFetch(`/history?target_lang=${currentStudyLang}`).then(r => r.json())
  ]);
  let serverHistory = historyResult[0].status === 'fulfilled' ? historyResult[0].value : (JSON.parse(localStorage.getItem('studyHistory')) || {});
 
@@ -3947,6 +3943,25 @@
 
  <script>
  window.i18nDict = {
+ "Эпическое средство передвижения": { en: "Epic mount", de: "Episches Reittier" },
+ "Название": { en: "Name", de: "Name" },
+ "Закрыть": { en: "Close", de: "Schließen" },
+ "Не помню": { en: "Don't know", de: "Weiß nicht" },
+ "Выучено:": { en: "Learned:", de: "Gelernt:" },
+ "Активен шанс выпадения транспорта!": { en: "Mount drop chance active!", de: "Reittier-Dropchance aktiv!" },
+ "Транспорт": { en: "Mounts", de: "Reittiere" },
+ "Каталог Транспорта": { en: "Mounts Catalog", de: "Reittierkatalog" },
+ "Транспорт пока не получен": { en: "No mounts obtained yet", de: "Noch keine Reittiere erhalten" },
+ "Интерактивная 3D-модель недоступна": { en: "Interactive 3D model unavailable", de: "Interaktives 3D-Modell nicht verfügbar" },
+ "Загрузка 3D-плеера...": { en: "Loading 3D player...", de: "Lade 3D-Player..." },
+ "Очистка памяти...": { en: "Clearing memory...", de: "Speicherbereinigung..." },
+ "Репутация колод": { en: "Decks Reputation", de: "Decks Ruf" },
+ "Скрыть темы": { en: "Hide topics", de: "Themen ausblenden" },
+ "Архив пуст ": { en: "Archive is empty ", de: "Archiv ist leer " },
+ "Отлично! Все текущие слова выучены ": { en: "Great! All current words learned ", de: "Super! Alle aktuellen Wörter gelernt " },
+ "Одно": { en: "One", de: "Eins" },
+ " слово": { en: " word", de: " Wort" },
+ "Ежедневный квест": { en: "Daily Quest", de: "Tägliche Quest" },
  "Турист": { en: "Tourist", de: "Tourist" },
  "Мигрант": { en: "Migrant", de: "Migrant" },
  "Студент": { en: "Student", de: "Student" },
@@ -4498,7 +4513,7 @@
  <div class="flex justify-between items-center mb-6 shrink-0">
  <div class="flex items-center gap-3">
  <img src="https://wow.zamimg.com/images/wow/icons/large/wow_token01.jpg" class="w-8 h-8 rounded-full border border-yellow-500/50">
- <h2 class="text-xl font-bold text-white uppercase tracking-widest">Транспорт</h2>
+ <h2 class="text-xl font-bold text-white uppercase tracking-widest">${t('Транспорт')}</h2>
  </div>
  <button onclick="document.getElementById('artifacts-catalog-modal').classList.add('hidden')"
  class="w-10 h-10 rounded-full bg-[#172A45] text-gray-400 hover:text-white hover:bg-red-500/20 flex items-center justify-center transition-all text-xl">×</button>

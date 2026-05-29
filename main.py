@@ -120,7 +120,7 @@ def init_db():
     cur.execute("""
         CREATE TABLE IF NOT EXISTS user_progress (
             username TEXT PRIMARY KEY,
-            level INTEGER DEFAULT 17,
+            level INTEGER DEFAULT 1,
             current_xp BIGINT DEFAULT 0,
             last_action_time TIMESTAMP DEFAULT NOW(),
             rested_words_left INTEGER DEFAULT 0,
@@ -185,6 +185,30 @@ def init_db():
     except Exception:
         conn.rollback()
 
+    try:
+        cur.execute("ALTER TABLE user_progress ADD COLUMN target_lang TEXT DEFAULT 'de'")
+        conn.commit()
+        cur.execute("ALTER TABLE user_progress DROP CONSTRAINT IF EXISTS user_progress_pkey CASCADE")
+        cur.execute("ALTER TABLE user_progress ADD PRIMARY KEY (username, target_lang)")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
+    try:
+        cur.execute("ALTER TABLE study_history ADD COLUMN target_lang TEXT DEFAULT 'de'")
+        conn.commit()
+        cur.execute("ALTER TABLE study_history DROP CONSTRAINT IF EXISTS study_history_pkey CASCADE")
+        cur.execute("ALTER TABLE study_history ADD PRIMARY KEY (date_str, username, target_lang)")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
+    try:
+        cur.execute("ALTER TABLE user_artifacts ADD COLUMN target_lang TEXT DEFAULT 'de'")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
     cur.close()
     conn.close()
 
@@ -242,12 +266,14 @@ class LevelRename(BaseModel):
 class HistoryUpdate(BaseModel):
     date_str: str
     ms_spent: int
+    target_lang: str = "de"
 
 class AvatarUpdate(BaseModel):
     avatar_base64: str
 
 class ProgressAction(BaseModel):
     action_type: str
+    target_lang: str = "de"
 
 def get_user_bonuses(username):
     conn = get_db_connection()
@@ -306,10 +332,10 @@ def update_avatar(data: AvatarUpdate, x_user: str = Header("osman")):
     return {"status": "success"}
 
 @app.get("/history")
-def get_history(x_user: str = Header("osman")):
+def get_history(target_lang: str = "de", x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT date_str, ms_spent FROM study_history WHERE username = %s", (x_user,))
+    cur.execute("SELECT date_str, ms_spent FROM study_history WHERE username = %s AND target_lang = %s", (x_user, target_lang))
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -320,21 +346,21 @@ def update_history(data: HistoryUpdate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO study_history (date_str, ms_spent, username) 
-        VALUES (%s, %s, %s) 
-        ON CONFLICT (date_str, username) 
+        INSERT INTO study_history (date_str, ms_spent, username, target_lang) 
+        VALUES (%s, %s, %s, %s) 
+        ON CONFLICT (date_str, username, target_lang) 
         DO UPDATE SET ms_spent = study_history.ms_spent + EXCLUDED.ms_spent
-    """, (data.date_str, data.ms_spent, x_user))
+    """, (data.date_str, data.ms_spent, x_user, data.target_lang))
     conn.commit()
     cur.close()
     conn.close()
     return {"status": "success"}
 
 @app.get("/progress")
-def get_progress(x_user: str = Header("osman")):
+def get_progress(target_lang: str = "de", x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM user_progress WHERE username = %s", (x_user,))
+    cur.execute("SELECT * FROM user_progress WHERE username = %s AND target_lang = %s", (x_user, target_lang))
     row = cur.fetchone()
     
     from datetime import datetime, timedelta
@@ -342,7 +368,7 @@ def get_progress(x_user: str = Header("osman")):
     today_str = now.date().isoformat()
     
     if not row:
-        cur.execute("INSERT INTO user_progress (username, level, current_xp, last_action_time, last_daily_date) VALUES (%s, 17, 0, NOW(), %s) RETURNING *", (x_user, today_str))
+        cur.execute("INSERT INTO user_progress (username, level, current_xp, last_action_time, last_daily_date, target_lang) VALUES (%s, 1, 0, NOW(), %s, %s) RETURNING *", (x_user, today_str, target_lang))
         row = cur.fetchone()
         conn.commit()
     
@@ -390,8 +416,8 @@ def get_progress(x_user: str = Header("osman")):
 
     if updates:
         set_clauses = ", ".join([f"{k} = %s" for k in updates.keys()])
-        values = list(updates.values()) + [x_user]
-        cur.execute(f"UPDATE user_progress SET {set_clauses} WHERE username = %s", values)
+        values = list(updates.values()) + [x_user, target_lang]
+        cur.execute(f"UPDATE user_progress SET {set_clauses} WHERE username = %s AND target_lang = %s", values)
         conn.commit()
 
     row['xp_for_next'] = xp_needed_for_next(row['level'])
@@ -405,7 +431,7 @@ def get_progress(x_user: str = Header("osman")):
 def progress_action(data: ProgressAction, x_user: str = Header("osman")):
     import math
     import random
-    state = get_progress(x_user)
+    state = get_progress(data.target_lang, x_user)
     
     base_xp = 10 if data.action_type == "new" else 5
     
@@ -542,8 +568,8 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
                 
                 # Check for duplicate — each mount is unique in collection
                 cur.execute(
-                    "SELECT COUNT(*) as cnt FROM user_artifacts WHERE username = %s AND artifact_name = %s",
-                    (x_user, artifact_name)
+                    "SELECT COUNT(*) as cnt FROM user_artifacts WHERE username = %s AND artifact_name = %s AND target_lang = %s",
+                    (x_user, artifact_name, data.target_lang)
                 )
                 already_owned = cur.fetchone()['cnt'] > 0
                 
@@ -554,9 +580,9 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
                     break
                 
                 cur.execute("""
-                    INSERT INTO user_artifacts (username, artifact_name, rarity)
-                    VALUES (%s, %s, %s) RETURNING id
-                """, (x_user, artifact_name, rarity))
+                    INSERT INTO user_artifacts (username, artifact_name, rarity, target_lang)
+                    VALUES (%s, %s, %s, %s) RETURNING id
+                """, (x_user, artifact_name, rarity, data.target_lang))
                 art_id = cur.fetchone()['id']
                 conn.commit()
                 cur.close()
@@ -577,8 +603,8 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
         UPDATE user_progress 
         SET level = %s, current_xp = %s, daily_new_words = %s, daily_reviews = %s, 
             rested_words_left = %s, last_action_time = NOW(), paragon_completions = %s
-        WHERE username = %s
-    """, (new_level, new_xp, new_daily_new, new_daily_rev, new_rested_left, new_paragon, x_user))
+        WHERE username = %s AND target_lang = %s
+    """, (new_level, new_xp, new_daily_new, new_daily_rev, new_rested_left, new_paragon, x_user, data.target_lang))
     conn.commit()
     cur.close()
     conn.close()
@@ -596,15 +622,15 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
     }
 
 @app.get("/artifacts")
-def get_artifacts(x_user: str = Header("osman")):
+def get_artifacts(target_lang: str = "de", x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT id, artifact_name, rarity, dropped_at 
         FROM user_artifacts 
-        WHERE username = %s 
+        WHERE username = %s AND target_lang = %s
         ORDER BY dropped_at DESC
-    """, (x_user,))
+    """, (x_user, target_lang))
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -612,7 +638,7 @@ def get_artifacts(x_user: str = Header("osman")):
 
 
 @app.get("/leaderboard")
-def get_leaderboard():
+def get_leaderboard(target_lang: str = "de"):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
@@ -622,8 +648,9 @@ def get_leaderboard():
             COUNT(*) as all_words,
             SUM(CASE WHEN score >= 4 THEN 1 ELSE 0 END) as learned_words
         FROM words
+        WHERE target_lang = %s
         GROUP BY username
-    """)
+    """, (target_lang,))
     word_stats = cur.fetchall()
     
     from datetime import datetime, timedelta
@@ -637,12 +664,12 @@ def get_leaderboard():
             SUM(ms_spent) as total_ms,
             MAX(date_str) as last_active
         FROM study_history
-        WHERE date_str >= %s
+        WHERE date_str >= %s AND target_lang = %s
         GROUP BY username
-    """, (monday_str,))
+    """, (monday_str, target_lang))
     history_stats = cur.fetchall()
 
-    cur.execute("SELECT username, date_str FROM study_history ORDER BY username, date_str DESC")
+    cur.execute("SELECT username, date_str FROM study_history WHERE target_lang = %s ORDER BY username, date_str DESC", (target_lang,))
     all_history = cur.fetchall()
     
     cur.close()
