@@ -599,7 +599,8 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
         "paragon_completed": paragon_completed,
         "current_xp": new_xp,
         "xp_for_next": xp_needed_for_next(new_level),
-        "artifact": dropped_artifact
+        "artifact": dropped_artifact,
+        "daily_actions": total_actions
     }
 
 @app.get("/artifacts")

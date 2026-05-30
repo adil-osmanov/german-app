@@ -524,17 +524,21 @@
 
 
  <div id="train-xp-panel"
- class="w-full bg-[#112240] rounded-[1rem] p-3 shadow-md border border-[#D4AF37]/20 mb-3 gap-2 hidden"
- style="display:none; flex-direction:column;">
- <div
- class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
+ class="w-full bg-[#112240] rounded-[1rem] p-2 shadow-md border border-[#D4AF37]/20 mb-2 gap-1.5 flex flex-col">
+ <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">
+ <div class="flex items-center gap-2">
  <span id="train-xp-lvl">Lvl 1</span>
+ <span class="text-blue-400 border-l border-white/20 pl-2">Задание: <span id="train-quest-text" class="text-white">0/200</span></span>
+ </div>
  <span id="train-xp-text" class="text-gray-400">0 / 150 XP</span>
  </div>
+ <div class="w-full flex flex-col gap-0.5">
  <div class="w-full h-1.5 bg-[#172A45] rounded-full overflow-hidden">
- <div id="train-xp-bar"
- class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700"
- style="width: 0%"></div>
+ <div id="train-xp-bar" class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700" style="width: 0%"></div>
+ </div>
+ <div class="w-full h-1 bg-[#172A45] rounded-full overflow-hidden">
+ <div id="train-quest-bar" class="h-full bg-green-500 transition-all duration-700" style="width: 0%"></div>
+ </div>
  </div>
  </div>
 
@@ -1731,14 +1735,14 @@
         
         modal.classList.remove('opacity-100');
         modal.classList.add('opacity-0');
-        content.classList.remove('scale-100');
-        content.classList.add('scale-95');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
         iconWrap.classList.remove('scale-100');
         iconEl.classList.remove('scale-100');
         
         setTimeout(() => {
             modal.classList.add('hidden');
-        }, 300);
+        }, 200);
     };
 
     window.showMountDetail = (name, rarity, icon, colorHex, dropRate, obtained) => {
@@ -1884,11 +1888,12 @@
         statsEl.innerHTML = statusText;
         
         modal.classList.remove('hidden');
+        // trigger reflow
         void modal.offsetWidth;
         modal.classList.remove('opacity-0');
         modal.classList.add('opacity-100');
-        content.classList.remove('scale-95');
-        content.classList.add('scale-100');
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
     };
 
     window.closeFullArt = () => {
@@ -1975,17 +1980,25 @@
  body: JSON.stringify({ action_type: isNew ? 'new' : 'review', target_lang: currentStudyLang })
  }).then(res => res.json()).then(data => {
  if (data.status === 'success') {
- if (data.leveled_up) showLevelUp(data.new_level);
+ if (data.leveled_up) {
+      showLevelUp(data.new_level);
+      const lvlAudio = new Audio('/sounds/levelup.ogg');
+      lvlAudio.play().catch(e => console.error("Audio play failed:", e));
+ }
  if (data.quest_completed) {
  setTimeout(() => {
  showXPFloat(500, window.innerWidth / 2, window.innerHeight / 2);
  showLevelUp('Квест сдан!');
+ const questAudio = new Audio('/sounds/questcomplete.ogg');
+ questAudio.play().catch(e => console.error("Audio play failed:", e));
  }, 500);
  }
  if (data.paragon_completed) {
  setTimeout(() => {
  showXPFloat(1000, window.innerWidth / 2, window.innerHeight / 2);
  showLevelUp('Парагон!');
+ const questAudio = new Audio('/sounds/questcomplete.ogg');
+ questAudio.play().catch(e => console.error("Audio play failed:", e));
  }, 500);
  }
  if (data.artifact) {
@@ -2288,13 +2301,12 @@
  const obtained = obtainedNames.has(art.name);
  const borderCol = obtained ? art.color : '#4B5563';
  const opacityCls = obtained ? '' : 'opacity-40 grayscale';
- const glowCls = obtained ? `box-shadow: 0 0 15px ${art.color}60 inset` : '';
  
  html += `
  <div class="aspect-square rounded-xl bg-[#0a1128] border-2 flex flex-col items-center justify-center p-2 relative transition-transform ${obtained ? 'hover:scale-105' : ''} cursor-pointer" 
- style="border-color: ${borderCol}; ${glowCls}" onclick="showMountDetail('${escapeStr(art.name)}', '${escapeStr(art.rarity)}', '${art.icon}', '${art.color}', '${art.dropRate}', ${obtained})">
+ style="border-color: ${borderCol}" onclick="showMountDetail('${escapeStr(art.name)}', '${escapeStr(art.rarity)}', '${art.icon}', '${art.color}', '${art.dropRate}', ${obtained})">
  <div class="flex flex-col items-center justify-center w-full h-full ${opacityCls}">
- <img src="${art.icon}" class="w-10 h-10 object-cover rounded-md mb-2 pointer-events-none border-2" style="border-color: ${borderCol}; box-shadow: 0 0 10px ${obtained ? art.color : 'transparent'}" alt="${escapeStr(art.name)}">
+ <img src="${art.icon}" class="w-10 h-10 object-cover rounded-md mb-2 pointer-events-none" alt="${escapeStr(art.name)}">
  <span class="text-[8px] text-center font-bold leading-tight uppercase tracking-wider block w-full px-1 overflow-hidden text-ellipsis line-clamp-2" style="color: ${borderCol}">${escapeStr(art.name)}</span>
  </div>
  </div>
@@ -2346,20 +2358,27 @@
  iconHtml = `<div class="w-full h-full flex items-center justify-center bg-[#0a1128]"><span class="text-2xl">${emoji}</span></div>`;
  }
  
+ const rarityMap = {
+ "uncommon": "Необычное",
+ "rare": "Редкое",
+ "epic": "Эпическое",
+ "legendary": "Легендарное"
+ };
+ const displayRarity = rarityMap[art.rarity] || art.rarity;
  const artName = art.artifact_name || art.name;
  
  html += `
  <div class="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors w-full cursor-pointer group" onclick="showMountDetail('${escapeStr(artName)}', '${escapeStr(art.rarity)}', '${globalArt ? globalArt.icon : ''}', '${colorHex}', '', true)">
-   <!-- Иконка -->
-   <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-md pointer-events-none transition-transform group-hover:scale-105" style="border-color: ${colorHex}40">
-     ${iconHtml}
-   </div>
-   
-   <!-- Текстовый блок -->
-   <div class="flex flex-col text-left pointer-events-none">
-     <span class="text-white text-base font-medium tracking-wide">${escapeStr(artName)}</span>
-     <span class="text-cyan-400 text-xs uppercase tracking-widest mt-1 opacity-80">В коллекции</span>
-   </div>
+ <!-- Иконка -->
+ <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-md pointer-events-none transition-transform group-hover:scale-105" style="border-color: ${colorHex}80; box-shadow: 0 0 10px ${colorHex}50">
+ ${iconHtml}
+ </div>
+ 
+ <!-- Текстовый блок -->
+ <div class="flex flex-col text-left pointer-events-none">
+ <span class="text-base font-medium tracking-wide drop-shadow-sm" style="color: ${colorHex}">${escapeStr(artName)}</span>
+ <span class="text-xs uppercase tracking-widest mt-1 font-bold" style="color: ${colorHex}90">${displayRarity} • В коллекции</span>
+ </div>
  </div>
  `;
  });
@@ -4697,7 +4716,7 @@
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
  </svg>
  </button>
- <div id="full-art-content" class="relative transition-all duration-500 scale-95 opacity-0 flex justify-center items-center w-full max-w-4xl h-full">
+ <div id="full-art-content" class="relative transition-all duration-200 ease-out scale-95 opacity-0 flex justify-center items-center w-full max-w-[85vw] max-h-[80vh] mx-auto">
  <div id="full-art-wrapper" class="relative inline-block max-w-full max-h-full rounded-2xl border-2 border-transparent transition-all">
  <img id="full-art-image" src="" class="max-w-full max-h-[65vh] w-auto h-auto object-contain rounded-2xl">
  <div class="absolute bottom-0 left-0 right-0 pt-24 pb-6 px-6 bg-gradient-to-t from-black via-black/80 to-transparent rounded-b-2xl pointer-events-none flex flex-col items-center text-center">
@@ -4720,6 +4739,18 @@
  if (e.key === 'Escape' && !document.getElementById('full-art-modal').classList.contains('hidden')) {
  closeFullArt();
  }
+ });
+
+ // Background preloading of all mount arts
+ window.addEventListener('load', () => {
+    setTimeout(() => {
+        ALL_ARTIFACTS.forEach(a => {
+            if (a.fullArt) {
+                const img = new Image();
+                img.src = encodeURI(a.fullArt);
+            }
+        });
+    }, 2000); // delay so it doesn't block initial page render
  });
  </script>
 </body>
