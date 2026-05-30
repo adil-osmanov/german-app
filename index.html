@@ -626,7 +626,7 @@
  </div>
 
  <div id="train-synonyms-block" class="hidden mt-5 pt-4 border-t border-white/5 w-full text-left">
- <div class="text-[10px] text-white/40 uppercase tracking-[0.2em] mb-1.5">СВЯЗАННЫЕ СЛОВА:</div>
+ <div class="text-[10px] text-white/40 uppercase tracking-[0.2em] mb-1.5">СИНОНИМЫ:</div>
  <div id="train-synonyms-list" class="text-cyan-500/80 text-sm font-light"></div>
  </div>
  </div>
@@ -2103,6 +2103,19 @@
  }
  });
 
+    const questTextEl = document.getElementById('train-quest-text');
+    const questBarEl = document.getElementById('train-quest-bar');
+    if (questTextEl && questBarEl) {
+        const baseTotal = todayCount % 200;
+        const isParagon = paragon_completions > 0 || todayCount >= 200;
+        const displayVal = (todayCount % 200 === 0 && todayCount > 0) ? 200 : baseTotal;
+        const pctQuest = (todayCount % 200 === 0 && todayCount > 0) ? 1 : Math.min(1, baseTotal / 200);
+        
+        questTextEl.innerText = isParagon ? `Парагон: ${displayVal}/200` : `${displayVal}/200`;
+        questBarEl.style.width = `${pctQuest * 100}%`;
+        questBarEl.className = isParagon ? "h-full bg-blue-500 transition-all duration-700" : "h-full bg-green-500 transition-all duration-700";
+    }
+
  if (document.getElementById('prof-rank-name')) document.getElementById('prof-rank-name').innerText = rankName;
  if (document.getElementById('prof-league-icon')) document.getElementById('prof-league-icon').innerHTML = rankIcon;
 
@@ -3081,6 +3094,7 @@
  if (verbGame) verbGame.classList.add('hidden');
  if (container && container.parentElement) container.parentElement.classList.remove('hidden');
  if (document.getElementById('train-card-block')) document.getElementById('train-card-block').classList.add('hidden');
+    if (document.getElementById('train-xp-panel')) document.getElementById('train-xp-panel').style.display = 'none';
  try {
  container.innerHTML = '';
  let eligibleWords = globalWords;
@@ -3457,14 +3471,18 @@
 
  if (w.word_type === 'verb') {
  const prefixes = ['ab', 'an', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'nach', 'her', 'hin', 'vor', 'weg', 'zu', 'zurück', 'zusammen'];
- let wDe = (w.word_de || '').toLowerCase();
- let splitIndex = -1;
- for (let p of prefixes) {
- if (wDe.startsWith(p)) {
- splitIndex = p.length;
- break;
- }
- }
+        let wDe = (w.word_de || '').toLowerCase();
+        let part = (w.partizip || '').toLowerCase();
+        let splitIndex = -1;
+        for (let p of prefixes) {
+            if (wDe.startsWith(p)) {
+                let isSep = part ? part.startsWith(p) : (wDe !== 'mitteln');
+                if (isSep) {
+                    splitIndex = p.length;
+                }
+                break;
+            }
+        }
  if (splitIndex > 0 && splitIndex < wDe.length) {
  const originalWord = w.word_de || '';
  formattedGerman = '<span class="text-white/60">' + escapeStr((w.article ? w.article + ' ' : '') + originalWord.substring(0, splitIndex)) + '</span><span class="text-white/40 mx-0.5">·</span><span class="text-white">' + escapeStr(originalWord.substring(splitIndex)) + '</span>';
@@ -3481,11 +3499,13 @@
  const targetRu = normalizeRu(w.word_ru);
 
  if (targetRu) {
- const synonyms = globalWords.filter(other => 
- other.word_de !== w.word_de && 
- other.target_lang === w.target_lang && 
- normalizeRu(other.word_ru) === targetRu
- );
+ const getRuWords = (str) => (str || '').toLowerCase().replace(/\([^)]*\)/g, '').split(',').map(s => s.trim()).filter(s => s.length > 0);
+        const targetRuWords = getRuWords(w.word_ru);
+        const synonyms = globalWords.filter(other => {
+            if (other.word_de === w.word_de || other.target_lang !== w.target_lang) return false;
+            const otherRuWords = getRuWords(other.word_ru);
+            return targetRuWords.some(tr => otherRuWords.includes(tr));
+        });
  if (synonyms.length > 0) {
  document.getElementById('train-synonyms-block').classList.remove('hidden');
  const uniqueSynonyms = [...new Set(synonyms.map(s => {
@@ -3494,16 +3514,20 @@
  txt = (s.article ? s.article + ' ' : '') + s.word_de;
  } else if (s.word_type === 'verb') {
  const prefixes = ['ab', 'an', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'nach', 'her', 'hin', 'vor', 'weg', 'zu', 'zurück', 'zusammen'];
- let wDe = (s.word_de || '').toLowerCase();
- for (let p of prefixes) {
- if (wDe.startsWith(p)) {
- let splitIndex = p.length;
- if (splitIndex > 0 && splitIndex < wDe.length) {
- txt = s.word_de.substring(0, splitIndex) + '·' + s.word_de.substring(splitIndex);
- }
- break;
- }
- }
+                    let wDe = (s.word_de || '').toLowerCase();
+                    let part = (s.partizip || '').toLowerCase();
+                    for (let p of prefixes) {
+                        if (wDe.startsWith(p)) {
+                            let isSep = part ? part.startsWith(p) : (wDe !== 'mitteln');
+                            if (isSep) {
+                                let splitIndex = p.length;
+                                if (splitIndex > 0 && splitIndex < wDe.length) {
+                                    txt = s.word_de.substring(0, splitIndex) + '·' + s.word_de.substring(splitIndex);
+                                }
+                            }
+                            break;
+                        }
+                    }
  }
  return txt;
  }))];
