@@ -390,6 +390,33 @@
  .rested-pulse {
  animation: restedGlowPulse 2s infinite ease-in-out;
  }
+ @keyframes legendaryShake {
+ 0% { transform: scale(1) translate(0, 0); }
+ 10% { transform: scale(1.02) translate(-2px, -2px); }
+ 20% { transform: scale(1) translate(2px, 2px); }
+ 30% { transform: scale(1.01) translate(-1px, 2px); }
+ 40% { transform: scale(1) translate(1px, -1px); }
+ 100% { transform: scale(1) translate(0, 0); }
+ }
+ .animate-legendary-shake {
+ animation: legendaryShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+ }
+ @keyframes npcscanPulse {
+ 0% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.8), inset 0 0 40px rgba(239, 68, 68, 0.8); border-color: #EF4444; }
+ 50% { box-shadow: 0 0 140px rgba(239, 68, 68, 1), inset 0 0 140px rgba(239, 68, 68, 1); border-color: #DC2626; transform: scale(1.03); }
+ 100% { box-shadow: 0 0 60px rgba(239, 68, 68, 0.8), inset 0 0 60px rgba(239, 68, 68, 0.8); border-color: #EF4444; transform: scale(1); }
+ }
+ .animate-npcscan {
+ animation: npcscanPulse 2.5s ease-in-out 3 forwards;
+ }
+ @keyframes epicPulse {
+ 0% { box-shadow: 0 0 30px #A855F780; }
+ 50% { box-shadow: 0 0 70px #A855F7ff; }
+ 100% { box-shadow: 0 0 30px #A855F780; }
+ }
+ .animate-epic-pulse {
+ animation: epicPulse 3s infinite ease-in-out;
+ }
  </style>
  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
  <link rel="manifest" href="/manifest.json">
@@ -592,6 +619,11 @@
 
  <div id="train-answer-example"
  class="text-sm text-[#D4AF37] dark:text-[#FDE08B] mt-3 hidden text-center w-full">
+ </div>
+
+ <div id="train-synonyms-block" class="hidden mt-5 pt-4 border-t border-white/5 w-full text-left">
+ <div class="text-[10px] text-white/40 uppercase tracking-[0.2em] mb-1.5">СВЯЗАННЫЕ СЛОВА:</div>
+ <div id="train-synonyms-list" class="text-cyan-500/80 text-sm font-light"></div>
  </div>
  </div>
 
@@ -1116,13 +1148,13 @@
         <div id="mount-detail-content" class="bg-[#112240] w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border-4 border-gray-700 text-center relative overflow-hidden transition-all duration-500 scale-95">
             <div id="mount-detail-bg" class="absolute inset-0 pointer-events-none opacity-30 transition-all duration-700"></div>
             
-            <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10" id="mount-detail-rarity">${t('Эпическое средство передвижения')}</p>
+            <p class="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-gray-400 relative z-10 notranslate" id="mount-detail-rarity">${t('Эпическое средство передвижения')}</p>
             
             <div id="mount-detail-icon-wrap" class="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-6 border-4 border-gray-600 relative z-10 bg-[#0a1128] overflow-hidden shadow-2xl">
                 <img id="mount-detail-icon" src="" class="w-full h-full object-cover pointer-events-none">
             </div>
             
-            <h2 class="text-3xl font-black text-white mb-2 relative z-10 tracking-tight" id="mount-detail-name">${t('Название')}</h2>
+            <h2 class="text-3xl font-black text-white mb-2 relative z-10 tracking-tight notranslate" id="mount-detail-name">${t('Название')}</h2>
             
             <div class="mt-4 relative z-10" id="mount-detail-stats"></div>
             
@@ -1710,6 +1742,103 @@
     };
 
     window.showMountDetail = (name, rarity, icon, colorHex, dropRate, obtained) => {
+        const globalArt = ALL_ARTIFACTS.find(a => a.name === name);
+        const effectiveColor = obtained ? colorHex : '#6B7280';
+        const shadowColor = obtained ? effectiveColor + '80' : 'rgba(107,114,128,0.5)';
+        
+        if (globalArt && globalArt.fullArt) {
+            const modal = document.getElementById('full-art-modal');
+            const content = document.getElementById('full-art-content');
+            const wrapper = document.getElementById('full-art-wrapper');
+            const img = document.getElementById('full-art-image');
+            const nameEl = document.getElementById('full-art-name');
+            const rarityEl = document.getElementById('full-art-rarity');
+            const statsEl = document.getElementById('full-art-stats');
+            
+            if (window.currentFullArtAudio) {
+                window.currentFullArtAudio.pause();
+                window.currentFullArtAudio.currentTime = 0;
+            }
+            if (globalArt.sound) {
+                window.currentFullArtAudio = new Audio(encodeURI(globalArt.sound));
+                window.currentFullArtAudio.volume = 0.6;
+                window.currentFullArtAudio.play().catch(e => console.log('Audio auto-play prevented', e));
+            }
+
+            img.src = encodeURI(globalArt.fullArt);
+            
+            img.style.boxShadow = '';
+            img.classList.remove('animate-epic-pulse', 'animate-legendary-shake');
+            wrapper.classList.remove('animate-npcscan');
+            img.style.animation = 'none';
+            wrapper.style.animation = 'none';
+            void img.offsetWidth;
+            void wrapper.offsetWidth;
+            img.style.animation = '';
+            wrapper.style.animation = '';
+            
+            // Custom effects applied regardless of obtained status
+            if (globalArt && globalArt.customEffect === "npcscan") {
+                wrapper.classList.add('animate-npcscan');
+            }
+            
+            if (obtained) {
+                img.style.filter = 'none';
+                if (rarity === "uncommon") {
+                    img.style.boxShadow = 'none';
+                    img.style.borderColor = 'transparent';
+                } else if (rarity === "rare") {
+                    img.style.boxShadow = `0 0 50px #3B82F6`;
+                    img.style.borderColor = '#3B82F6';
+                } else if (rarity === "epic") {
+                    img.classList.add('animate-epic-pulse');
+                    img.style.borderColor = '#A855F7';
+                } else if (rarity === "legendary") {
+                    if (!globalArt || globalArt.customEffect !== "npcscan") {
+                        img.style.boxShadow = `0 0 60px #F59E0B`;
+                        img.style.borderColor = '#F59E0B';
+                        img.classList.add('animate-legendary-shake');
+                    }
+                } else {
+                    img.style.boxShadow = `0 0 50px ${shadowColor}`;
+                    img.style.borderColor = effectiveColor;
+                }
+            } else {
+                img.style.borderColor = 'transparent';
+                img.style.boxShadow = 'none';
+                img.style.filter = 'grayscale(100%) opacity(0.7)';
+            }
+            
+            nameEl.innerText = name;
+            nameEl.style.color = obtained ? 'white' : '#9CA3AF';
+            
+            const rarityMap = {
+                "uncommon": "Необычное",
+                "rare": "Редкое",
+                "epic": "Эпическое",
+                "legendary": "Легендарное"
+            };
+            const displayRarity = rarityMap[rarity] || rarity;
+            
+            rarityEl.innerText = `${displayRarity} средство передвижения`;
+            rarityEl.style.color = effectiveColor;
+            
+            const statusText = obtained 
+                ? `<div class="font-black uppercase tracking-widest text-sm" style="color: ${effectiveColor};">ПОЛУЧЕНО</div>` 
+                : `<div class="text-gray-400 font-bold uppercase tracking-widest text-xs">Шанс получения: <span class="text-white">${dropRate || 0}%</span></div>
+                   <div class="text-red-400/80 font-black uppercase tracking-widest text-sm mt-1">НЕ ПОЛУЧЕНО</div>`;
+            statsEl.innerHTML = statusText;
+
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+            
+            modal.focus();
+            return;
+        }
+
         const modal = document.getElementById('mount-detail-modal');
         const content = document.getElementById('mount-detail-content');
         const bg = document.getElementById('mount-detail-bg');
@@ -1719,14 +1848,18 @@
         const nameEl = document.getElementById('mount-detail-name');
         const statsEl = document.getElementById('mount-detail-stats');
         
-        const effectiveColor = obtained ? colorHex : '#6B7280';
-        const shadowColor = obtained ? effectiveColor + '80' : 'rgba(107,114,128,0.5)';
-        
         content.style.borderColor = obtained ? effectiveColor : '#374151'; 
         content.style.boxShadow = obtained ? `0 0 50px ${shadowColor}` : 'none';
         bg.style.background = `radial-gradient(circle at center 30%, ${effectiveColor}, transparent 60%)`;
         
-        rarityText.innerText = `${rarity} средство передвижения`;
+        const rarityMap = {
+            "uncommon": "Необычное",
+            "rare": "Редкое",
+            "epic": "Эпическое",
+            "legendary": "Легендарное"
+        };
+        const displayRarity = rarityMap[rarity] || rarity;
+        rarityText.innerText = `${displayRarity} средство передвижения`;
         rarityText.style.color = effectiveColor;
         
         iconEl.src = icon;
@@ -1756,6 +1889,25 @@
         modal.classList.add('opacity-100');
         content.classList.remove('scale-95');
         content.classList.add('scale-100');
+    };
+
+    window.closeFullArt = () => {
+        const modal = document.getElementById('full-art-modal');
+        const content = document.getElementById('full-art-content');
+        
+        if (window.currentFullArtAudio) {
+            window.currentFullArtAudio.pause();
+            window.currentFullArtAudio.currentTime = 0;
+            window.currentFullArtAudio = null;
+        }
+        
+        modal.classList.add('opacity-0');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 500);
     };
 
  window.showArtifactDrop = (artifact) => {
@@ -2059,90 +2211,44 @@
  container.innerHTML = html;
  }
 
- const ALL_ARTIFACTS = [
- // --- КАТЕГОРИЯ: МАМОНТЫ ---
- { name: "Ледяной мамонт", rarity: "Необычный", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_white.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Шерстистый мамонт", rarity: "Редкий", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_brown.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556 },
- { name: "Большой ледяной мамонт", rarity: "Редкий", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_white.jpg", color: "#3B82F6", dropRate: "0.4" , npcId: 38556 },
- { name: "Тундровый мамонт путешественника", rarity: "Эпический", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_brown.jpg", color: "#8B5CF6", dropRate: "0.1" , npcId: 38556 },
- { name: "Черный боевой мамонт", rarity: "Легендарный", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_black.jpg", color: "#F59E0B", dropRate: "0.004" , npcId: 38556 },
- { name: "Большой черный боевой мамонт", rarity: "Мифический", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_black.jpg", color: "#EF4444", dropRate: "0.001" , npcId: 38556 },
-
+ const ALL_ARTIFACTS = [ // --- КАТЕГОРИЯ: МАМОНТЫ ---
+ { name: "Ледяной мамонт", rarity: "uncommon", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_white.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/ледяной мамонт.jpeg", sound: "/sounds/ледяной мамонт.ogg" },
+ { name: "Шерстистый мамонт", rarity: "rare", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_brown.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556, fullArt: "/images/mounts/шерстистый мамонт.jpeg", sound: "/sounds/шерстистый мамонт.ogg" },
+ { name: "Тундровый мамонт путешественника", rarity: "epic", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_brown.jpg", color: "#A855F7", dropRate: "0.1" , npcId: 38556, fullArt: "/images/mounts/тундровый мамонт путешественника.jpeg", sound: "/sounds/тундровый мамонт путешественника.ogg" },
+ { name: "Большой черный боевой мамонт", rarity: "legendary", category: "Мамонты", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mammoth_black.jpg", color: "#F59E0B", dropRate: "0.01" , npcId: 38556, fullArt: "/images/mounts/большой черный боевой мамонт.jpeg", sound: "/sounds/большой черный боевой мамонт.ogg" },
  // --- КАТЕГОРИЯ: ВОЛКИ (Орки) ---
- { name: "Свирепый бурый волк", rarity: "Обычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_blackdirewolf.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Свирепый лесной волк", rarity: "Обычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitedirewolf.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный лесной волк", rarity: "Необычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitedirewolf.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Стремительный серый волк", rarity: "Необычный", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitedirewolf.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Черный боевой волк", rarity: "Редкий", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_blackdirewolf.jpg", color: "#3B82F6", dropRate: "0.5" , npcId: 38556 },
-
+ { name: "Свирепый бурый волк", rarity: "uncommon", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_blackdirewolf.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/свирепый бурый волк.jpeg", sound: "/sounds/свирепый бурый волк.ogg" },
+ { name: "Стремительный лесной волк", rarity: "rare", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitedirewolf.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556, fullArt: "/images/mounts/стремительный лесной волк.jpeg", sound: "/sounds/стремительный лесной волк.ogg" },
+ { name: "Черный боевой волк", rarity: "epic", category: "Волки", emoji: "🐺", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_blackdirewolf.jpg", color: "#A855F7", dropRate: "0.1" , npcId: 38556, fullArt: "/images/mounts/черный боевой волк.jpeg", sound: "/sounds/черный боевой волк.ogg" },
  // --- КАТЕГОРИЯ: КОНИ (Люди / Нежить) ---
- { name: "Вороной конь", rarity: "Обычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Гнедой конь", rarity: "Обычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный белый скакун", rarity: "Необычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Красный конь-скелет", rarity: "Обычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/spell_nature_swiftness.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный зеленый конь-скелет", rarity: "Необычный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/spell_nature_swiftness.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Поводья коня смерти", rarity: "Эпический", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/spell_nature_swiftness.jpg", color: "#8B5CF6", dropRate: "0.1" , npcId: 38556 },
- { name: "Огненный боевой конь", rarity: "Легендарный", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_nightmarehorse.jpg", color: "#F59E0B", dropRate: "0.008" , npcId: 38556 },
- { name: "Стремительный конь Альянса", rarity: "Эпический", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#8B5CF6", dropRate: "0.08" , npcId: 38556 },
- { name: "Непобедимый", rarity: "Мифический", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_pegasus.jpg", color: "#EF4444", dropRate: "0.0005" , npcId: 38556 },
-
+ { name: "Вороной скакун", rarity: "uncommon", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/Вороной скакун.jpeg", sound: "/sounds/вороной скакун.ogg" },
+ { name: "Стремительный белый скакун", rarity: "rare", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridinghorse.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556, fullArt: "/images/mounts/стремительный белый скакун.jpeg", sound: "/sounds/стремительный белый скакун.ogg" },
+ { name: "Огненный боевой конь", rarity: "epic", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_nightmarehorse.jpg", color: "#A855F7", dropRate: "0.1" , npcId: 38556, fullArt: "/images/mounts/огненный боевой конь.jpeg", sound: "/sounds/огненный боевой конь.ogg" },
+ { name: "Непобедимый", rarity: "legendary", category: "Кони", emoji: "🐎", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_pegasus.jpg", color: "#F59E0B", dropRate: "0.01" , npcId: 38556, fullArt: "/images/mounts/Непобедимый.jpeg", sound: "/sounds/непобедимый.ogg" },
  // --- КАТЕГОРИЯ: ДРАКОНЫ И ПРОТОДРАКОНЫ ---
- { name: "Бронзовый дракон", rarity: "Редкий", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_bronze.jpg", color: "#3B82F6", dropRate: "0.8" , npcId: 38556 },
- { name: "Красный дракон", rarity: "Редкий", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_red.jpg", color: "#3B82F6", dropRate: "0.5" , npcId: 38556 },
- { name: "Черный дракон", rarity: "Эпический", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_twilight.jpg", color: "#8B5CF6", dropRate: "0.05" , npcId: 38556 },
- { name: "Синий дракон", rarity: "Эпический", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_blue.jpg", color: "#8B5CF6", dropRate: "0.04" , npcId: 38556 },
- { name: "Лазурный дракон", rarity: "Эпический", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_azure.jpg", color: "#8B5CF6", dropRate: "0.03" , npcId: 38556 },
- { name: "Синий протодракон", rarity: "Эпический", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#8B5CF6", dropRate: "0.02" , npcId: 38556 },
- { name: "Зеленый протодракон", rarity: "Эпический", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#8B5CF6", dropRate: "0.015" , npcId: 38556 },
- { name: "Поводья дракона Ониксии", rarity: "Легендарный", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_head_dragon_black.jpg", color: "#F59E0B", dropRate: "0.006" , npcId: 38556 },
- { name: "Затерянный во времени протодракон", rarity: "Легендарный", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#F59E0B", dropRate: "0.002" , npcId: 38556 },
-
+ { name: "Бронзовый дракон", rarity: "uncommon", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_bronze.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/бронзовый дракон.jpeg", sound: "/sounds/бронзовый дракон.ogg" },
+ { name: "Синий протодракон", rarity: "rare", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556, fullArt: "/images/mounts/синий протодракон.jpeg", sound: "/sounds/синий протодракон.ogg" },
+ { name: "Поводья дракона Ониксии", rarity: "epic", category: "Драконы", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_head_dragon_black.jpg", color: "#A855F7", dropRate: "0.1" , npcId: 38556, fullArt: "/images/mounts/поводье дракона ониксии.jpeg", sound: "/sounds/поводье дракона ониксии.ogg" },
+ { name: "Затерянный во времени протодракон", rarity: "legendary", category: "Драконы", emoji: "🐲", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_drake_proto.jpg", color: "#F59E0B", dropRate: "0.01" , npcId: 38556, fullArt: "/images/mounts/затерянный_во_времени_протодракон_легендарный_202605300310.jpeg", sound: "/sounds/затерянный во времени протодракон.wav", customEffect: "npcscan" },
  // --- КАТЕГОРИЯ: МЕДВЕДИ ---
- { name: "Черный медведь", rarity: "Обычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_black.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Бурый медведь", rarity: "Обычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_brown.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Бронированный бурый медведь", rarity: "Необычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_brown.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556 },
- { name: "Черный боевой медведь", rarity: "Необычный", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_black.jpg", color: "#10B981", dropRate: "2.5" , npcId: 38556 },
- { name: "Белый полярный медведь", rarity: "Редкий", category: "Медведи", emoji: "🐻❄️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_white.jpg", color: "#3B82F6", dropRate: "0.2" , npcId: 38556 },
-
+ { name: "Бурый медведь", rarity: "uncommon", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_brown.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/бурый медведь.jpeg", sound: "/sounds/бурый медведь.ogg" },
+ { name: "Бронированный бурый медведь", rarity: "rare", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_brown.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556, fullArt: "/images/mounts/bear_art.jpeg", sound: "/sounds/bear_roar.ogg" },
+ { name: "Белый полярный медведь", rarity: "epic", category: "Медведи", emoji: "🐻❄️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_white.jpg", color: "#A855F7", dropRate: "0.1" , npcId: 38556, fullArt: "/images/mounts/белый полярный медведь.jpeg", sound: "/sounds/bear_roar.ogg" },
+ { name: "Черный боевой медведь", rarity: "legendary", category: "Медведи", emoji: "🐻", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_polarbear_black.jpg", color: "#F59E0B", dropRate: "0.01" , npcId: 38556, fullArt: "/images/mounts/черный боевой медведь.jpeg", sound: "/sounds/черный боевой медведь.ogg" },
  // --- КАТЕГОРИЯ: ПТИЦЫ (Грифоны, Ветрокрылы, Ящеры) ---
- { name: "Золотистый грифон", rarity: "Обычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_gryphon_01.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Белоснежный грифон", rarity: "Обычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_gryphon_01.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный синий грифон", rarity: "Необычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_gryphon_01.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Рыжий ветрокрыл", rarity: "Обычный", category: "Птицы", emoji: "🦇", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_wyvern_01.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный красный ветрокрыл", rarity: "Необычный", category: "Птицы", emoji: "🦇", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_wyvern_01.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Кенарийский боевой гиппогриф", rarity: "Необычный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_warhippogryph.jpg", color: "#10B981", dropRate: "5.0" , npcId: 38556 },
- { name: "Стремительный белый крылобег", rarity: "Необычный", category: "Птицы", emoji: "🦩", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_cockatricemount.jpg", color: "#10B981", dropRate: "3.0" , npcId: 38556 },
- { name: "Пепел Ал'ара", rarity: "Легендарный", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_summerfest_brazierorange.jpg", color: "#F59E0B", dropRate: "0.005" , npcId: 18997 },
-
+ { name: "Золотистый грифон", rarity: "uncommon", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_gryphon_01.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/золотистый грифон.jpeg", sound: "/sounds/золотистый грифон.ogg" },
+ { name: "Кенарийский боевой гиппогриф", rarity: "epic", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_warhippogryph.jpg", color: "#A855F7", dropRate: "0.1" , npcId: 38556, fullArt: "/images/mounts/кенарийский боевой гипогриф.jpeg", sound: "/sounds/кенарийский боевой гипогриф.ogg" },
+ { name: "Пепел Ал'ара", rarity: "legendary", category: "Птицы", emoji: "🦅", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_summerfest_brazierorange.jpg", color: "#F59E0B", dropRate: "0.01" , npcId: 18997, fullArt: "/images/mounts/пепел альара.jpeg", sound: "/sounds/пепел альара.ogg" },
  // --- КАТЕГОРИЯ: МЕХАНИЗМЫ ---
- { name: "Ковер-самолет", rarity: "Необычный", category: "Механизмы", emoji: "🧶", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_camel_gray.jpg", color: "#10B981", dropRate: "3.5" , npcId: 38556 },
- { name: "Зеленый механодолгоног", rarity: "Обычный", category: "Механизмы", emoji: "⚙️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mechastrider.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный желтый механодолгоног", rarity: "Необычный", category: "Механизмы", emoji: "⚙️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mechastrider.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Турбоветролет", rarity: "Необычный", category: "Механизмы", emoji: "🚁", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_enggizmos_03.jpg", color: "#10B981", dropRate: "1.5" , npcId: 38556 },
- { name: "Анжинерский чоппер", rarity: "Редкий", category: "Механизмы", emoji: "🏍️", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_key_04.jpg", color: "#3B82F6", dropRate: "0.5" , npcId: 38556 },
- { name: "Механоцикл", rarity: "Редкий", category: "Механизмы", emoji: "🏍️", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_key_04.jpg", color: "#3B82F6", dropRate: "0.5" , npcId: 38556 },
- { name: "Голова Мимирона", rarity: "Мифический", category: "Механизмы", emoji: "🚁", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_enggizmos_03.jpg", color: "#EF4444", dropRate: "0.001" , npcId: 38556 },
-
+ { name: "Зеленый механодолгоног", rarity: "uncommon", category: "Механизмы", emoji: "⚙️", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mechastrider.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/зеленый механодолгоног.jpeg", sound: "/sounds/зеленый механодолгоног.ogg" },
+ { name: "Анжинерский чоппер", rarity: "rare", category: "Механизмы", emoji: "🏍️", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_key_04.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556, fullArt: "/images/mounts/анжинеркий чоппер.jpeg", sound: "/sounds/анжинерский чоппер.ogg" },
+ { name: "Голова Мимирона", rarity: "legendary", category: "Механизмы", emoji: "🚁", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_enggizmos_03.jpg", color: "#F59E0B", dropRate: "0.01" , npcId: 38556, fullArt: "/images/mounts/голова мимирона.jpeg", sound: "/sounds/голова мимирона.ogg" },
  // --- КАТЕГОРИЯ: КОШКИ ---
- { name: "Полосатый рассветный саблезуб", rarity: "Обычный", category: "Кошки", emoji: "🐅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Пятнистый ледопард", rarity: "Обычный", category: "Кошки", emoji: "🐆", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный ледопард", rarity: "Необычный", category: "Кошки", emoji: "🐆", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Поводья ледопарда Зимних Ключей", rarity: "Редкий", category: "Кошки", emoji: "🐆", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#3B82F6", dropRate: "0.8" , npcId: 38556 },
- { name: "Стремительный зулианский тигр", rarity: "Легендарный", category: "Кошки", emoji: "🐅", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#F59E0B", dropRate: "0.006" , npcId: 38556 },
-
- // --- КАТЕГОРИЯ: БАРАНЫ И ЭЛЕККИ ---
- { name: "Серый баран", rarity: "Обычный", category: "Бараны и Элекки", emoji: "🐏", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mountainram.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Стремительный белый баран", rarity: "Необычный", category: "Бараны и Элекки", emoji: "🐏", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mountainram.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
- { name: "Лиловый элекк", rarity: "Обычный", category: "Бараны и Элекки", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridingelekk_purple.jpg", color: "#6B7280", dropRate: "3.0" , npcId: 38556 },
- { name: "Большой синий элекк", rarity: "Необычный", category: "Бараны и Элекки", emoji: "🐘", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_ridingelekk.jpg", color: "#10B981", dropRate: "2.0" , npcId: 38556 },
-
+ { name: "Пятнистый ледопард", rarity: "uncommon", category: "Кошки", emoji: "🐆", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_whitetiger.jpg", color: "#10B981", dropRate: "4.0" , npcId: 38556, fullArt: "/images/mounts/пятнистый ледопард.jpeg", sound: "/sounds/пятнистый ледопард.ogg" },
  // --- КАТЕГОРИЯ: УНИКАЛЬНЫЕ И ПРОЧИЕ ---
- { name: "Синий скат Пустоты", rarity: "Необычный", category: "Уникальные", emoji: "🐟", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_pet_netherray.jpg", color: "#10B981", dropRate: "1.5" , npcId: 38556 },
- { name: "Ониксовый дракон Пустоты", rarity: "Необычный", category: "Уникальные", emoji: "🐉", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_pet_netherray.jpg", color: "#10B981", dropRate: "1.5" , npcId: 38556 },
- { name: "Черный боевой баран", rarity: "Редкий", category: "Уникальные", emoji: "🐏", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_mount_mountainram.jpg", color: "#3B82F6", dropRate: "0.5" , npcId: 38556 },
- { name: "Морская черепаха", rarity: "Эпический", category: "Уникальные", emoji: "🐢", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_pet_turtle.jpg", color: "#8B5CF6", dropRate: "0.08" , npcId: 38556 },
- { name: "Повелитель воронов", rarity: "Эпический", category: "Уникальные", emoji: "🦚", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_ravenlordmount.jpg", color: "#8B5CF6", dropRate: "0.06" , npcId: 21473 }
-];
+ { name: "Морская черепаха", rarity: "rare", category: "Уникальные", emoji: "🐢", icon: "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_pet_turtle.jpg", color: "#3B82F6", dropRate: "1.0" , npcId: 38556, fullArt: "/images/mounts/морская черепаха.jpeg", sound: "/sounds/морская черепаза.ogg" },
+ { name: "Повелитель воронов", rarity: "epic", category: "Уникальные", emoji: "🦚", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_ravenlordmount.jpg", color: "#A855F7", dropRate: "0.1" , npcId: 21473, fullArt: "/images/mounts/повелитель воронов.jpeg", sound: "/sounds/повелитель воронов.ogg" },
+    ];
 
  async function openArtifactsCatalogModal() {
  try {
@@ -2188,8 +2294,8 @@
  <div class="aspect-square rounded-xl bg-[#0a1128] border-2 flex flex-col items-center justify-center p-2 relative transition-transform ${obtained ? 'hover:scale-105' : ''} cursor-pointer" 
  style="border-color: ${borderCol}; ${glowCls}" onclick="showMountDetail('${escapeStr(art.name)}', '${escapeStr(art.rarity)}', '${art.icon}', '${art.color}', '${art.dropRate}', ${obtained})">
  <div class="flex flex-col items-center justify-center w-full h-full ${opacityCls}">
- <img src="${art.icon}" class="w-10 h-10 object-cover rounded-md mb-2 shadow-sm pointer-events-none" alt="${escapeStr(art.name)}">
- <span class="text-[8px] text-center font-bold text-gray-300 leading-tight uppercase tracking-wider block w-full px-1 overflow-hidden text-ellipsis line-clamp-2">${escapeStr(art.name)}</span>
+ <img src="${art.icon}" class="w-10 h-10 object-cover rounded-md mb-2 pointer-events-none border-2" style="border-color: ${borderCol}; box-shadow: 0 0 10px ${obtained ? art.color : 'transparent'}" alt="${escapeStr(art.name)}">
+ <span class="text-[8px] text-center font-bold leading-tight uppercase tracking-wider block w-full px-1 overflow-hidden text-ellipsis line-clamp-2" style="color: ${borderCol}">${escapeStr(art.name)}</span>
  </div>
  </div>
  `;
@@ -3278,11 +3384,12 @@
  const btnSpeakQ = document.getElementById('btn-speak-question'); const btnSpeakAns = document.getElementById('btn-speak-answer');
 
  const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
+
  const scoreNum = Number(w.score) || 0;
  let state = scoreNum >= MAX_SCORE ? 'Archive' : (scoreNum >= (MAX_SCORE - 1) ? 'L2' : 'L1');
 
  document.getElementById('train-de-word').innerText = fullGerman;
- if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-400 font-medium mr-1 notranslate">Pl.: die</span><span class="text-gray-400 notranslate opacity-60">${escapeStr(w.plural)}</span>`;
+ if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').innerHTML = `<span class="text-gray-300 font-medium mr-1 notranslate">Pl.:</span><span class="text-gray-500 notranslate">die ${escapeStr(w.plural)}</span>`;
  else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) {
  const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
  const inf = (w.word_de || '').toLowerCase();
@@ -3325,7 +3432,66 @@
  ansEx.classList.remove('hidden');
  } else if (ansEx) ansEx.classList.add('hidden');
 
- document.getElementById('train-de-word').innerText = currentIsGermanQuestion ? (w.word_ru || '') : fullGerman;
+ document.getElementById('train-synonyms-block').classList.add('hidden');
+
+ let formattedGerman = escapeStr(fullGerman);
+
+ if (w.word_type === 'verb') {
+ const prefixes = ['ab', 'an', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'nach', 'her', 'hin', 'vor', 'weg', 'zu', 'zurück', 'zusammen'];
+ let wDe = (w.word_de || '').toLowerCase();
+ let splitIndex = -1;
+ for (let p of prefixes) {
+ if (wDe.startsWith(p)) {
+ splitIndex = p.length;
+ break;
+ }
+ }
+ if (splitIndex > 0 && splitIndex < wDe.length) {
+ const originalWord = w.word_de || '';
+ formattedGerman = '<span class="text-white/60">' + escapeStr((w.article ? w.article + ' ' : '') + originalWord.substring(0, splitIndex)) + '</span><span class="text-white/40 mx-0.5">·</span><span class="text-white">' + escapeStr(originalWord.substring(splitIndex)) + '</span>';
+ }
+ }
+
+ document.getElementById('train-de-word').innerHTML = currentIsGermanQuestion ? escapeStr(w.word_ru || '') : formattedGerman;
+
+ // Synonyms logic
+ if (!currentIsGermanQuestion && w.word_ru) {
+ const normalizeRu = (str) => {
+ return (str || '').toLowerCase().replace(/\([^)]*\)/g, '').trim();
+ };
+ const targetRu = normalizeRu(w.word_ru);
+
+ if (targetRu) {
+ const synonyms = globalWords.filter(other => 
+ other.word_de !== w.word_de && 
+ other.target_lang === w.target_lang && 
+ normalizeRu(other.word_ru) === targetRu
+ );
+ if (synonyms.length > 0) {
+ document.getElementById('train-synonyms-block').classList.remove('hidden');
+ const uniqueSynonyms = [...new Set(synonyms.map(s => {
+ let txt = s.word_de;
+ if (s.word_type === 'noun') {
+ txt = (s.article ? s.article + ' ' : '') + s.word_de;
+ } else if (s.word_type === 'verb') {
+ const prefixes = ['ab', 'an', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'nach', 'her', 'hin', 'vor', 'weg', 'zu', 'zurück', 'zusammen'];
+ let wDe = (s.word_de || '').toLowerCase();
+ for (let p of prefixes) {
+ if (wDe.startsWith(p)) {
+ let splitIndex = p.length;
+ if (splitIndex > 0 && splitIndex < wDe.length) {
+ txt = s.word_de.substring(0, splitIndex) + '·' + s.word_de.substring(splitIndex);
+ }
+ break;
+ }
+ }
+ }
+ return txt;
+ }))];
+ document.getElementById('train-synonyms-list').innerText = uniqueSynonyms.join(', ');
+ }
+ }
+ }
 
  if (state === 'L1' || state === 'L2' || state === 'Archive') {
  if (badge) {
@@ -3336,7 +3502,7 @@
  badge.className = typeLabel ? "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-[#0b101e] border border-[#D4AF37]/40 text-[#D4AF37] shadow-[0_0_6px_rgba(212,175,55,0.2)]" : "hidden";
  }
  }
- if (qEl) qEl.innerText = currentIsGermanQuestion ? fullGerman : (w.word_ru || '');
+ if (qEl) qEl.innerHTML = currentIsGermanQuestion ? formattedGerman : escapeStr(w.word_ru || '');
  document.getElementById('btn-show-answer').classList.remove('hidden');
 
  document.getElementById('btn-forgot').onclick = () => { triggerVibration([10, 20]); playTone(200, 'sawtooth', 0.2); updateScoreWithSM2(0); };
@@ -4524,6 +4690,37 @@
  </div>
  </div>
 
-</body>
+ <!-- Premium Full Art Modal -->
+ <div id="full-art-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex justify-center items-center p-4 transition-all duration-500 opacity-0" tabindex="-1">
+ <button id="full-art-close-btn" class="absolute top-6 right-6 text-white/70 hover:text-white transition-colors z-[310] w-12 h-12 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm" onclick="closeFullArt()">
+ <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ <div id="full-art-content" class="relative transition-all duration-500 scale-95 opacity-0 flex justify-center items-center w-full max-w-4xl h-full">
+ <div id="full-art-wrapper" class="relative inline-block max-w-full max-h-full rounded-2xl border-2 border-transparent transition-all">
+ <img id="full-art-image" src="" class="max-w-full max-h-[65vh] w-auto h-auto object-contain rounded-2xl">
+ <div class="absolute bottom-0 left-0 right-0 pt-24 pb-6 px-6 bg-gradient-to-t from-black via-black/80 to-transparent rounded-b-2xl pointer-events-none flex flex-col items-center text-center">
+ <p id="full-art-rarity" class="text-xs uppercase tracking-[0.3em] font-bold mb-1 text-gray-300 notranslate"></p>
+ <h2 id="full-art-name" class="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-md notranslate"></h2>
+ <div id="full-art-stats" class="relative z-10 mt-1"></div>
+ </div>
+ </div>
+ </div>
+ </div>
 
+ <script>
+ document.getElementById('full-art-modal').addEventListener('click', (e) => {
+ if (e.target.id === 'full-art-modal' || e.target.id === 'full-art-content') {
+ closeFullArt();
+ }
+ });
+
+ document.addEventListener('keydown', (e) => {
+ if (e.key === 'Escape' && !document.getElementById('full-art-modal').classList.contains('hidden')) {
+ closeFullArt();
+ }
+ });
+ </script>
+</body>
 </html>

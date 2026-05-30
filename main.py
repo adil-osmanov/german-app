@@ -18,6 +18,15 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
 app = FastAPI()
+
+from fastapi.staticfiles import StaticFiles
+import os
+
+if os.path.isdir("images"):
+    app.mount("/images", StaticFiles(directory="images"), name="images")
+if os.path.isdir("sounds"):
+    app.mount("/sounds", StaticFiles(directory="sounds"), name="sounds")
+
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
@@ -95,7 +104,8 @@ def init_db():
             ease_factor REAL DEFAULT 2.5,
             interval INTEGER DEFAULT 0,
             repetitions INTEGER DEFAULT 0,
-            username TEXT DEFAULT 'osman'
+            username TEXT DEFAULT 'osman',
+            is_separable BOOLEAN DEFAULT FALSE
         )
     """)
     # Таблица облачной истории изучения
@@ -205,6 +215,12 @@ def init_db():
 
     try:
         cur.execute("ALTER TABLE user_artifacts ADD COLUMN target_lang TEXT DEFAULT 'de'")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
+    try:
+        cur.execute("ALTER TABLE words ADD COLUMN is_separable BOOLEAN DEFAULT FALSE")
         conn.commit()
     except Exception:
         conn.rollback()
@@ -490,75 +506,40 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
     # RNG Drop System
     dropped_artifact = None
     if total_actions > 200:
-        roll = random.uniform(0, 100)
         
-        ALL_ARTIFACTS = [
-            { "name": "Кенарийский боевой гиппогриф", "rarity": "Необычный", "dropRate": 5.0, "category": "Птицы" , "npcId": 38556 },
-            { "name": "Бронированный бурый медведь", "rarity": "Необычный", "dropRate": 4.0, "category": "Медведи" , "npcId": 38556 },
-            { "name": "Ковер-самолет", "rarity": "Необычный", "dropRate": 3.5, "category": "Механизмы" , "npcId": 38556 },
-            { "name": "Стремительный белый крылобег", "rarity": "Необычный", "dropRate": 3.0, "category": "Птицы" , "npcId": 38556 },
-            { "name": "Свирепый бурый волк", "rarity": "Обычный", "dropRate": 3.0, "category": "Волки" , "npcId": 38556 },
-            { "name": "Свирепый лесной волк", "rarity": "Обычный", "dropRate": 3.0, "category": "Волки" , "npcId": 38556 },
-            { "name": "Вороной конь", "rarity": "Обычный", "dropRate": 3.0, "category": "Кони" , "npcId": 38556 },
-            { "name": "Гнедой конь", "rarity": "Обычный", "dropRate": 3.0, "category": "Кони" , "npcId": 38556 },
-            { "name": "Красный конь-скелет", "rarity": "Обычный", "dropRate": 3.0, "category": "Кони" , "npcId": 38556 },
-            { "name": "Черный медведь", "rarity": "Обычный", "dropRate": 3.0, "category": "Медведи" , "npcId": 38556 },
-            { "name": "Бурый медведь", "rarity": "Обычный", "dropRate": 3.0, "category": "Медведи" , "npcId": 38556 },
-            { "name": "Золотистый грифон", "rarity": "Обычный", "dropRate": 3.0, "category": "Птицы" , "npcId": 38556 },
-            { "name": "Белоснежный грифон", "rarity": "Обычный", "dropRate": 3.0, "category": "Птицы" , "npcId": 38556 },
-            { "name": "Рыжий ветрокрыл", "rarity": "Обычный", "dropRate": 3.0, "category": "Птицы" , "npcId": 38556 },
-            { "name": "Зеленый механодолгоног", "rarity": "Обычный", "dropRate": 3.0, "category": "Механизмы" , "npcId": 38556 },
-            { "name": "Полосатый рассветный саблезуб", "rarity": "Обычный", "dropRate": 3.0, "category": "Кошки" , "npcId": 38556 },
-            { "name": "Пятнистый ледопард", "rarity": "Обычный", "dropRate": 3.0, "category": "Кошки" , "npcId": 38556 },
-            { "name": "Серый баран", "rarity": "Обычный", "dropRate": 3.0, "category": "Бараны и Элекки" , "npcId": 38556 },
-            { "name": "Лиловый элекк", "rarity": "Обычный", "dropRate": 3.0, "category": "Бараны и Элекки" , "npcId": 38556 },
-            { "name": "Черный боевой медведь", "rarity": "Необычный", "dropRate": 2.5, "category": "Медведи" , "npcId": 38556 },
-            { "name": "Ледяной мамонт", "rarity": "Необычный", "dropRate": 2.0, "category": "Мамонты" , "npcId": 38556 },
-            { "name": "Стремительный лесной волк", "rarity": "Необычный", "dropRate": 2.0, "category": "Волки" , "npcId": 38556 },
-            { "name": "Стремительный серый волк", "rarity": "Необычный", "dropRate": 2.0, "category": "Волки" , "npcId": 38556 },
-            { "name": "Стремительный белый скакун", "rarity": "Необычный", "dropRate": 2.0, "category": "Кони" , "npcId": 38556 },
-            { "name": "Стремительный зеленый конь-скелет", "rarity": "Необычный", "dropRate": 2.0, "category": "Кони" , "npcId": 38556 },
-            { "name": "Стремительный синий грифон", "rarity": "Необычный", "dropRate": 2.0, "category": "Птицы" , "npcId": 38556 },
-            { "name": "Стремительный красный ветрокрыл", "rarity": "Необычный", "dropRate": 2.0, "category": "Птицы" , "npcId": 38556 },
-            { "name": "Стремительный желтый механодолгоног", "rarity": "Необычный", "dropRate": 2.0, "category": "Механизмы" , "npcId": 38556 },
-            { "name": "Стремительный ледопард", "rarity": "Необычный", "dropRate": 2.0, "category": "Кошки" , "npcId": 38556 },
-            { "name": "Стремительный белый баран", "rarity": "Необычный", "dropRate": 2.0, "category": "Бараны и Элекки" , "npcId": 38556 },
-            { "name": "Большой синий элекк", "rarity": "Необычный", "dropRate": 2.0, "category": "Бараны и Элекки" , "npcId": 38556 },
-            { "name": "Турбоветролет", "rarity": "Необычный", "dropRate": 1.5, "category": "Механизмы" , "npcId": 38556 },
-            { "name": "Синий скат Пустоты", "rarity": "Необычный", "dropRate": 1.5, "category": "Уникальные" , "npcId": 38556 },
-            { "name": "Ониксовый дракон Пустоты", "rarity": "Необычный", "dropRate": 1.5, "category": "Уникальные" , "npcId": 38556 },
-            { "name": "Шерстистый мамонт", "rarity": "Редкий", "dropRate": 1.0, "category": "Мамонты" , "npcId": 38556 },
-            { "name": "Красный дракон", "rarity": "Редкий", "dropRate": 0.9, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Бронзовый дракон", "rarity": "Редкий", "dropRate": 0.8, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Поводья ледопарда Зимних Ключей", "rarity": "Редкий", "dropRate": 0.8, "category": "Кошки" , "npcId": 38556 },
-            { "name": "Черный боевой волк", "rarity": "Редкий", "dropRate": 0.5, "category": "Волки" , "npcId": 38556 },
-            { "name": "Анжинерский чоппер", "rarity": "Редкий", "dropRate": 0.5, "category": "Механизмы" , "npcId": 38556 },
-            { "name": "Механоцикл", "rarity": "Редкий", "dropRate": 0.5, "category": "Механизмы" , "npcId": 38556 },
-            { "name": "Черный боевой баран", "rarity": "Редкий", "dropRate": 0.5, "category": "Уникальные" , "npcId": 38556 },
-            { "name": "Большой ледяной мамонт", "rarity": "Редкий", "dropRate": 0.4, "category": "Мамонты" , "npcId": 38556 },
-            { "name": "Белый полярный медведь", "rarity": "Редкий", "dropRate": 0.2, "category": "Медведи" , "npcId": 38556 },
-            { "name": "Поводья коня смерти", "rarity": "Эпический", "dropRate": 0.1, "category": "Кони" , "npcId": 38556 },
-            { "name": "Тундровый мамонт путешественника", "rarity": "Эпический", "dropRate": 0.1, "category": "Мамонты" , "npcId": 38556 },
-            { "name": "Стремительный конь Альянса", "rarity": "Эпический", "dropRate": 0.08, "category": "Кони" , "npcId": 38556 },
-            { "name": "Морская черепаха", "rarity": "Эпический", "dropRate": 0.08, "category": "Уникальные" , "npcId": 38556 },
-            { "name": "Повелитель воронов", "rarity": "Эпический", "dropRate": 0.06, "category": "Уникальные" , "npcId": 21473 },
-            { "name": "Черный дракон", "rarity": "Эпический", "dropRate": 0.05, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Синий дракон", "rarity": "Эпический", "dropRate": 0.04, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Лазурный дракон", "rarity": "Эпический", "dropRate": 0.03, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Синий протодракон", "rarity": "Эпический", "dropRate": 0.02, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Зеленый протодракон", "rarity": "Эпический", "dropRate": 0.015, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Огненный боевой конь", "rarity": "Легендарный", "dropRate": 0.008, "category": "Кони" , "npcId": 38556 },
-            { "name": "Стремительный зулианский тигр", "rarity": "Легендарный", "dropRate": 0.006, "category": "Кошки" , "npcId": 38556 },
-            { "name": "Поводья дракона Ониксии", "rarity": "Легендарный", "dropRate": 0.006, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Пепел Ал'ара", "rarity": "Легендарный", "dropRate": 0.005, "category": "Птицы" , "npcId": 18997 },
-            { "name": "Черный боевой мамонт", "rarity": "Легендарный", "dropRate": 0.004, "category": "Мамонты" , "npcId": 38556 },
-            { "name": "Затерянный во времени протодракон", "rarity": "Легендарный", "dropRate": 0.002, "category": "Драконы" , "npcId": 38556 },
-            { "name": "Большой черный боевой мамонт", "rarity": "Мифический", "dropRate": 0.001, "category": "Мамонты" , "npcId": 38556 },
-            { "name": "Голова Мимирона", "rarity": "Мифический", "dropRate": 0.001, "category": "Механизмы" , "npcId": 38556 },
-            { "name": "Непобедимый", "rarity": "Мифический", "dropRate": 0.0005, "category": "Кони" , "npcId": 38556 }
-        ]
-        
-        for mount in reversed(ALL_ARTIFACTS):
+        ALL_ARTIFACTS = [            { "name": "Свирепый бурый волк", "rarity": "uncommon", "dropRate": 4.0, "category": "Волки" , "npcId": 38556 },
+            { "name": "Вороной скакун", "rarity": "uncommon", "dropRate": 4.0, "category": "Кони" , "npcId": 38556 },
+            { "name": "Бурый медведь", "rarity": "uncommon", "dropRate": 4.0, "category": "Медведи" , "npcId": 38556 },
+            { "name": "Золотистый грифон", "rarity": "uncommon", "dropRate": 4.0, "category": "Птицы" , "npcId": 38556 },
+            { "name": "Зеленый механодолгоног", "rarity": "uncommon", "dropRate": 4.0, "category": "Механизмы" , "npcId": 38556 },
+            { "name": "Пятнистый ледопард", "rarity": "uncommon", "dropRate": 4.0, "category": "Кошки" , "npcId": 38556 },
+            { "name": "Ледяной мамонт", "rarity": "uncommon", "dropRate": 4.0, "category": "Мамонты" , "npcId": 38556 },
+            { "name": "Бронзовый дракон", "rarity": "uncommon", "dropRate": 4.0, "category": "Драконы" , "npcId": 38556 },
+            { "name": "Бронированный бурый медведь", "rarity": "rare", "dropRate": 1.0, "category": "Медведи" , "npcId": 38556 },
+            { "name": "Стремительный лесной волк", "rarity": "rare", "dropRate": 1.0, "category": "Волки" , "npcId": 38556 },
+            { "name": "Стремительный белый скакун", "rarity": "rare", "dropRate": 1.0, "category": "Кони" , "npcId": 38556 },
+            { "name": "Шерстистый мамонт", "rarity": "rare", "dropRate": 1.0, "category": "Мамонты" , "npcId": 38556 },
+            { "name": "Анжинерский чоппер", "rarity": "rare", "dropRate": 1.0, "category": "Механизмы" , "npcId": 38556 },
+            { "name": "Морская черепаха", "rarity": "rare", "dropRate": 1.0, "category": "Уникальные" , "npcId": 38556 },
+            { "name": "Синий протодракон", "rarity": "rare", "dropRate": 1.0, "category": "Драконы" , "npcId": 38556 },
+            { "name": "Кенарийский боевой гиппогриф", "rarity": "epic", "dropRate": 0.1, "category": "Птицы" , "npcId": 38556 },
+            { "name": "Черный боевой волк", "rarity": "epic", "dropRate": 0.1, "category": "Волки" , "npcId": 38556 },
+            { "name": "Белый полярный медведь", "rarity": "epic", "dropRate": 0.1, "category": "Медведи" , "npcId": 38556 },
+            { "name": "Тундровый мамонт путешественника", "rarity": "epic", "dropRate": 0.1, "category": "Мамонты" , "npcId": 38556 },
+            { "name": "Повелитель воронов", "rarity": "epic", "dropRate": 0.1, "category": "Уникальные" , "npcId": 21473 },
+            { "name": "Огненный боевой конь", "rarity": "epic", "dropRate": 0.1, "category": "Кони" , "npcId": 38556 },
+            { "name": "Поводья дракона Ониксии", "rarity": "epic", "dropRate": 0.1, "category": "Драконы" , "npcId": 38556 },
+            { "name": "Черный боевой медведь", "rarity": "legendary", "dropRate": 0.01, "category": "Медведи" , "npcId": 38556 },
+            { "name": "Пепел Ал'ара", "rarity": "legendary", "dropRate": 0.01, "category": "Птицы" , "npcId": 18997 },
+            { "name": "Затерянный во времени протодракон", "rarity": "legendary", "dropRate": 0.01, "category": "Драконы" , "npcId": 38556 },
+            { "name": "Большой черный боевой мамонт", "rarity": "legendary", "dropRate": 0.01, "category": "Мамонты" , "npcId": 38556 },
+            { "name": "Голова Мимирона", "rarity": "legendary", "dropRate": 0.01, "category": "Механизмы" , "npcId": 38556 },
+            { "name": "Непобедимый", "rarity": "legendary", "dropRate": 0.01, "category": "Кони" , "npcId": 38556, "fullArt": "/images/mounts/Непобедимый.jpeg", "sound": "/sounds/непобедимый.ogg" }
+    ]
+        # Check independent drops, from rarest to most common
+        sorted_mounts = sorted(ALL_ARTIFACTS, key=lambda x: x['dropRate'])
+        for mount in sorted_mounts:
+            roll = random.uniform(0, 100)
             if roll <= mount['dropRate']:
                 artifact_name = mount['name']
                 rarity = mount['rarity']
@@ -734,7 +715,7 @@ def edit_word(word_id: int, word: WordCreate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        UPDATE words SET word_type=%s, article=%s, word_de=%s, plural=%s, word_ru=%s, folder=%s, level=%s, subfolder=%s, example=%s, example_ru=%s, praeteritum=%s, partizip=%s, target_lang=%s WHERE id=%s AND username=%s
+        UPDATE words SET word_type = %s, article = %s, word_de = %s, plural = %s, word_ru = %s, folder = %s, level = %s, subfolder = %s, example = %s, example_ru = %s, praeteritum = %s, partizip = %s, target_lang = %s WHERE id = %s AND username = %s
     """, (word.word_type, word.article, word.word_de, word.plural, word.word_ru, word.folder, word.level, word.subfolder, word.example, word.example_ru, word.praeteritum, word.partizip, word.target_lang, word_id, x_user))
     conn.commit()
     cur.close()
