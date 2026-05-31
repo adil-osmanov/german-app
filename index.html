@@ -1936,7 +1936,7 @@
  const icon = document.getElementById('artifact-drop-icon');
  const nameEl = document.getElementById('artifact-drop-name');
  
- const globalArt = ALL_ARTIFACTS.find(a => a.name === artifact.name);
+ const globalArt = ALL_ARTIFACTS.find(a => a.name === artifact.name) || ALL_ARTIFACTS.find(a => a.id === artifact.name);
  let colorHex = globalArt ? globalArt.color : '#F59E0B';
  let shadowColor = colorHex + '80';
  
@@ -1948,13 +1948,14 @@
  iconWrap.style.borderColor = colorHex;
  iconWrap.style.boxShadow = `0 0 20px ${shadowColor} inset, 0 0 20px ${shadowColor}`;
  
- if (globalArt && globalArt.icon) {
- iconWrap.innerHTML = `<img src="${globalArt.icon}" class="w-full h-full object-cover rounded-full pointer-events-none" alt="${escapeStr(globalArt.name)}">`;
+ if (globalArt && (globalArt.fullArt || globalArt.icon)) {
+     let imgSrc = globalArt.fullArt ? encodeURI(globalArt.fullArt) : globalArt.icon;
+ iconWrap.innerHTML = `<img src="${imgSrc}" class="w-full h-full object-cover rounded-full pointer-events-none" alt="${escapeStr(globalArt.name)}">`;
  } else {
  iconWrap.innerHTML = `<span class="text-4xl" id="artifact-drop-icon">🐎</span>`;
  }
  
- nameEl.innerText = artifact.name;
+ nameEl.innerText = (globalArt ? globalArt.name : artifact.name) || 'Новый транспорт';
  nameEl.style.color = colorHex;
  nameEl.style.textShadow = `0 0 10px ${shadowColor}`;
  
@@ -2004,23 +2005,20 @@
  if (data.status === 'success') {
  if (data.leveled_up) {
       showLevelUp(data.new_level);
-      const lvlAudio = new Audio('/sounds/levelup.ogg');
-      lvlAudio.play().catch(e => console.error("Audio play failed:", e));
+      try { new Audio('/sounds/levelup.ogg').play().catch(e => console.error(e)); } catch(e){}
  }
  if (data.quest_completed) {
+ try { new Audio('/sounds/questcomplete.ogg').play().catch(e => console.error(e)); } catch(e){}
  setTimeout(() => {
  showXPFloat(500, window.innerWidth / 2, window.innerHeight / 2);
  showLevelUp('Квест сдан!');
- const questAudio = new Audio('/sounds/questcomplete.ogg');
- questAudio.play().catch(e => console.error("Audio play failed:", e));
  }, 500);
  }
  if (data.paragon_completed) {
+ try { new Audio('/sounds/questcomplete.ogg').play().catch(e => console.error(e)); } catch(e){}
  setTimeout(() => {
  showXPFloat(1000, window.innerWidth / 2, window.innerHeight / 2);
  showLevelUp('Парагон!');
- const questAudio = new Audio('/sounds/questcomplete.ogg');
- questAudio.play().catch(e => console.error("Audio play failed:", e));
  }, 500);
  }
  if (data.artifact) {
@@ -2125,14 +2123,14 @@
     const questTextEl = document.getElementById('train-quest-text');
     const questBarEl = document.getElementById('train-quest-bar');
     if (questTextEl && questBarEl) {
-        const baseTotal = todayCount % 200;
-        const isParagon = paragon_completions > 0 || todayCount >= 200;
-        const displayVal = (todayCount % 200 === 0 && todayCount > 0) ? 200 : baseTotal;
-        const pctQuest = (todayCount % 200 === 0 && todayCount > 0) ? 1 : Math.min(1, baseTotal / 200);
+        const isParagon = todayCount > 200;
+        const displayVal = (todayCount % 200 === 0 && todayCount > 0) ? 200 : (todayCount % 200);
+        const pctQuest = displayVal / 200;
         
-        questTextEl.innerText = isParagon ? `Парагон: ${displayVal}/200` : `${displayVal}/200`;
+        questTextEl.innerText = `${displayVal}/200`;
         questBarEl.style.width = `${pctQuest * 100}%`;
-        questBarEl.className = isParagon ? "h-full bg-blue-500 transition-all duration-700" : "h-full bg-green-500 transition-all duration-700";
+        questBarEl.style.backgroundColor = isParagon ? '#3B82F6' : '#22C55E';
+        questBarEl.className = "h-full transition-all duration-700";
     }
 
  if (document.getElementById('prof-rank-name')) document.getElementById('prof-rank-name').innerText = rankName;
@@ -3153,11 +3151,11 @@ window.updateExperience = async () => {
  userXpText = `${curXp} / ${reqXp} XP`;
  userPct = Math.min(100, Math.max(0, (curXp / reqXp) * 100));
  }
- const isParagon = paragonCount > 0 || todayTrainedCount >= 200;
- const questBase = isParagon ? (todayTrainedCount % 200) : todayTrainedCount;
+ const isParagon = todayTrainedCount > 200;
+ const questBase = (todayTrainedCount % 200 === 0 && todayTrainedCount > 0) ? 200 : (todayTrainedCount % 200);
  const questColor = isParagon ? '#3B82F6' : '#D4AF37';
  const questFill = isParagon ? 'background:linear-gradient(to right,#2563eb,#60a5fa)' : 'background:linear-gradient(to right,#ca8a04,#fde047)';
- const questLabel = isParagon ? `Задание ${paragonCount + 1}: ${questBase} / 200 слов` : `Задание: ${questBase} / 200 слов`;
+ const questLabel = `Задание: ${questBase} / 200 слов`;
  const questPct = Math.min((questBase / 200) * 100, 100);
 
  let html = `
@@ -3500,7 +3498,7 @@ window.updateExperience = async () => {
  let formattedGerman = escapeStr(fullGerman);
 
  if (w.word_type === 'verb') {
- const prefixes = ['ab', 'an', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'nach', 'her', 'hin', 'vor', 'weg', 'zu', 'zurück', 'zusammen'];
+ const prefixes = ['zurück', 'zusammen', 'nach', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'her', 'hin', 'vor', 'weg', 'ab', 'an', 'zu'];
         let wDe = (w.word_de || '').toLowerCase();
         let part = (w.partizip || '').toLowerCase();
         let splitIndex = -1;
@@ -3542,7 +3540,7 @@ window.updateExperience = async () => {
  if (s.word_type === 'noun') {
  txt = (s.article ? s.article + ' ' : '') + s.word_de;
  } else if (s.word_type === 'verb') {
- const prefixes = ['ab', 'an', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'nach', 'her', 'hin', 'vor', 'weg', 'zu', 'zurück', 'zusammen'];
+ const prefixes = ['zurück', 'zusammen', 'nach', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'her', 'hin', 'vor', 'weg', 'ab', 'an', 'zu'];
                     let wDeRaw = s.word_de || '';
                     let wDe = wDeRaw.toLowerCase();
                     let isSich = wDe.startsWith('sich ');
