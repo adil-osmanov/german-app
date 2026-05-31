@@ -1466,6 +1466,17 @@
  } catch (e) { }
  }
 
+ async function idbUpdateWord(word) {
+ try {
+ const db = await dbPromise;
+ return new Promise(res => {
+ const tx = db.transaction('words', 'readwrite');
+ tx.objectStore('words').put(word);
+ tx.oncomplete = () => res();
+ });
+ } catch (e) { }
+ }
+
  async function queueOfflineUpdate(endpoint, method, payload) {
  try {
  const db = await dbPromise;
@@ -3619,11 +3630,7 @@
  w.repetitions = sm2Result.repetitions;
 
  // Fire XP text instantly BEFORE waiting for network
- if (quality >= 3) {
- updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
- } else {
- updateExperience();
- }
+ updateDailyActivity(w.repetitions === 1 || quality < 3, window.innerWidth / 2, window.innerHeight / 2 - 100);
 
  try {
  apiFetch(`${API_URL}/${w.id}/score`, {
@@ -3638,8 +3645,7 @@
  gwItem.ease_factor = sm2Result.easeFactor; gwItem.interval = sm2Result.interval; gwItem.repetitions = sm2Result.repetitions;
  }
 
- idbSaveWords(globalWords); // Persist to IndexedDB immediately for offline reliability
- updateExperience();
+ idbUpdateWord(gwItem || w); // Fast single-word update instead of whole DB sync
  curIdx++; _swipeInProgress = false;
  
  // Моментальный рендер
