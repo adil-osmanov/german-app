@@ -1984,6 +1984,17 @@
  predictedXP = Math.ceil(baseXP * xpMult);
  }
  showXPFloat(predictedXP, eventX || (window.innerWidth / 2), (eventY || (window.innerHeight / 2 - 50)) - 20);
+    if (window.userProgressState) {
+        window.userProgressState.current_xp = parseInt(window.userProgressState.current_xp || 0) + predictedXP;
+        if (isNew) {
+            window.userProgressState.daily_new_words = parseInt(window.userProgressState.daily_new_words || 0) + 1;
+        } else {
+            window.userProgressState.daily_reviews = parseInt(window.userProgressState.daily_reviews || 0) + 1;
+        }
+        if (typeof window.renderExperienceUI === 'function') {
+            window.renderExperienceUI();
+        }
+    }
 
  apiFetch('/progress/action', {
  method: 'POST',
@@ -2070,12 +2081,9 @@
  document.body.classList.add('theme-golden-abyss');
  }
 
- window.updateExperience = async () => {
- try {
- const res = await apiFetch(`/progress?target_lang=${currentStudyLang}`);
- window.userProgressState = await res.json();
- 
- let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active, paragon_completions, bonuses, streak } = window.userProgressState;
+ window.renderExperienceUI = () => {
+    if (!window.userProgressState) return;
+    let { level, current_xp, xp_for_next, daily_new_words, daily_reviews, rested_words_left, buff_active, paragon_completions, bonuses, streak } = window.userProgressState;
  level = parseInt(level, 10);
  current_xp = parseInt(current_xp, 10);
  xp_for_next = parseInt(xp_for_next, 10);
@@ -2170,7 +2178,15 @@
 
  renderReputation();
 
- } catch(e) { console.error('XP fetch error', e); }
+ 
+};
+
+window.updateExperience = async () => {
+    try {
+        const res = await apiFetch(`/progress?target_lang=${currentStudyLang}`);
+        window.userProgressState = await res.json();
+        window.renderExperienceUI();
+    } catch(e) { console.error('XP fetch error', e); }
 
  const profMastered = document.getElementById('prof-mastered-text');
  const profTotal = document.getElementById('prof-total-text');
@@ -2419,6 +2435,7 @@
  const allWords = data.map(w => ({ ...w, ease_factor: w.ease_factor || 2.5, interval: w.interval || 0, repetitions: w.repetitions || 0 }));
  await idbSaveWords(allWords);
  globalWords = allWords.filter(w => (w.target_lang || 'de') === currentStudyLang);
+ globalWords.forEach(w => w._ruTokens = (w.word_ru || '').toLowerCase().replace(/\([^)]*\)/g, '').split(',').map(s => s.trim()).filter(s => s.length > 0));
  updateExperience();
  }
  setTimeout(processSyncQueue, 500);
@@ -2427,6 +2444,7 @@
  const offDb = await idbGetWords();
  if (offDb && offDb.length > 0) {
  globalWords = offDb.filter(w => (w.target_lang || 'de') === currentStudyLang);
+ globalWords.forEach(w => w._ruTokens = (w.word_ru || '').toLowerCase().replace(/\([^)]*\)/g, '').split(',').map(s => s.trim()).filter(s => s.length > 0));
  console.log("Loaded words from IndexedDB.");
  } else {
  const saved = localStorage.getItem('offline_words_db');
@@ -2435,6 +2453,7 @@
  if (Array.isArray(parsed)) {
  const allWords = parsed;
  globalWords = allWords.filter(w => (w.target_lang || 'de') === currentStudyLang);
+ globalWords.forEach(w => w._ruTokens = (w.word_ru || '').toLowerCase().replace(/\([^)]*\)/g, '').split(',').map(s => s.trim()).filter(s => s.length > 0));
  await idbSaveWords(allWords);
  }
  }
@@ -3514,8 +3533,7 @@
         const targetRuWords = getRuWords(w.word_ru);
         const synonyms = globalWords.filter(other => {
             if (other.word_de === w.word_de || other.target_lang !== w.target_lang) return false;
-            const otherRuWords = getRuWords(other.word_ru);
-            return targetRuWords.some(tr => otherRuWords.includes(tr));
+            return targetRuWords.some(tr => (other._ruTokens || []).includes(tr));
         });
  if (synonyms.length > 0) {
  document.getElementById('train-synonyms-block').classList.remove('hidden');
@@ -3525,15 +3543,24 @@
  txt = (s.article ? s.article + ' ' : '') + s.word_de;
  } else if (s.word_type === 'verb') {
  const prefixes = ['ab', 'an', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'nach', 'her', 'hin', 'vor', 'weg', 'zu', 'zurück', 'zusammen'];
-                    let wDe = (s.word_de || '').toLowerCase();
-                    let part = (s.partizip || '').toLowerCase();
+                    let wDeRaw = s.word_de || '';
+                    let wDe = wDeRaw.toLowerCase();
+                    let isSich = wDe.startsWith('sich ');
+                    let cleanWDe = isSich ? wDe.substring(5) : wDe;
+                    let part = (s.partizip || '').toLowerCase().replace(/^(hat|ist|sich)\s+/, '').trim();
                     for (let p of prefixes) {
-                        if (wDe.startsWith(p)) {
-                            let isSep = part ? part.startsWith(p) : (wDe !== 'mitteln');
+                        if (cleanWDe.startsWith(p)) {
+                            let isSep = false;
+                            if (part) {
+                                isSep = part.startsWith(p);
+                            } else {
+                                isSep = !['antworten', 'mitteln', 'herrschen', 'hindern', 'zucken', 'zupfen'].includes(cleanWDe);
+                            }
                             if (isSep) {
-                                let splitIndex = p.length;
-                                if (splitIndex > 0 && splitIndex < wDe.length) {
-                                    txt = s.word_de.substring(0, splitIndex) + '·' + s.word_de.substring(splitIndex);
+                                let offset = isSich ? 5 : 0;
+                                let splitIndex = offset + p.length;
+                                if (splitIndex > offset && splitIndex < wDeRaw.length) {
+                                    txt = wDeRaw.substring(0, splitIndex) + '·' + wDeRaw.substring(splitIndex);
                                 }
                             }
                             break;
@@ -3630,7 +3657,9 @@
  w.repetitions = sm2Result.repetitions;
 
  // Fire XP text instantly BEFORE waiting for network
- updateDailyActivity(w.repetitions === 1 || quality < 3, window.innerWidth / 2, window.innerHeight / 2 - 100);
+ if (quality >= 3) {
+     updateDailyActivity(w.repetitions === 1, window.innerWidth / 2, window.innerHeight / 2 - 100);
+ }
 
  try {
  apiFetch(`${API_URL}/${w.id}/score`, {
@@ -3649,7 +3678,7 @@
  curIdx++; _swipeInProgress = false;
  
  // Моментальный рендер
- try { renderCard(); } catch (e) { console.error(e); } finally { _isScoring = false; }
+ try { renderCard(); } catch (e) { console.error(e); } finally { setTimeout(() => { _isScoring = false; }, 250); }
  } catch (err) {
  console.error("SM2 critical:", err);
  _isScoring = false;
@@ -4601,9 +4630,20 @@
              return;
          }
          
+         // Пауза анимации если профиль не открыт (экономия CPU)
+         const profView = document.getElementById('view-prof');
+         if (!profView || profView.classList.contains('hidden')) {
+             requestAnimationFrame(drawGalaxy);
+             return;
+         }
+
          let archiveLength = 0;
          if (typeof globalWords !== 'undefined' && typeof MAX_SCORE !== 'undefined') {
-             archiveLength = globalWords.filter(w => w.score >= MAX_SCORE).length;
+             // Кэшируем длину, чтобы не фильтровать массив 5000 слов 60 раз в секунду
+             if (window._cachedArchiveLength === undefined || Math.random() < 0.02) {
+                 window._cachedArchiveLength = globalWords.filter(w => w.score >= MAX_SCORE).length;
+             }
+             archiveLength = window._cachedArchiveLength;
          }
          
          // Генерируем массив только если изменилось кол-во слов
