@@ -3575,13 +3575,23 @@ window.updateExperience = async () => {
 
         if (splitIndex <= 0) {
             const prefixes = ['zurück', 'zusammen', 'vorbei', 'heraus', 'hinaus', 'weiter', 'vorher', 'nach', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'her', 'hin', 'vor', 'weg', 'ab', 'an', 'zu'];
+            const dualPrefixes = ['hinter', 'über', 'unter', 'durch', 'wider', 'um', 'wieder'];
+            
             for (let p of prefixes) {
                 if (wDe.startsWith(p)) {
-                    let isSep = part ? part.startsWith(p) : (wDe !== 'mitteln');
-                    if (isSep) {
-                        splitIndex = p.length;
+                    if (dualPrefixes.some(d => wDe.startsWith(d))) {
+                        continue;
                     }
-                    break;
+
+                    const remainder = wDe.substring(p.length);
+                    const isInsepBase = inseparable.some(insep => remainder.startsWith(insep));
+                    const isIeren = wDe.endsWith('ieren');
+                    const hasValidPartizip = part && part.length > 3 && part !== wDe;
+                    
+                    if (!hasValidPartizip || isInsepBase || isIeren) {
+                        splitIndex = p.length;
+                        break;
+                    }
                 }
             }
         }
