@@ -555,7 +555,7 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
         # Check independent drops, from rarest to most common
         sorted_mounts = sorted(ALL_ARTIFACTS, key=lambda x: x['dropRate'])
         for mount in sorted_mounts:
-            scaled_drop = mount['dropRate'] / 10.0
+            scaled_drop = mount['dropRate'] / 200.0
             roll = random.uniform(0, 100)
             if roll <= scaled_drop:
                 artifact_name = mount['name']
