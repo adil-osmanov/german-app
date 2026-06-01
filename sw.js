@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kraft-v2';
+const CACHE_NAME = 'kraft-v3';
 const URLS_TO_CACHE = [
     '/',
     '/index.html',
@@ -6,16 +6,27 @@ const URLS_TO_CACHE = [
 ];
 
 self.addEventListener('install', event => {
+    self.skipWaiting(); // Activate new SW immediately
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
+    );
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+        ).then(() => self.clients.claim()) // Take control of all clients immediately
     );
 });
 
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
     
-    // Let apiFetch handle API offline fallbacks directly
-    if (event.request.url.includes('/words') || event.request.url.includes('/history') || event.request.url.includes('/profiles')) {
+    // Never cache API requests - always go network
+    const url = event.request.url;
+    if (url.includes('/words') || url.includes('/history') || url.includes('/profiles') ||
+        url.includes('/progress') || url.includes('/score') || url.includes('/artifacts')) {
         return; 
     }
     event.respondWith(
