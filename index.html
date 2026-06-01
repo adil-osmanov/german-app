@@ -3732,7 +3732,7 @@ window.updateExperience = async () => {
  const sm2Result = calculateSM2(quality, w.repetitions, w.interval, w.ease_factor, w.score);
 
  let nextReviewMs = 0;
- if (sm2Result.interval === 0) nextReviewMs = Date.now() + 10 * 60 * 1000;
+ if (sm2Result.interval === 0) nextReviewMs = 0; // Сразу доступно, счетчик не падает
  else nextReviewMs = Date.now() + sm2Result.interval * 24 * 60 * 60 * 1000;
 
  let newScore = w.score;
