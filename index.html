@@ -2621,12 +2621,26 @@ window.updateExperience = async () => {
          if (dictTypeFilter === 'verbs' && dictVerbFormFilter === 'partizip') {
              const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
              const inf = (w.word_de_inf || '').toLowerCase();
-             const rawPart = (w.word_de || '').toLowerCase().trim();
-             const alreadyHasAux = rawPart.startsWith('hat ') || rawPart.startsWith('ist ') || rawPart.startsWith('haben ') || rawPart.startsWith('sein ');
-             if (!alreadyHasAux) {
-                 const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
-                 displayWordDe = `<span class="text-gray-500 text-xs mr-1.5 font-normal">${aux}</span>` + displayWordDe;
+             
+             let actualAux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
+             let actualPartizip = (w.word_de || '').trim();
+             const pLower = actualPartizip.toLowerCase();
+             
+             if (pLower.startsWith('hat ')) {
+                 actualAux = actualPartizip.substring(0, 3);
+                 actualPartizip = actualPartizip.substring(4).trim();
+             } else if (pLower.startsWith('ist ')) {
+                 actualAux = actualPartizip.substring(0, 3);
+                 actualPartizip = actualPartizip.substring(4).trim();
+             } else if (pLower.startsWith('haben ')) {
+                 actualAux = actualPartizip.substring(0, 5);
+                 actualPartizip = actualPartizip.substring(6).trim();
+             } else if (pLower.startsWith('sein ')) {
+                 actualAux = actualPartizip.substring(0, 4);
+                 actualPartizip = actualPartizip.substring(5).trim();
              }
+             
+             displayWordDe = `<span class="text-gray-500 text-xs mr-1.5 font-normal">${escapeStr(actualAux)}</span>` + escapeStr(actualPartizip);
          }
          
          const safeWordDe = escapeStr(w.word_de);
@@ -3567,11 +3581,27 @@ window.updateExperience = async () => {
       } else {
           const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
           const inf = (w.word_de || '').toLowerCase();
-          const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
-          const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
-          const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
-          const partizipDisplay = w.partizip ? (alreadyHasAux ? escapeStr(w.partizip) : `<span class="text-gray-500 text-sm mr-2">${aux}</span>${escapeStr(w.partizip)}`) : '-';
-          formToSpeak = alreadyHasAux ? w.partizip : `${aux} ${w.partizip}`;
+          
+          let actualAux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
+          let actualPartizip = (w.partizip || '').trim();
+          const pLower = actualPartizip.toLowerCase();
+          
+          if (pLower.startsWith('hat ')) {
+              actualAux = actualPartizip.substring(0, 3);
+              actualPartizip = actualPartizip.substring(4).trim();
+          } else if (pLower.startsWith('ist ')) {
+              actualAux = actualPartizip.substring(0, 3);
+              actualPartizip = actualPartizip.substring(4).trim();
+          } else if (pLower.startsWith('haben ')) {
+              actualAux = actualPartizip.substring(0, 5);
+              actualPartizip = actualPartizip.substring(6).trim();
+          } else if (pLower.startsWith('sein ')) {
+              actualAux = actualPartizip.substring(0, 4);
+              actualPartizip = actualPartizip.substring(5).trim();
+          }
+
+          const partizipDisplay = actualPartizip ? `<span class="text-gray-500 text-lg mr-2 font-medium">${escapeStr(actualAux)}</span>${escapeStr(actualPartizip)}` : '-';
+          formToSpeak = `${actualAux} ${actualPartizip}`;
           document.getElementById('train-de-word').innerHTML = partizipDisplay;
       }
       if (qEl) qEl.innerHTML = `<div class="flex flex-row items-baseline justify-center gap-3 flex-wrap"><span class="text-4xl font-black text-white notranslate pb-1">${escapeStr(w.word_de)}</span><span class="text-lg text-gray-400 notranslate font-medium">(${escapeStr((w.word_ru || '').replace(/\\([^)]*\\)/g, '').trim())})</span></div>`;
