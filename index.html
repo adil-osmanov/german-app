@@ -499,12 +499,30 @@
  </div>
  </div>
 
- <div class="flex bg-[#112240]/50 border border-white/5 p-1 rounded-xl mb-4">
- <button id="dict-tab-active"
- class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#172A45] shadow-sm transition-all text-[#D4AF37]">В
- процессе</button>
- <button id="dict-tab-mastered"
- class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-[#D4AF37]">Архив</button>
+ <div class="flex flex-col gap-2 mb-4">
+    <div class="flex items-center justify-between gap-3">
+        <!-- Main Filter: Words / Verbs -->
+        <div class="flex bg-[#112240]/50 border border-white/5 p-1 rounded-xl flex-1" id="dict-type-tabs">
+            <button id="dict-tab-words" class="flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-[#2A3B5E] text-white shadow-sm transition-all uppercase tracking-wider">Слова</button>
+            <button id="dict-tab-verbs" class="flex-1 py-1.5 text-[11px] font-bold rounded-lg text-gray-500 hover:text-[#D4AF37] transition-all uppercase tracking-wider">Формы</button>
+        </div>
+        
+        <!-- Sub Filter: Active / Mastered -->
+        <div class="flex bg-[#112240]/50 border border-white/5 p-1 rounded-xl w-32">
+            <button id="dict-tab-active" class="flex-1 py-1.5 rounded-lg bg-[#2A3B5E] text-[#D4AF37] shadow-sm transition-all flex items-center justify-center" title="В процессе">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>
+            <button id="dict-tab-mastered" class="flex-1 py-1.5 rounded-lg text-gray-500 hover:text-[#D4AF37] transition-all flex items-center justify-center" title="Архив">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Sub-Sub Filter: Präteritum / Perfekt (Only visible when Формы is selected) -->
+    <div class="flex bg-[#112240]/50 border border-white/5 p-1 rounded-xl w-full hidden" id="dict-verb-form-tabs">
+        <button id="dict-tab-praet" class="flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-[#1A2640] text-blue-300 shadow-sm transition-all uppercase tracking-wider">Präteritum</button>
+        <button id="dict-tab-perf" class="flex-1 py-1.5 text-[11px] font-bold rounded-lg text-gray-500 hover:text-green-400 transition-all uppercase tracking-wider">Perfekt</button>
+    </div>
  </div>
 
  <div id="dict-list">
@@ -647,77 +665,7 @@
  </div>
  </div>
 
- <div id="verb-trainer-game" class="hidden w-full relative pt-2 animate-in fade-in zoom-in duration-300">
- <div class="mb-4 w-full px-1 flex justify-between">
- <p class="text-xs font-bold text-gray-400 uppercase tracking-widest text-center mb-1 "
- id="vt-count-text">Формы глаголов</p>
- <p
- class="text-xs font-bold text-[#D4AF37] uppercase tracking-widest text-center mb-1 ">
- <span id="vt-remaining-label"></span> <span id="vt-counter">0</span>
- </p>
- </div>
- <div
- class="flex bg-[#112240] bg-opacity-80 dark:bg-[#172A45]/50 p-1 rounded-xl mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
- <button id="vt-mode-praet" onclick="setVTMode('praet')"
- class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white">Präteritum</button>
- <button id="vt-mode-perf" onclick="setVTMode('perf')"
- class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]">Partizip
- II</button>
- </div>
- <!-- XP progress bar for verb trainer -->
- <div id="vt-xp-panel" class="w-full bg-[#112240] rounded-[1rem] p-3 mb-3 border border-[#D4AF37]/20"
- style="display:none; flex-direction:column; gap:6px;">
- <div
- class="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-[#D4AF37]">
- <span id="vt-xp-lvl">Lvl 1</span>
- <span id="vt-xp-text" class="text-gray-400">0 / 150 XP</span>
- </div>
- <div class="w-full h-1.5 bg-[#172A45] rounded-full overflow-hidden">
- <div id="vt-xp-bar"
- class="h-full bg-gradient-to-r from-[#D4AF37] to-[#FDE08B] transition-all duration-700"
- style="width: 0%"></div>
- </div>
- </div>
- <div id="verb-card"
- class="p-8 rounded-[2rem] shadow-[0_5px_30px_rgba(212,175,55,0.08)] relative min-h-[300px] flex flex-col items-center justify-center text-center bg-[#172A45] transition-all">
- <div
- class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[#D4AF37]/5 pointer-events-none z-0 rounded-[2rem]">
- </div>
- <p class="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-3 z-10"
- data-orig-ru="Глагол">Глагол</p>
- <!-- German infinitive = PRIMARY (big) -->
- <h2 id="vt-inf" class="text-4xl font-black text-white mb-2 z-10 leading-tight notranslate"></h2>
- <!-- Russian translation = secondary (small) -->
- <h3 id="vt-ru" class="text-sm font-medium text-gray-400 z-10 mb-8 notranslate"></h3>
-
- <button id="vt-btn-show" onclick="showVTAnswer()"
- class="mt-auto w-full border border-[#D4AF37]/50 text-[#D4AF37] font-semibold py-3 rounded-xl active:scale-95 transition-all text-sm z-10 hover:bg-[#D4AF37]/10 tracking-wide bg-[#112240]/60"
- data-orig-ru="Показать форму">Показать форму</button>
-
- <div id="vt-answer-block"
- class="hidden w-full mt-2 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 z-10">
- <div
- class="bg-[#112240]/60 p-5 rounded-2xl border border-[#D4AF37]/30 w-full mb-6 relative overflow-hidden flex flex-col items-center justify-center shadow-lg transform transition-all">
- <div
- class="absolute inset-0 bg-gradient-to-r from-green-500/10 via-transparent to-transparent pointer-events-none">
- </div>
- <p class="text-[9px] text-[#D4AF37]/80 uppercase tracking-widest font-black mb-1.5 px-2 py-0.5 bg-[#172A45] rounded border border-[#D4AF37]/20"
- data-orig-ru="Ответ">Ответ</p>
- <p id="vt-answer"
- class="text-2xl font-semibold text-green-400 tracking-wide notranslate">
- </p>
- </div>
- <div class="flex gap-3 w-full">
- <button onclick="answerVerb(false)"
- class="flex-1 bg-[#1A1A1A]/40 border border-red-500/40 text-red-400 py-3.5 rounded-xl font-bold hover:bg-red-500/10 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md"><span
- data-orig-ru="Забыл">Забыл</span></button>
- <button onclick="answerVerb(true)"
- class="flex-1 bg-green-500/10 border border-green-500/50 text-green-400 py-3.5 rounded-xl font-bold hover:bg-green-500/20 active:scale-95 transition-all flex flex-col items-center justify-center shadow-md shadow-green-900/40"><span
- data-orig-ru="Помню">Помню</span></button>
- </div>
- </div>
- </div>
- </div>
+ <!-- verb-trainer-game unified with train-card-block -->
  </section>
 
  <section id="view-stats" class="hidden relative pt-4 pb-6 flex flex-col items-center select-none">
@@ -732,7 +680,6 @@
                  <div id="prof-avatar"
                       class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center text-4xl font-bold bg-[#172A45] text-[#D4AF37] group-hover:scale-105 transition-transform">
                  </div>
-                 <div id="prof-buff-spark" class="absolute -left-2 top-0 text-2xl hidden" title="Бафф Интеллекта (+10% XP)">✨</div>
              </div>
          </div>
 
@@ -1306,6 +1253,7 @@
  };
 
  let dictTabFilter = 'active';
+ let dictTypeFilter = 'words';
  let trainDirection = 'auto';
  let currentIsGermanQuestion = false;
  let currentArticle = 'der';
@@ -2136,8 +2084,7 @@
  if (document.getElementById('prof-rank-name')) document.getElementById('prof-rank-name').innerText = rankName;
  if (document.getElementById('prof-league-icon')) document.getElementById('prof-league-icon').innerHTML = rankIcon;
 
- const buffSpark = document.getElementById('prof-buff-spark');
- if (buffSpark) buffSpark.classList.toggle('hidden', !buff_active);
+ // buff spark removed
 
  const ringQuest = document.getElementById('ring-quest');
  const questText = document.getElementById('prof-quest-text');
@@ -2540,12 +2487,37 @@ window.updateExperience = async () => {
  if (g && currentArticle !== g) selectArticle(g);
  };
 
+ let dictVerbFormFilter = 'praeteritum'; // default
  document.getElementById('dict-tab-active').onclick = () => { dictTabFilter = 'active'; renderDictTabs(); };
  document.getElementById('dict-tab-mastered').onclick = () => { dictTabFilter = 'mastered'; renderDictTabs(); };
+ document.getElementById('dict-tab-words').onclick = () => { dictTypeFilter = 'words'; renderDictTabs(); };
+ document.getElementById('dict-tab-verbs').onclick = () => { dictTypeFilter = 'verbs'; renderDictTabs(); };
+ document.getElementById('dict-tab-praet').onclick = () => { dictVerbFormFilter = 'praeteritum'; renderDictTabs(); };
+ document.getElementById('dict-tab-perf').onclick = () => { dictVerbFormFilter = 'partizip'; renderDictTabs(); };
  function renderDictTabs() {
- document.getElementById('dict-tab-active').className = dictTabFilter === 'active' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
- document.getElementById('dict-tab-mastered').className = dictTabFilter === 'mastered' ? "flex-1 py-1.5 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all flex items-center justify-center gap-1 text-white" : "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all flex items-center justify-center gap-1 hover:text-gray-700 dark:hover:text-[#D4AF37]";
- renderDict();
+    const isLangSupportVerbs = currentStudyLang === 'de';
+    if (!isLangSupportVerbs && dictTypeFilter === 'verbs') dictTypeFilter = 'words';
+    
+    const verbsTabBtn = document.getElementById('dict-tab-verbs');
+    if (verbsTabBtn && verbsTabBtn.parentElement) {
+        verbsTabBtn.parentElement.classList.toggle('hidden', !isLangSupportVerbs);
+    }
+    
+    const verbFormTabs = document.getElementById('dict-verb-form-tabs');
+    if (verbFormTabs) {
+        verbFormTabs.classList.toggle('hidden', dictTypeFilter !== 'verbs');
+    }
+
+    document.getElementById('dict-tab-words').className = dictTypeFilter === 'words' ? "flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-[#2A3B5E] text-white shadow-sm transition-all uppercase tracking-wider" : "flex-1 py-1.5 text-[11px] font-bold rounded-lg text-gray-500 hover:text-white transition-all uppercase tracking-wider";
+    document.getElementById('dict-tab-verbs').className = dictTypeFilter === 'verbs' ? "flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-[#2A3B5E] text-[#D4AF37] shadow-sm transition-all uppercase tracking-wider" : "flex-1 py-1.5 text-[11px] font-bold rounded-lg text-gray-500 hover:text-[#D4AF37] transition-all uppercase tracking-wider";
+
+    document.getElementById('dict-tab-active').className = dictTabFilter === 'active' ? "flex-1 py-1.5 rounded-lg bg-[#2A3B5E] text-[#D4AF37] shadow-sm transition-all flex items-center justify-center" : "flex-1 py-1.5 rounded-lg text-gray-500 hover:text-[#D4AF37] transition-all flex items-center justify-center";
+    document.getElementById('dict-tab-mastered').className = dictTabFilter === 'mastered' ? "flex-1 py-1.5 rounded-lg bg-[#2A3B5E] text-[#D4AF37] shadow-sm transition-all flex items-center justify-center" : "flex-1 py-1.5 rounded-lg text-gray-500 hover:text-[#D4AF37] transition-all flex items-center justify-center";
+    
+    document.getElementById('dict-tab-praet').className = dictVerbFormFilter === 'praeteritum' ? "flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-[#1A2640] text-blue-300 shadow-sm transition-all uppercase tracking-wider" : "flex-1 py-1.5 text-[11px] font-bold rounded-lg text-gray-500 hover:text-blue-300 transition-all uppercase tracking-wider";
+    document.getElementById('dict-tab-perf').className = dictVerbFormFilter === 'partizip' ? "flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-[#1B2A20] text-green-400 shadow-sm transition-all uppercase tracking-wider" : "flex-1 py-1.5 text-[11px] font-bold rounded-lg text-gray-500 hover:text-green-400 transition-all uppercase tracking-wider";
+    
+    renderDict();
  }
 
  const searchInp = document.getElementById('search-input');
@@ -2585,7 +2557,27 @@ window.updateExperience = async () => {
  function renderDict(query = searchInp.value.toLowerCase()) {
  const container = document.getElementById('dict-list');
  try {
- let filtered = globalWords.filter(w => (w.word_de || "").toLowerCase().includes(query) || (w.word_ru || "").toLowerCase().includes(query));
+ let filtered = [];
+ if (dictTypeFilter === 'verbs') {
+     globalWords.forEach(w => {
+         if (w.word_type === 'verb' && w.praeteritum && w.partizip) {
+             const mDe = (w.word_de || "").toLowerCase();
+             const mRu = (w.word_ru || "").toLowerCase();
+             const mPr = w.praeteritum.toLowerCase();
+             const mPa = w.partizip.toLowerCase();
+             if (mDe.includes(query) || mRu.includes(query) || mPr.includes(query) || mPa.includes(query)) {
+                 if (dictVerbFormFilter === 'praeteritum') {
+                     filtered.push({ ...w, is_vt: true, vt_form: 'praeteritum', score: w.vt_praet_score || 0, next_review: w.vt_praet_next_review || 0, word_de_inf: w.word_de, word_ru_inf: w.word_ru, word_de: w.praeteritum, word_ru: '', _originalWordId: w.id });
+                 } else if (dictVerbFormFilter === 'partizip') {
+                     filtered.push({ ...w, is_vt: true, vt_form: 'partizip', score: w.vt_part_score || 0, next_review: w.vt_part_next_review || 0, word_de_inf: w.word_de, word_ru_inf: w.word_ru, word_de: w.partizip, word_ru: '', _originalWordId: w.id });
+                 }
+             }
+         }
+     });
+ } else {
+     filtered = globalWords.filter(w => (w.word_de || "").toLowerCase().includes(query) || (w.word_ru || "").toLowerCase().includes(query));
+ }
+
  if (dictTabFilter === 'active') filtered = filtered.filter(w => w.score < MAX_SCORE);
  else filtered = filtered.filter(w => w.score >= MAX_SCORE);
 
@@ -2595,105 +2587,156 @@ window.updateExperience = async () => {
 
  const colors = { der: 'text-der', die: 'text-die', das: 'text-das' };
  const grouped = {};
- filtered.forEach(w => {
- const f = w.folder || 'Без курса'; const l = w.level || 'Общее'; const s = w.subfolder || 'Без темы';
- if (!grouped[f]) grouped[f] = {}; if (!grouped[f][l]) grouped[f][l] = {}; if (!grouped[f][l][s]) grouped[f][l][s] = [];
- grouped[f][l][s].push(w);
- });
+ 
+ if (dictTypeFilter === 'verbs') {
+     // Sort grouped by score, then alphabetically
+     filtered.sort((a, b) => {
+         if (a.score !== b.score) return b.score - a.score;
+         return (a.word_de || '').localeCompare(b.word_de || '');
+     });
+     const groupName = dictVerbFormFilter === 'praeteritum' ? 'Präteritum' : 'Perfekt';
+     grouped[groupName] = { 'Общее': { 'Все формы': filtered } };
+ } else {
+     filtered.forEach(w => {
+     const f = w.folder || 'Без курса'; const l = w.level || 'Общее'; const s = w.subfolder || 'Без темы';
+     if (!grouped[f]) grouped[f] = {}; if (!grouped[f][l]) grouped[f][l] = {}; if (!grouped[f][l][s]) grouped[f][l][s] = [];
+     grouped[f][l][s].push(w);
+     });
+ }
 
  let savedFolderOrder = []; let savedTopicOrder = {};
  try { savedFolderOrder = JSON.parse(localStorage.getItem('folderOrder')) || []; } catch (e) { }
  try { savedTopicOrder = JSON.parse(localStorage.getItem('topicOrder')) || {}; } catch (e) { }
 
- const folderNames = Object.keys(grouped).sort((a, b) => { let idxA = savedFolderOrder.indexOf(a); let idxB = savedFolderOrder.indexOf(b); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
-
  let html = '<div id="dict-folders-container">';
- folderNames.forEach(f => {
- const safeF = escapeStr(f);
- if (collapsedDictTopics['folder_' + f] === undefined) collapsedDictTopics['folder_' + f] = true;
- const isFolderCollapsed = collapsedDictTopics['folder_' + f];
- const folderChevronClass = isFolderCollapsed ? '' : 'rotate-180';
-
- html += `
- <div class="dict-folder mb-4 bg-[#112240] rounded-2xl overflow-hidden border border-white/5" data-folder="${safeF}">
- <div class="flex items-center justify-between px-4 py-3 border-b border-white/5 cursor-pointer hover:bg-[#172A45] transition-colors" data-folder-header="${safeF}" onclick="toggleFolder('${safeF}')">
- <div class="flex items-center gap-3 flex-1 min-w-0">
- <div class="cursor-move drag-handle-folder text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
- <h2 class="text-base font-bold text-white truncate notranslate" ${isDevMode ? `onclick="event.stopPropagation(); renameFolder('${safeF}')" style="cursor:pointer;" title="Переименовать"` : ''}>${f}</h2>
- </div>
- <div class="flex items-center gap-2">
- ${isDevMode ? `<div class="flex items-center gap-1">
- <button onclick="fastAddCourse('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#34d399] hover:bg-[#34d399]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
- <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37]/60 hover:text-[#D4AF37] rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
- <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400/60 hover:text-red-400 rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
- </div>` : ''}
- <svg class="folder-chevron w-5 h-5 text-gray-500 transition-transform ${folderChevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
- </div>
- </div>
- <div class="dict-topics-container p-2 space-y-1${isFolderCollapsed ? ' hidden' : ''}" data-folder="${safeF}">
- `;
-
- let topics = [];
- for (const l in grouped[f]) { for (const s in grouped[f][l]) { topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` }); } }
- topics.sort((a, b) => { let orderArr = savedTopicOrder[f] || []; let idxA = orderArr.indexOf(a.key); let idxB = orderArr.indexOf(b.key); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
-
- topics.forEach(topic => {
- const l = topic.l; const s = topic.s; const wordsInTopic = topic.words; const topicKey = topic.key;
- const safeL = escapeStr(l); const safeS = escapeStr(s); const safeTopicKey = escapeStr(topicKey);
- if (collapsedDictTopics[topicKey] === undefined) collapsedDictTopics[topicKey] = true;
- const isTopicCollapsed = collapsedDictTopics[topicKey];
- const topicChevronClass = isTopicCollapsed ? '' : 'rotate-180';
-
- html += `
- <div class="dict-topic bg-[#112240] rounded-xl border border-white/5 mb-2 overflow-hidden" data-topic="${safeTopicKey}">
- <div class="flex items-center justify-between px-4 py-2 bg-[#172A45]/50 border-b border-white/5 cursor-pointer hover:bg-[#1e3357] transition-colors" onclick="toggleTopic('${safeTopicKey}')">
- <div class="flex items-center gap-2 min-w-0 flex-1">
- <div class="cursor-move drag-handle-topic text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
- ${l !== 'Общее' ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-md flex-shrink-0 bg-[#0b101e] border border-[#D4AF37]/40 text-[#D4AF37] tracking-wider shadow-[0_0_6px_rgba(212,175,55,0.2)]">${l}</span>` : ''}
- <span class="text-sm font-semibold text-gray-200 truncate notranslate">${s}</span>
- <span class="text-xs text-gray-500 flex-shrink-0 ml-1">${wordsInTopic.length} ${t('слов')}</span>
-
- </div>
- <div class="flex items-center gap-1 flex-shrink-0">
- ${isDevMode ? `<button onclick="renameSubfolder('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>` : ''}
- <button onclick="addWordToTopic('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
- <svg class="topic-chevron w-5 h-5 text-gray-500 transition-transform ${topicChevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
- </div>
- </div>
- <div id="topic-words-${safeTopicKey}" data-loaded="${isTopicCollapsed && query.length === 0 ? 'false' : 'true'}" class="p-2 space-y-1 bg-[#0a1128]${isTopicCollapsed ? ' hidden' : ''}">
- `;
-
- window._topicHtmlCache = window._topicHtmlCache || {};
- let topicHtmlCacheStr = '';
-
- wordsInTopic.forEach(w => {
- let extraInfo = '';
- if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
- else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
- const safeWordDe = escapeStr(w.word_de);
- topicHtmlCacheStr += `
- <div onclick="openEdit(${w.id})" class="bg-[#172A45] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#1e3357] transition-colors border border-l-4 card-rarity-${Math.min(w.score, 4)} ${w.score >= MAX_SCORE ? 'border-l-yellow-500' : w.score === 3 ? 'border-l-purple-500' : w.score === 2 ? 'border-l-blue-500' : w.score === 1 ? 'border-l-green-500' : 'border-l-gray-600'}">
- <div class="flex-1 pr-3 min-w-0">
- <p class="text-base font-bold text-white leading-tight truncate notranslate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-medium mr-1">${w.article}</span>` : ''}${w.word_de} <span class="text-gray-500 text-xs font-normal">${extraInfo}</span></p>
- <p class="text-gray-400 text-sm mt-0.5 truncate notranslate">${w.word_ru}</p>
- ${w.example ? `<p class="text-[11px] text-blue-300/60 mt-1 truncate notranslate">${escapeStr(w.example.split(/[-—(/\[]/)[0].trim())}</p>` : ''}
- </div>
- <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
- <div class="flex gap-1">
- <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-1.5 rounded-full text-gray-500 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"/></svg></button>
- <button onclick="deleteWord(${w.id}, event)" class="p-1.5 rounded-full text-gray-500 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
- </div>
- <span class="text-xs font-bold rarity-${Math.min(w.score, 4)}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
- </div>
- </div>`;
- });
  
- window._topicHtmlCache[safeTopicKey] = topicHtmlCacheStr;
- if (!isTopicCollapsed || query.length > 0) html += topicHtmlCacheStr;
- html += `</div></div>`;
- });
- html += `</div></div>`;
- });
+ if (dictTypeFilter === 'verbs') {
+     html += '<div class="space-y-2 pb-4">';
+     filtered.forEach(w => {
+         let extraInfo = '';
+         if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
+         else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
+         
+         let displayWordDe = escapeStr(w.word_de);
+         if (dictTypeFilter === 'verbs' && dictVerbFormFilter === 'partizip') {
+             const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
+             const inf = (w.word_de_inf || '').toLowerCase();
+             const rawPart = (w.word_de || '').toLowerCase().trim();
+             const alreadyHasAux = rawPart.startsWith('hat ') || rawPart.startsWith('ist ') || rawPart.startsWith('haben ') || rawPart.startsWith('sein ');
+             if (!alreadyHasAux) {
+                 const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
+                 displayWordDe = `<span class="text-gray-500 text-xs mr-1.5 font-normal">${aux}</span>` + displayWordDe;
+             }
+         }
+         
+         const safeWordDe = escapeStr(w.word_de);
+         html += `
+         <div onclick="openEdit(${w._originalWordId || w.id})" style="content-visibility: auto; contain-intrinsic-size: 80px;" class="bg-[#172A45] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#1e3357] transition-colors border border-l-4 card-rarity-${Math.min(w.score, 4)} ${w.score >= MAX_SCORE ? 'border-l-yellow-500' : w.score === 3 ? 'border-l-purple-500' : w.score === 2 ? 'border-l-blue-500' : w.score === 1 ? 'border-l-green-500' : 'border-l-gray-600'}">
+         <div class="flex-1 pr-3 min-w-0">
+         ${dictTypeFilter === 'verbs' ? `<p class="text-sm font-medium text-gray-400 leading-tight truncate notranslate mb-0.5">${escapeStr(w.word_de_inf)} <span class="text-gray-500 text-xs font-normal">(${escapeStr((w.word_ru_inf || '').split(/[,;]/)[0])})</span></p>` : ''}
+         <p class="text-base font-bold text-white leading-tight truncate notranslate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-medium mr-1">${w.article}</span>` : ''}${displayWordDe} ${dictTypeFilter !== 'verbs' ? `<span class="text-gray-500 text-xs font-normal">${extraInfo}</span>` : ''}</p>
+         ${dictTypeFilter !== 'verbs' ? `<p class="text-gray-400 text-sm mt-0.5 truncate notranslate">${w.word_ru}</p>` : ''}
+         ${w.example ? `<p class="text-[11px] text-blue-300/60 mt-1 truncate notranslate">${escapeStr(w.example.split(/[-—(/\[]/)[0].trim())}</p>` : ''}
+         </div>
+         <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+         <div class="flex gap-1">
+         <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-1.5 rounded-full text-gray-500 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"/></svg></button>
+         <button onclick="deleteWord(${w._originalWordId || w.id}, event)" class="p-1.5 rounded-full text-gray-500 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+         </div>
+         <span class="text-xs font-bold rarity-${Math.min(w.score, 4)}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+         </div>
+         </div>`;
+     });
+     html += '</div>';
+ } else {
+     const folderNames = Object.keys(grouped).sort((a, b) => { let idxA = savedFolderOrder.indexOf(a); let idxB = savedFolderOrder.indexOf(b); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
+     folderNames.forEach(f => {
+     const safeF = escapeStr(f);
+     if (collapsedDictTopics['folder_' + f] === undefined) collapsedDictTopics['folder_' + f] = true;
+     const isFolderCollapsed = collapsedDictTopics['folder_' + f];
+     const folderChevronClass = isFolderCollapsed ? '' : 'rotate-180';
+
+     html += `
+     <div class="dict-folder mb-4 bg-[#112240] rounded-2xl overflow-hidden border border-white/5" data-folder="${safeF}">
+     <div class="flex items-center justify-between px-4 py-3 border-b border-white/5 cursor-pointer hover:bg-[#172A45] transition-colors" data-folder-header="${safeF}" onclick="toggleFolder('${safeF}')">
+     <div class="flex items-center gap-3 flex-1 min-w-0">
+     <div class="cursor-move drag-handle-folder text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
+     <h2 class="text-base font-bold text-white truncate notranslate" ${isDevMode ? `onclick="event.stopPropagation(); renameFolder('${safeF}')" style="cursor:pointer;" title="Переименовать"` : ''}>${f}</h2>
+     </div>
+     <div class="flex items-center gap-2">
+     ${isDevMode ? `<div class="flex items-center gap-1">
+     <button onclick="fastAddCourse('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#34d399] hover:bg-[#34d399]/10 rounded-full transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
+     <button onclick="renameFolder('${safeF}'); event.stopPropagation();" class="p-1.5 text-[#D4AF37]/60 hover:text-[#D4AF37] rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+     <button onclick="premiumConfirm(t('Удалить курс со всеми словами внутри?'), () => deleteCourse('${safeF}')); event.stopPropagation();" class="p-1.5 text-red-400/60 hover:text-red-400 rounded-full transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+     </div>` : ''}
+     <svg class="folder-chevron w-5 h-5 text-gray-500 transition-transform ${folderChevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+     </div>
+     </div>
+     <div class="dict-topics-container p-2 space-y-1${isFolderCollapsed ? ' hidden' : ''}" data-folder="${safeF}">
+     `;
+
+     let topics = [];
+     for (const l in grouped[f]) { for (const s in grouped[f][l]) { topics.push({ l, s, words: grouped[f][l][s], key: `${f}|${l}|${s}` }); } }
+     topics.sort((a, b) => { let orderArr = savedTopicOrder[f] || []; let idxA = orderArr.indexOf(a.key); let idxB = orderArr.indexOf(b.key); if (idxA === -1) idxA = 9999; if (idxB === -1) idxB = 9999; return idxA - idxB; });
+
+     topics.forEach(topic => {
+     const l = topic.l; const s = topic.s; const wordsInTopic = topic.words; const topicKey = topic.key;
+     const safeL = escapeStr(l); const safeS = escapeStr(s); const safeTopicKey = escapeStr(topicKey);
+     if (collapsedDictTopics[topicKey] === undefined) collapsedDictTopics[topicKey] = true;
+     const isTopicCollapsed = collapsedDictTopics[topicKey];
+     const topicChevronClass = isTopicCollapsed ? '' : 'rotate-180';
+
+     html += `
+     <div class="dict-topic bg-[#112240] rounded-xl border border-white/5 mb-2 overflow-hidden" data-topic="${safeTopicKey}">
+     <div class="flex items-center justify-between px-4 py-2 bg-[#172A45]/50 border-b border-white/5 cursor-pointer hover:bg-[#1e3357] transition-colors" onclick="toggleTopic('${safeTopicKey}')">
+     <div class="flex items-center gap-2 min-w-0 flex-1">
+     <div class="cursor-move drag-handle-topic text-gray-600 hover:text-white transition-colors flex-shrink-0" onclick="event.stopPropagation()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg></div>
+     ${l !== 'Общее' ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-md flex-shrink-0 bg-[#0b101e] border border-[#D4AF37]/40 text-[#D4AF37] tracking-wider shadow-[0_0_6px_rgba(212,175,55,0.2)]">${l}</span>` : ''}
+     <span class="text-sm font-semibold text-gray-200 truncate notranslate">${s}</span>
+     <span class="text-xs text-gray-500 flex-shrink-0 ml-1">${wordsInTopic.length} ${t('слов')}</span>
+
+     </div>
+     <div class="flex items-center gap-1 flex-shrink-0">
+     ${isDevMode ? `<button onclick="renameSubfolder('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>` : ''}
+     <button onclick="addWordToTopic('${safeF}','${safeL}','${safeS}'); event.stopPropagation();" class="p-1 text-gray-600 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
+     <svg class="topic-chevron w-5 h-5 text-gray-500 transition-transform ${topicChevronClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+     </div>
+     </div>
+     <div id="topic-words-${safeTopicKey}" data-loaded="${isTopicCollapsed && query.length === 0 ? 'false' : 'true'}" class="p-2 space-y-1 bg-[#0a1128]${isTopicCollapsed ? ' hidden' : ''}">
+     `;
+
+     window._topicHtmlCache = window._topicHtmlCache || {};
+     let topicHtmlCacheStr = '';
+
+     wordsInTopic.forEach(w => {
+     let extraInfo = '';
+     if (w.word_type === 'noun' && w.plural) extraInfo = `(pl. ${w.plural})`;
+     else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) extraInfo = `(${w.praeteritum || '-'}, ${w.partizip || '-'})`;
+     const safeWordDe = escapeStr(w.word_de);
+     topicHtmlCacheStr += `
+     <div onclick="openEdit(${w.id})" class="bg-[#172A45] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#1e3357] transition-colors border border-l-4 card-rarity-${Math.min(w.score, 4)} ${w.score >= MAX_SCORE ? 'border-l-yellow-500' : w.score === 3 ? 'border-l-purple-500' : w.score === 2 ? 'border-l-blue-500' : w.score === 1 ? 'border-l-green-500' : 'border-l-gray-600'}">
+     <div class="flex-1 pr-3 min-w-0">
+     <p class="text-base font-bold text-white leading-tight truncate notranslate">${w.word_type === 'noun' ? `<span class="${colors[w.article]} font-medium mr-1">${w.article}</span>` : ''}${w.word_de} <span class="text-gray-500 text-xs font-normal">${extraInfo}</span></p>
+     <p class="text-gray-400 text-sm mt-0.5 truncate notranslate">${w.word_ru}</p>
+     ${w.example ? `<p class="text-[11px] text-blue-300/60 mt-1 truncate notranslate">${escapeStr(w.example.split(/[-—(/\[]/)[0].trim())}</p>` : ''}
+     </div>
+     <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+     <div class="flex gap-1">
+     <button onclick="speakWord('${(w.word_type === 'noun' ? w.article + ' ' : '') + safeWordDe}', event)" class="p-1.5 rounded-full text-gray-500 hover:text-[#D4AF37] transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z"/></svg></button>
+     <button onclick="deleteWord(${w.id}, event)" class="p-1.5 rounded-full text-gray-500 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+     </div>
+     <span class="text-xs font-bold rarity-${Math.min(w.score, 4)}">${Math.min(w.score, MAX_SCORE)}/${MAX_SCORE}</span>
+     </div>
+     </div>`;
+     });
+     
+     window._topicHtmlCache[safeTopicKey] = topicHtmlCacheStr;
+     if (!isTopicCollapsed || query.length > 0) html += topicHtmlCacheStr;
+     html += `</div></div>`;
+     });
+     html += `</div></div>`;
+     });
+ }
  html += '</div>';
 
  container.innerHTML = html;
@@ -3132,7 +3175,8 @@ window.updateExperience = async () => {
  const waitingCount = eligibleWords.filter(w => !isWordDue(w)).length;
  const weakWordsCount = eligibleWords.filter(w => w.score < 2 && isWordDue(w)).length;
 
- const verbAvailableCount = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip).length;
+ const praetAvailableCount = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip && Date.now() >= (w.vt_praet_next_review || 0)).length;
+ const perfAvailableCount = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip && Date.now() >= (w.vt_part_next_review || 0)).length;
 
  let todayTrainedCount = 0;
  let paragonCount = 0;
@@ -3188,13 +3232,24 @@ window.updateExperience = async () => {
  <div class="bg-[#112240] bg-opacity-80/20 w-8 h-8 rounded-full flex items-center justify-center relative z-10 flex-shrink-0"><svg class="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></div>
  </button>
  ${currentStudyLang === 'de' && window.currentTrainingMode === 'classic' ? `
- <button onclick="startVerbTrainer()" class="w-full text-left bg-[#172A45] hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center group mb-3">
- <h3 class="text-sm font-bold text-white flex items-center gap-2">${t('Формы глаголов')}</h3>
- <div class="flex items-center gap-3">
- <span class="bg-white/5 text-gray-400 text-[10px] font-bold px-2 py-1 rounded-md tracking-wider shadow-inner"><span class="notranslate">${verbAvailableCount}</span></span>
- <div class="text-[#D4AF37]"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
+ <div class="flex gap-2 w-full mb-3">
+     <button onclick="startTraining('praeteritum')" class="flex-1 text-left bg-[#132038] border border-blue-500/20 hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm flex flex-col items-center group">
+         <h3 class="text-sm font-bold text-blue-400 mb-2">${t('Präteritum')}</h3>
+         <div class="flex items-center gap-3">
+             <span class="bg-black/20 text-gray-400 text-[10px] font-bold px-2 py-1 rounded-md tracking-wider shadow-inner"><span class="notranslate">${praetAvailableCount}</span></span>
+             <div class="text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+         </div>
+     </button>
+     
+     <button onclick="startTraining('partizip')" class="flex-1 text-left bg-[#132038] border border-blue-500/20 hover:scale-[0.98] transition-all p-4 rounded-xl shadow-sm flex flex-col items-center group">
+         <h3 class="text-sm font-bold text-emerald-400 mb-2">${t('Perfekt')}</h3>
+         <div class="flex items-center gap-3">
+             <span class="bg-black/20 text-gray-400 text-[10px] font-bold px-2 py-1 rounded-md tracking-wider shadow-inner"><span class="notranslate">${perfAvailableCount}</span></span>
+             <div class="text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+         </div>
+     </button>
  </div>
- </button>` : ''}
+ ` : ''}
  `;
 
  if (weakWordsCount > 0) {
@@ -3251,33 +3306,7 @@ window.updateExperience = async () => {
  continue;
  }
 
-    window.startTraining = (sel, forceArchive = false) => {
-        window.currentTrainingMode = sel;
-        if (document.getElementById('bottom-nav')) document.getElementById('bottom-nav').classList.add('hidden');
-        let eligibleWords = globalWords;
-        let availableWords = eligibleWords.filter(w => isWordDue(w));
 
-        if (sel === 'all') { trainList = availableWords; }
-        else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 2); }
-        else if (sel.startsWith('course|')) { const courseName = sel.split('|')[1]; trainList = availableWords.filter(w => (w.folder || 'Без курса') === courseName); }
-        else if (sel === 'mastered' || forceArchive) {
-            if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = eligibleWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
-            else { trainList = eligibleWords.filter(w => w.score >= MAX_SCORE); }
-        }
-        else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
-
-        if (!trainList.length) return alert(t('На сегодня слов нет! Отдыхай.'));
-        trainList.sort(() => 0.5 - Math.random()); curIdx = 0; sessionStartMs = Date.now();
-        document.getElementById('train-setup-block').classList.add('hidden'); document.getElementById('train-card-block').classList.remove('hidden');
-        const pnl = document.getElementById('train-xp-panel'); if (pnl) { pnl.style.display = 'flex'; } renderCard();
-    };
-
-    document.getElementById('btn-stop-training').onclick = () => {
-        if (document.getElementById('bottom-nav')) document.getElementById('bottom-nav').classList.remove('hidden');
-        const pnl = document.getElementById('train-xp-panel'); if (pnl) pnl.style.display = 'none';
-        if (cardTimeout) clearTimeout(cardTimeout);
-        saveSessionTime(); setupTrainMenu();
-    };
 
  const cWordsCount = courseWords.filter(w => isWordDue(w)).length;
  const folderId = `details-${btoa(encodeURIComponent(folder)).replace(/=/g, '')}`;
@@ -3369,19 +3398,30 @@ window.updateExperience = async () => {
  }
 
  window.startTraining = (sel, forceArchive = false) => {
- window.currentTrainingMode = sel;
+ window.currentTrainingSelection = sel;
  if (document.getElementById('bottom-nav')) document.getElementById('bottom-nav').classList.add('hidden');
- let eligibleWords = globalWords;
+ 
+ let eligibleWords = [];
+ globalWords.forEach(w => {
+     eligibleWords.push(w);
+     if (currentStudyLang === 'de' && w.word_type === 'verb' && w.praeteritum && w.partizip) {
+         eligibleWords.push({ ...w, is_vt: true, vt_form: 'praeteritum', score: w.vt_praet_score || 0, next_review: w.vt_praet_next_review || 0, ease_factor: w.vt_praet_ease || 2.5, interval: w.vt_praet_interval || 0, repetitions: w.vt_praet_reps || 0, _originalWordId: w.id });
+         eligibleWords.push({ ...w, is_vt: true, vt_form: 'partizip', score: w.vt_part_score || 0, next_review: w.vt_part_next_review || 0, ease_factor: w.vt_part_ease || 2.5, interval: w.vt_part_interval || 0, repetitions: w.vt_part_reps || 0, _originalWordId: w.id });
+     }
+ });
+ 
  let availableWords = eligibleWords.filter(w => isWordDue(w));
 
- if (sel === 'all') { trainList = availableWords; }
- else if (sel === 'weak') { trainList = availableWords.filter(w => w.score < 2); }
- else if (sel.startsWith('course|')) { const courseName = sel.split('|')[1]; trainList = availableWords.filter(w => (w.folder || 'Без курса') === courseName); }
+ if (sel === 'praeteritum') { trainList = availableWords.filter(w => w.is_vt && w.vt_form === 'praeteritum'); }
+ else if (sel === 'partizip') { trainList = availableWords.filter(w => w.is_vt && w.vt_form === 'partizip'); }
+ else if (sel === 'all') { trainList = availableWords.filter(w => !w.is_vt); }
+ else if (sel === 'weak') { trainList = availableWords.filter(w => !w.is_vt && w.score < 2); }
+ else if (sel.startsWith('course|')) { const courseName = sel.split('|')[1]; trainList = availableWords.filter(w => !w.is_vt && (w.folder || 'Без курса') === courseName); }
  else if (sel === 'mastered' || forceArchive) {
- if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = eligibleWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
- else { trainList = eligibleWords.filter(w => w.score >= MAX_SCORE); }
+ if (forceArchive) { const [f, l, s] = sel.split('|'); trainList = eligibleWords.filter(w => !w.is_vt && w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
+ else { trainList = eligibleWords.filter(w => !w.is_vt && w.score >= MAX_SCORE); }
  }
- else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
+ else { const [f, l, s] = sel.split('|'); trainList = availableWords.filter(w => !w.is_vt && w.folder === f && (w.level || 'Общее') === l && w.subfolder === s); }
 
  if (!trainList.length) return alert(t('На сегодня слов нет! Отдыхай.'));
  trainList.sort(() => 0.5 - Math.random()); curIdx = 0; sessionStartMs = Date.now();
@@ -3469,6 +3509,7 @@ window.updateExperience = async () => {
  else if (trainDirection === 'ru-de') currentIsGermanQuestion = false;
  else currentIsGermanQuestion = state === 'L2' ? false : Math.random() > 0.5;
 
+ if (!w.is_vt) {
  if (currentIsGermanQuestion) {
  if (btnSpeakQ) { btnSpeakQ.classList.remove('hidden'); btnSpeakQ.onclick = (e) => speakWord(fullGerman, e); }
  if (btnSpeakAns) btnSpeakAns.classList.add('hidden');
@@ -3477,9 +3518,10 @@ window.updateExperience = async () => {
  if (btnSpeakQ) btnSpeakQ.classList.add('hidden');
  if (btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(fullGerman, e); }
  }
+ }
 
  const ansEx = document.getElementById('train-answer-example');
- if (w.example && ansEx) {
+ if (w.example && ansEx && !w.is_vt) {
  const sentence = extractGermanSentence(w.example);
  const safeSentence = escapeStr(sentence);
  ansEx.innerHTML = `
@@ -3517,7 +3559,31 @@ window.updateExperience = async () => {
  }
  }
 
- document.getElementById('train-de-word').innerHTML = currentIsGermanQuestion ? escapeStr(w.word_ru || '') : formattedGerman;
+ if (w.is_vt) {
+      let formToSpeak = '';
+      if (w.vt_form === 'praeteritum') {
+          formToSpeak = w.praeteritum;
+          document.getElementById('train-de-word').innerHTML = escapeStr(w.praeteritum || '-');
+      } else {
+          const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
+          const inf = (w.word_de || '').toLowerCase();
+          const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
+          const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
+          const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
+          const partizipDisplay = w.partizip ? (alreadyHasAux ? escapeStr(w.partizip) : `<span class="text-gray-500 text-sm mr-2">${aux}</span>${escapeStr(w.partizip)}`) : '-';
+          formToSpeak = alreadyHasAux ? w.partizip : `${aux} ${w.partizip}`;
+          document.getElementById('train-de-word').innerHTML = partizipDisplay;
+      }
+      if (qEl) qEl.innerHTML = `<div class="flex flex-row items-baseline justify-center gap-3 flex-wrap"><span class="text-4xl font-black text-white notranslate pb-1">${escapeStr(w.word_de)}</span><span class="text-lg text-gray-400 notranslate font-medium">(${escapeStr((w.word_ru || '').replace(/\\([^)]*\\)/g, '').trim())})</span></div>`;
+      document.getElementById('train-de-plural').classList.add('hidden');
+      document.getElementById('train-synonyms-block').classList.add('hidden');
+      if (btnSpeakQ) btnSpeakQ.classList.add('hidden');
+      if (btnSpeakAns) { btnSpeakAns.classList.remove('hidden'); btnSpeakAns.onclick = (e) => speakWord(formToSpeak, e); }
+      w._formToSpeak = formToSpeak;
+  } else {
+      document.getElementById('train-de-word').innerHTML = currentIsGermanQuestion ? escapeStr(w.word_ru || '') : formattedGerman;
+      if (!w.is_vt && qEl) qEl.innerHTML = currentIsGermanQuestion ? formattedGerman : escapeStr(w.word_ru || '');
+  }
 
  // Synonyms logic
  if (!currentIsGermanQuestion && w.word_ru) {
@@ -3581,7 +3647,7 @@ window.updateExperience = async () => {
  badge.className = typeLabel ? "px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-[#0b101e] border border-[#D4AF37]/40 text-[#D4AF37] shadow-[0_0_6px_rgba(212,175,55,0.2)]" : "hidden";
  }
  }
- if (qEl) qEl.innerHTML = currentIsGermanQuestion ? formattedGerman : escapeStr(w.word_ru || '');
+ if (!w.is_vt && qEl) qEl.innerHTML = currentIsGermanQuestion ? formattedGerman : escapeStr(w.word_ru || '');
  document.getElementById('btn-show-answer').classList.remove('hidden');
 
  document.getElementById('btn-forgot').onclick = () => { triggerVibration([10, 20]); playTone(200, 'sawtooth', 0.2); updateScoreWithSM2(0); };
@@ -3660,16 +3726,26 @@ window.updateExperience = async () => {
  }
 
  try {
- apiFetch(`${API_URL}/${w.id}/score`, {
+ apiFetch(`${API_URL}/${w._originalWordId || w.id}/score`, {
  method: 'PUT', headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ score: newScore, next_review: nextReviewMs, ease_factor: sm2Result.easeFactor, interval: sm2Result.interval, repetitions: sm2Result.repetitions })
+ body: JSON.stringify({ score: newScore, next_review: nextReviewMs, ease_factor: sm2Result.easeFactor, interval: sm2Result.interval, repetitions: sm2Result.repetitions, form_type: w.is_vt ? w.vt_form : 'base' })
  }).catch(e => {}); // Do not await
  } catch (e) { }
 
- const gwItem = globalWords.find(gw => gw.id === w.id);
- if (gwItem && gwItem !== w) {
- gwItem.score = newScore; gwItem.next_review = nextReviewMs;
- gwItem.ease_factor = sm2Result.easeFactor; gwItem.interval = sm2Result.interval; gwItem.repetitions = sm2Result.repetitions;
+ const gwItem = globalWords.find(gw => gw.id === (w._originalWordId || w.id));
+ if (gwItem) {
+     if (w.is_vt) {
+         if (w.vt_form === 'praeteritum') {
+             gwItem.vt_praet_score = newScore; gwItem.vt_praet_next_review = nextReviewMs;
+             gwItem.vt_praet_ease = sm2Result.easeFactor; gwItem.vt_praet_interval = sm2Result.interval; gwItem.vt_praet_reps = sm2Result.repetitions;
+         } else {
+             gwItem.vt_part_score = newScore; gwItem.vt_part_next_review = nextReviewMs;
+             gwItem.vt_part_ease = sm2Result.easeFactor; gwItem.vt_part_interval = sm2Result.interval; gwItem.vt_part_reps = sm2Result.repetitions;
+         }
+     } else if (gwItem !== w) {
+         gwItem.score = newScore; gwItem.next_review = nextReviewMs;
+         gwItem.ease_factor = sm2Result.easeFactor; gwItem.interval = sm2Result.interval; gwItem.repetitions = sm2Result.repetitions;
+     }
  }
 
  idbUpdateWord(gwItem || w); // Fast single-word update instead of whole DB sync
@@ -3698,9 +3774,11 @@ window.updateExperience = async () => {
  setTimeout(() => {
  try {
  document.getElementById('btn-show-answer').classList.add('hidden'); document.getElementById('train-answer-block').classList.remove('hidden');
- const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
+ const w = trainList[curIdx]; if (w.word_type === 'noun' && w.plural) document.getElementById('train-de-plural').classList.remove('hidden'); else if (!w.is_vt && w.word_type === 'verb' && (w.praeteritum || w.partizip)) document.getElementById('train-de-plural').classList.remove('hidden');
 
- if (!currentIsGermanQuestion) {
+ if (w.is_vt) {
+ setTimeout(() => speakWord(w._formToSpeak), 100);
+ } else if (!currentIsGermanQuestion) {
  const fullGerman = (w.word_type === 'noun' ? (w.article || '') + ' ' : '') + (w.word_de || '');
  setTimeout(() => speakWord(fullGerman), 100);
  }
@@ -3748,103 +3826,7 @@ window.updateExperience = async () => {
  }
  });
 
- // --- ТРЕНАЖЕР ГЛАГОЛОВ (КАРТОЧКИ) ---
- let vtQueue = [];
- let vtIdx = 0;
- let vtMode = 'praet';
-
- window.startVerbTrainer = () => {
- vtQueue = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && w.partizip).sort(() => 0.5 - Math.random());
- if (vtQueue.length === 0) return alert(t("Заполните формы Präteritum и Partizip II у глаголов в словаре!"));
-
- vtIdx = 0;
- sessionStartMs = Date.now();
- document.getElementById('train-topics-container').parentElement.classList.add('hidden');
- document.getElementById('verb-trainer-game').classList.remove('hidden');
- const vtXpPanel = document.getElementById('vt-xp-panel');
- if (vtXpPanel) vtXpPanel.style.display = 'flex';
- updateExperience();
- renderVerbCard();
- };
-
- window.setVTMode = (mode) => {
- vtMode = mode;
- document.getElementById('vt-mode-praet').className = mode === 'praet' ? "flex-1 py-2 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
- document.getElementById('vt-mode-perf').className = mode === 'perf' ? "flex-1 py-2 text-xs font-bold rounded-lg bg-[#2A3B5E] shadow-sm transition-all text-white" : "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all hover:text-gray-700 dark:hover:text-[#D4AF37]";
- renderVerbCard();
- };
-
- window.renderVerbCard = () => {
- if (vtIdx >= vtQueue.length) {
- if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
- alert(t("Отлично! Все глаголы пройдены."));
- document.getElementById('train-topics-container').parentElement.classList.remove('hidden');
- document.getElementById('verb-trainer-game').classList.add('hidden');
- const vtXpPanel = document.getElementById('vt-xp-panel');
- if (vtXpPanel) vtXpPanel.style.display = 'none';
- return;
- }
- const w = vtQueue[vtIdx];
- document.getElementById('vt-counter').innerText = `${vtQueue.length - vtIdx}`;
- const vtRemLabel = document.getElementById('vt-remaining-label');
- if (vtRemLabel) vtRemLabel.innerText = t('Осталось:');
- // German = primary (big, vt-inf), Russian = secondary (small, vt-ru)
- document.getElementById('vt-inf').innerText = w.word_de;
- document.getElementById('vt-ru').innerText = w.word_ru;
-
- document.getElementById('vt-answer-block').classList.add('hidden');
- document.getElementById('vt-btn-show').classList.remove('hidden');
- };
-
- window.showVTAnswer = () => {
- triggerVibration(15);
- const w = vtQueue[vtIdx];
- if (vtMode === 'praet') {
- // Präteritum mode: show praeteritum form only
- document.getElementById('vt-answer').innerText = w.praeteritum || '—';
- } else {
- // Partizip II / Perfekt mode: show with haben/sein helper
- const seinVerbs = ['gehen', 'fahren', 'laufen', 'fliegen', 'kommen', 'ankommen', 'werden', 'sein', 'bleiben', 'passieren', 'fallen', 'steigen', 'aufstehen', 'einschlafen', 'aufwachen', 'wachsen', 'entstehen', 'sterben'];
- const inf = (w.word_de || '').toLowerCase();
- const rawPartizipLower = (w.partizip || '').toLowerCase().trim();
- const alreadyHasAux = rawPartizipLower.startsWith('hat ') || rawPartizipLower.startsWith('ist ') || rawPartizipLower.startsWith('haben ') || rawPartizipLower.startsWith('sein ');
- const aux = seinVerbs.some(v => inf.includes(v)) ? 'ist' : 'hat';
- const answerHtml = alreadyHasAux ? escapeStr(w.partizip) : `<span class="text-gray-400 text-sm mr-1">${aux}</span>${escapeStr(w.partizip)}`;
- document.getElementById('vt-answer').innerHTML = answerHtml;
- }
- const container = document.getElementById('verb-card');
- container.classList.add('perspective-1000', 'transform-style-3d');
- container.style.transform = 'rotateY(90deg)';
- container.style.transition = 'transform 0.15s ease-in';
- setTimeout(() => {
- document.getElementById('vt-btn-show').classList.add('hidden');
- document.getElementById('vt-answer-block').classList.remove('hidden');
- container.style.transform = 'rotateY(0deg)';
- container.style.transition = 'transform 0.2s ease-out';
- }, 150);
- };
-
- window.answerVerb = (remembered) => {
- if (remembered) {
- playTone(800, 'sine', 0.3);
- const { key, stats } = getDailyStats();
- stats.reviews++;
- localStorage.setItem(key, JSON.stringify(stats));
-
- const xpKey = `total_xp_${currentUser}`;
- const newTotal = (parseInt(localStorage.getItem(xpKey) || '0', 10)) + 5;
- localStorage.setItem(xpKey, newTotal);
-
- showXPFloat(5, window.innerWidth / 2, window.innerHeight / 3);
- updateExperience();
- } else {
- playTone(200, 'sawtooth', 0.2);
- // No XP for wrong
- }
- if (!remembered) { vtQueue.push({ ...vtQueue[vtIdx] }); }
- vtIdx++;
- renderVerbCard();
- };
+ // leftover js removed
 
  // --- СТАТИСТИКА И ТЕПЛОВАЯ КАРТА ---
  function generateHeatmap(history) {
@@ -3906,7 +3888,10 @@ window.updateExperience = async () => {
  async function loadStats() {
  const totalCount = globalWords.length;
  const mastered = globalWords.filter(w => w.score >= MAX_SCORE).length;
- const learnedVerbs = globalWords.filter(w => w.word_type === 'verb' && w.score >= MAX_SCORE).length;
+ const learnedPraet = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum && (w.vt_praet_score || 0) >= MAX_SCORE).length;
+ const totalPraet = globalWords.filter(w => w.word_type === 'verb' && w.praeteritum).length;
+ const learnedPerf = globalWords.filter(w => w.word_type === 'verb' && w.partizip && (w.vt_part_score || 0) >= MAX_SCORE).length;
+ const totalPerf = globalWords.filter(w => w.word_type === 'verb' && w.partizip).length;
 
  try {
  const historyResult = await Promise.allSettled([
@@ -3960,9 +3945,15 @@ window.updateExperience = async () => {
  <span class="text-gray-400 font-medium">${t('Всего выучено')}:</span>
  <span class="text-white font-bold">${mastered} / <span id="prof-total-text">${totalCount}</span></span>
  </div>
- <div class="flex justify-between items-center text-xs bg-[#172A45] border border-white/10 p-3.5 rounded-2xl shadow-sm mt-2.5">
- <span class="text-gray-400 font-medium">${t('Из них глаголов')}:</span>
- <span class="text-white font-bold" id="prof-verbs-text">${learnedVerbs}</span>
+ <div class="flex gap-2 mt-2.5">
+     <div class="flex-1 flex justify-between items-center text-xs bg-[#132038] border border-blue-500/20 p-3.5 rounded-2xl shadow-sm">
+         <span class="text-blue-400/80 font-medium">${t('Präteritum')}:</span>
+         <span class="text-blue-400 font-bold" id="prof-praet-text">${learnedPraet} / ${totalPraet}</span>
+     </div>
+     <div class="flex-1 flex justify-between items-center text-xs bg-[#132038] border border-blue-500/20 p-3.5 rounded-2xl shadow-sm">
+         <span class="text-emerald-400/80 font-medium">${t('Perfekt')}:</span>
+         <span class="text-emerald-400 font-bold" id="prof-perf-text">${learnedPerf} / ${totalPerf}</span>
+     </div>
  </div>
  </div>
  
@@ -4629,7 +4620,7 @@ window.updateExperience = async () => {
          }
          
          // Пауза анимации если профиль не открыт (экономия CPU)
-         const profView = document.getElementById('view-prof');
+         const profView = document.getElementById('view-stats');
          if (!profView || profView.classList.contains('hidden')) {
              requestAnimationFrame(drawGalaxy);
              return;

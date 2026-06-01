@@ -225,6 +225,21 @@ def init_db():
     except Exception:
         conn.rollback()
 
+    try:
+        cur.execute("ALTER TABLE words ADD COLUMN vt_praet_score INTEGER DEFAULT 0")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_praet_next_review BIGINT DEFAULT 0")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_praet_ease REAL DEFAULT 2.5")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_praet_interval INTEGER DEFAULT 0")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_praet_reps INTEGER DEFAULT 0")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_part_score INTEGER DEFAULT 0")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_part_next_review BIGINT DEFAULT 0")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_part_ease REAL DEFAULT 2.5")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_part_interval INTEGER DEFAULT 0")
+        cur.execute("ALTER TABLE words ADD COLUMN vt_part_reps INTEGER DEFAULT 0")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
     cur.close()
     conn.close()
 
@@ -251,6 +266,7 @@ class ScoreUpdate(BaseModel):
     ease_factor: float = 2.5
     interval: int = 0
     repetitions: int = 0
+    form_type: str = "base"
 
 class FolderReset(BaseModel):
     folder: str
@@ -539,8 +555,9 @@ def progress_action(data: ProgressAction, x_user: str = Header("osman")):
         # Check independent drops, from rarest to most common
         sorted_mounts = sorted(ALL_ARTIFACTS, key=lambda x: x['dropRate'])
         for mount in sorted_mounts:
+            scaled_drop = mount['dropRate'] / 10.0
             roll = random.uniform(0, 100)
-            if roll <= mount['dropRate']:
+            if roll <= scaled_drop:
                 artifact_name = mount['name']
                 rarity = mount['rarity']
                 
@@ -815,8 +832,17 @@ def upload_csv(folder: str = Form(...), level: str = Form(...), subfolder: str =
 def update_score(word_id: int, data: ScoreUpdate, x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE words SET score = %s, next_review = %s, ease_factor = %s, interval = %s, repetitions = %s WHERE id = %s AND username = %s", 
-                (data.score, data.next_review, data.ease_factor, data.interval, data.repetitions, word_id, x_user))
+    
+    if data.form_type == "praeteritum":
+        cur.execute("UPDATE words SET vt_praet_score = %s, vt_praet_next_review = %s, vt_praet_ease = %s, vt_praet_interval = %s, vt_praet_reps = %s WHERE id = %s AND username = %s", 
+                    (data.score, data.next_review, data.ease_factor, data.interval, data.repetitions, word_id, x_user))
+    elif data.form_type == "partizip":
+        cur.execute("UPDATE words SET vt_part_score = %s, vt_part_next_review = %s, vt_part_ease = %s, vt_part_interval = %s, vt_part_reps = %s WHERE id = %s AND username = %s", 
+                    (data.score, data.next_review, data.ease_factor, data.interval, data.repetitions, word_id, x_user))
+    else:
+        cur.execute("UPDATE words SET score = %s, next_review = %s, ease_factor = %s, interval = %s, repetitions = %s WHERE id = %s AND username = %s", 
+                    (data.score, data.next_review, data.ease_factor, data.interval, data.repetitions, word_id, x_user))
+                    
     conn.commit()
     cur.close()
     conn.close()
@@ -856,13 +882,13 @@ def delete_word(word_id: int, x_user: str = Header("osman")):
 def export_csv(x_user: str = Header("osman")):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip, ease_factor, interval, repetitions FROM words WHERE username = %s", (x_user,))
+    cur.execute("SELECT id, word_type, article, word_de, word_ru, folder, level, subfolder, score, example, next_review, plural, praeteritum, partizip, ease_factor, interval, repetitions, vt_praet_score, vt_praet_next_review, vt_praet_ease, vt_praet_interval, vt_praet_reps, vt_part_score, vt_part_next_review, vt_part_ease, vt_part_interval, vt_part_reps FROM words WHERE username = %s", (x_user,))
     rows = cur.fetchall()
     output = io.StringIO(newline='')
     writer = csv.writer(output, delimiter=';')
-    writer.writerow(["id", "word_type", "article", "word_de", "word_ru", "folder", "level", "subfolder", "score", "example", "next_review", "plural", "praeteritum", "partizip", "ease_factor", "interval", "repetitions"])
+    writer.writerow(["id", "word_type", "article", "word_de", "word_ru", "folder", "level", "subfolder", "score", "example", "next_review", "plural", "praeteritum", "partizip", "ease_factor", "interval", "repetitions", "vt_praet_score", "vt_praet_next_review", "vt_praet_ease", "vt_praet_interval", "vt_praet_reps", "vt_part_score", "vt_part_next_review", "vt_part_ease", "vt_part_interval", "vt_part_reps"])
     for r in rows:
-        writer.writerow([r['id'], r['word_type'], r['article'], r['word_de'], r['word_ru'], r['folder'], r['level'], r['subfolder'], r['score'], r['example'], r['next_review'], r['plural'], r['praeteritum'], r['partizip'], r['ease_factor'], r['interval'], r['repetitions']])
+        writer.writerow([r['id'], r['word_type'], r['article'], r['word_de'], r['word_ru'], r['folder'], r['level'], r['subfolder'], r['score'], r['example'], r['next_review'], r['plural'], r['praeteritum'], r['partizip'], r['ease_factor'], r['interval'], r['repetitions'], r.get('vt_praet_score',0), r.get('vt_praet_next_review',0), r.get('vt_praet_ease',2.5), r.get('vt_praet_interval',0), r.get('vt_praet_reps',0), r.get('vt_part_score',0), r.get('vt_part_next_review',0), r.get('vt_part_ease',2.5), r.get('vt_part_interval',0), r.get('vt_part_reps',0)])
     csv_string = '\ufeff' + output.getvalue()
     cur.close()
     conn.close()
