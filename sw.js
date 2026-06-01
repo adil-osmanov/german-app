@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kraft-v6';
+const CACHE_NAME = 'kraft-v7';
 const URLS_TO_CACHE = [
     '/',
     '/index.html',

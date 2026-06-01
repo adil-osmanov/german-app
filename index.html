@@ -3554,17 +3554,35 @@ window.updateExperience = async () => {
  let formattedGerman = escapeStr(fullGerman);
 
  if (w.word_type === 'verb') {
- const prefixes = ['zurück', 'zusammen', 'nach', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'her', 'hin', 'vor', 'weg', 'ab', 'an', 'zu'];
         let wDe = (w.word_de || '').toLowerCase();
         let part = (w.partizip || '').toLowerCase();
         let splitIndex = -1;
-        for (let p of prefixes) {
+        
+        let possiblePrefix = '';
+        let geIndex = part.indexOf('ge');
+        while (geIndex > 0) {
+            let p = part.substring(0, geIndex);
             if (wDe.startsWith(p)) {
-                let isSep = part ? part.startsWith(p) : (wDe !== 'mitteln');
-                if (isSep) {
-                    splitIndex = p.length;
+                possiblePrefix = p;
+            }
+            geIndex = part.indexOf('ge', geIndex + 1);
+        }
+        
+        const inseparable = ['be', 'emp', 'ent', 'er', 'ge', 'miss', 'ver', 'zer'];
+        if (possiblePrefix && !inseparable.includes(possiblePrefix)) {
+            splitIndex = possiblePrefix.length;
+        }
+
+        if (splitIndex <= 0) {
+            const prefixes = ['zurück', 'zusammen', 'vorbei', 'heraus', 'hinaus', 'weiter', 'vorher', 'nach', 'auf', 'aus', 'bei', 'ein', 'los', 'mit', 'her', 'hin', 'vor', 'weg', 'ab', 'an', 'zu'];
+            for (let p of prefixes) {
+                if (wDe.startsWith(p)) {
+                    let isSep = part ? part.startsWith(p) : (wDe !== 'mitteln');
+                    if (isSep) {
+                        splitIndex = p.length;
+                    }
+                    break;
                 }
-                break;
             }
         }
  if (splitIndex > 0 && splitIndex < wDe.length) {
